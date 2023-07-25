@@ -1,0 +1,189 @@
+\section{Applied quals overview}
+\subsection{Applied Qual exam tips \footnote{These tips are by Stephen Bates.}}
+
+
+\begin{itemize}
+	\item \textbf{You do not need to formally justify every statement that you make.} Indeed, sometimes a question is only
+checking whether you know some fact. For example, in most problems, it would be
+fine to say ``if two variables are highly correlated, then their regression coefficients
+are negatively correlated'' without proving such a statement.
+	\item \textbf{There may be many possible correct answers.} For some questions, your goal is to come up with one possible good answer to the question at hand. If time permits, you can give several correct answers for open-ended questions.
+	\item \textbf{Read the whole question first.} You should generally read the whole question, and then spend 1-2 minutes outlining which material that you learned in
+the first year may be relevant for the given problem.
+	\item \textbf{Write all of your observations.} It is a good idea to write down all of your
+thoughts about the problem, even seemingly small observations. Furthermore,
+it is sometimes useful to provide several layers in an answer to a problem at increasing
+levels of complexity. 
+	\item \textbf{Remember LMs, GLMs, and the bootstrap.} If you don’t know what to
+do, think about these three things. In particular, for problems that ask you to
+come up with a model, you can almost always formulate a solution as an LM
+or GLM.
+\end{itemize}
+
+\subsection{Applied exam topics}
+
+\begin{itemize}
+	\item The topics covered vary depending on the material taught. There are some ``classics'' such as linear models, GLMs and the EM algorithm.
+	\item You may get questions which do not directly relate to material that you've been taught.
+	\item A main challenge is working out what material to use in a given question. This is why the problems are assigned by year not by topic. 
+	\item For your reference, there is a file on Canvas with questions organized by topics. 
+\end{itemize}
+
+
+\subsection{Two types of problems\footnote{These comments are by Dan Kluger}}
+
+There are two types of questions on the applied qual.
+
+\begin{itemize}
+	\item \textbf{Type J problem:} A type J  problem is a problem where you have to make some sort of statistical \textit{judgment}. Type J problems come in two forms. Sometimes you have to choose which method should be used. Other times you are given a method and setting, and you are asked to comment on or critique the approach. There are sometimes multiple correct answers to a type J problem, and when answering a type J problem it can be hard to feel 100 percent certain that you have the answer they are looking for.
+	\item 
+	\textbf{Type C problem:} A type C problem does not require making any statistical judgments, and there is clearly only one right answer. Type C problems either involve \textit{computations, calculations}, or proofs relating to topics covered in the 305 sequence. They often involve matrix calculus or linear algebra tricks. 
+\end{itemize}
+
+Type C problems are similar to those you've solved on homework or in exams during the first year class. Type J problems will seem new and maybe more challenging. Unfortunately, there tend to be more type J problems than type C problems on the quals. According to Dan, between 2010 and 2021, there were 12/72 entirely type C problems, 5/72 problems that are mostly type C with a subpart that is a type J problem, and the remaining 55/72 problems have a substantial type J component or are entirely type J. Luckily, many of the type J questions are quite doable once you get a better sense of what constitutes a ``correct'' answer. You will become much more comfortable with them as the summer goes along.
+
+\subsection{Type J problem example: 2014 Problem 1}\label{sec:case_study_1}
+
+\subsubsection*{Problem statement}
+We want to measure the perceived brightness of a light source by human
+observers. Photographic equipment can easily measure the brightness of an
+object. However, human perception of brightness is not the same as what
+a machine will give. For instance a person might think a green LED looks
+brighter than a blue one even though they have equal energy output.
+
+People can however readily decide which of two light sources looks brighter. An experimenter places an object of standard brightness (a candle) at 1-meter distance from a human subject. The object of unknown brightness is placed at some distance from a subject, who then says whether the object
+appears to be brighter than the candle or less bright.
+
+We know that there is an inverse square rule, such that doubling the
+distance of the object from the viewer reduces the perceived brightness by a
+factor of four.
+
+The investigating team wants to know the perceived brightness of an object relative to the candle. They have data from numerous people at varying distances from the object, ranging from half a meter to four meters. What they record is the distance and whether the object appeared brighter or less bright. \newline
+
+\textbf{Your task:} give them a method for determining the relative brightness of
+an object compared to the candle from their data. Say how they should come
+up with a confidence interval. You will have to choose a model. No model is
+perfect, so indicate at least one meaningful limitation of your model.
+
+\subsubsection*{Solution\footnote{Solution evolved over quals coaching byStefan Wager, Gene Katsevich,  Kenneth Tay, Stephen Bates, Nikos Ignatiadis, Isaac Gibbs and Dan Kluger}}
+
+\paragraph{Initial observations and helpful notation:} Let $Y_i \in \{0, 1\}$ indicate whether in the $i$th observation, the subject thought the object was brighter than the candle, and let $d_i$ be the distance the subject was from the object. Let $b$ be the true unknown brightness of the object, and let us normalize the brightness of the candle to 1. Given the physics of the situation, $Y_i$ is likely to be 1 if $b/d_i^2 \gg 1$, and it is likely to be 0 if $b/d_i^2 \ll 1$. When $b/d_i^2 \approx 1$, presumably people would be uncertain about the relative brightness. 
+
+\paragraph{Modeling choices (simple version: each person has the same visual capabilities):} Remember that when in doubt think of linear models, GLMs or the bootstrap. Since we have binary data it logistic regression is a natural a natural approach to consider.
+We pick some function $g$ and use the logistic regression model
+\begin{equation*}
+Y_i \overset{\text{ind}}\sim \text{Ber}(\pi_i), \quad \mathrm{logit}(\pi_i) = g \left(\frac{b}{d_i^2}\right).
+\end{equation*}
+
+Some desired properties of $g$ that fit the problem are that $g(1)=0$, $\lim_{t \to \infty} g(t) =\infty$ and $\lim_{t \to 0} g(t)=-\infty$. We also would like $g$ to be increasing (since higher brightness or less distance should imply a greater chance $Y_i=1$). We would also like that $g(1/t)=-g(t)$ so that if we interchange the candle and the object then $\pi_i$ should change to $1-\pi_i$. One function that meets these desired properties is $g(t)=\theta \log (t)$ for some unknown precision parameter $\theta$.
+
+
+Then, the model is
+\begin{equation}
+Y_i \overset{\text{ind}}\sim \text{Ber}(\pi_i), \quad \mathrm{logit}(\pi_i) = \theta\log\left(\frac{b}{d_i^2}\right) = \beta_1 + \beta_2 \log d_i,
+\label{baseline}
+\end{equation}
+where $\beta_1 = \theta\log(b)$ and $\beta_2 = -2\theta$. This is a logistic regression model with the parameter of interest being
+\begin{equation*}
+b = \exp(-2\beta_1/\beta_2).
+\end{equation*}
+We can estimate $(\hat \beta_1, \hat \beta_2)$ using regular GLM methods and then set $\hat b = \exp(-2\hat \beta_1/\hat \beta_2)$. We could get a variance estimate for $\hat b$ using the asymptotic normal approximation for $(\hat \beta_1, \hat \beta_2)$ from GLM theory and the delta method, or if we don't trust the model, we can bootstrap our observations. To get a correct bootstrap estimate we should resample people not the individual observations. 
+
+This model is a good baseline, but it does not account for inter-person eyesight variability.
+ 
+\paragraph{Varying precision model:} Suppose that not every subject has the same vision capabilities. Here, we let $\theta_s$ quantifies the precision of subject $s$'s eyesight; higher $\theta_s$ imply greater ability to tell which object is brighter when the objects are at the same distance. Instead of using the model \eqref{baseline}, letting $s[i]$ denote the subject of the $i$th observation,
+
+\begin{equation*}
+Y_i \overset{\text{ind}}\sim \text{Ber}(\pi_i), \quad \text{logit}(\pi_i) = \theta_{s[i]} \log\left(\frac{b}{d_i^2}\right) = \beta_{1,s[i]} + \beta_{2,s[i]} \log d_i,
+\label{varying}
+\end{equation*}
+where, as before, $\beta_{1,s[i]} = \theta_{s[i]}\log(b)$ and $\beta_{2,s[i]} = -2\theta_{s[i]}$. One approach that could come to mind is fitting generalized linear mixed effects model is using the glmer package in R, although standard mixed effects model software is unlikely to be able to deal with this case where $ \beta_{1,s[i]}$ is constrained to be a scalar multiple of $\beta_{2,s[i]}$. 
+
+Another option is to model $\theta_{s[i]} \overset{\text{i.i.d.}}{\sim} \text{Gamma}(\alpha_0, \beta_0)$. Now we have a latent variable model on our hands, which we can fit using the EM algorithm, although the updates do not have nice closed form expressions. We can still get uncertainty estimates for $b$ by bootstrapping people, since people are still i.i.d. draws from a distribution. A drawback of this model is that the gamma distribution is a bit of an arbitrary choice for the distribution of eyesight precision. More broadly, a drawback of the approach is that the link function in the logistic regression was chosen for computational convenience and not because it reflects people's actual uncertainties in distinguishing which objects are brighter.
+
+\subsection{Type C problem example: 2019 Problem 6}\label{sec:case_study_2}
+
+\subsubsection*{Problem statement}
+
+You have developed a fantastic R package that can solve the lasso problem really quickly for large problems. In particular, given a dataset $(x_i,y_i)$, $i=1,\ldots,N$, with $x_i \in \bbR^p$ and $y_i \in \bbR$, you program solves,
+
+\[\min_\beta \frac{1}{2}\sum_{i=1}^N (y_i - x_i^\top \beta)^2 + \lambda \norm{\beta}_1 \]
+very fast, even with both $N$ and $p$ in the thousands. Your friend is somewhat theoretical, and wonders whether your program can be used to solve the related problem,
+
+
+\[\min_\beta \frac{1}{2}E_{XY}(Y-X^\top\beta)^2 + \lambda \norm{\beta}_1. \]
+ Here $X$ and $Y$ are random variables with $X \in \bbR^p$ ($p=500$) and $Y \in \bbR$, all means zero, and $(p+1) \times (p+1)$ p.d. known variance-covariance matrix
+ \[\Sigma = \begin{bmatrix}
+	\Sigma_{XX}&\sigma_{XY}\\
+	\sigma^\top_{XY} & \sigma_{YY}
+ \end{bmatrix}. \]
+ \begin{enumerate}
+	\item[(a)] How might you approach this problem computationally?
+	\item[(b)] ``Not good enough,'' says your friend. ``I want to derive a theoretical solution to my probelm.'' Provide one.  
+ \end{enumerate}
+ \subsubsection*{Solution \footnote{Nikos Ignatiadis, Dan Kluger and M.H.}}
+
+
+ In this problem we are interested in solving the population LASSO problem,
+ \begin{equation}
+ \label{eq:population_lasso}
+ \argmin_{\beta} \frac{1}{2} \EE{\p{Y - X^\top \beta}^2} + \lambda \Norm{\beta}_1,
+ \end{equation}
+ where $(X,Y)$ are centered and have a known covariance matrix $\Sigma$. Instead, we have at our disposal a LASSO solver for the empirical objective:
+ \begin{equation}
+ \label{eq:empirical_lasso}
+ \argmin_{\beta} \frac{1}{2} \Norm{\boldY - \boldX \beta}^2_2 + \lambda \Norm{\beta}_1,
+ \end{equation}
+ where $\mathbf{X}$ is an $N \times p$ design matrix with rows $x_i^\top$ and $\mathbf{Y}$ an $N\times 1$ response vector with entries $y_i$.
+ 
+ \begin{enumerate}[label=(\alph*)]
+ 
+ \item  Upon expanding the square of the population mean-squared error, we find that
+ %\footnotesize
+ \begin{align}
+ \label{eq:lasso_decomp}
+ \EE{\p{Y - X^\top \beta}^2} &= \EE{Y^2 -2 Y X^\top \beta+ \beta^\top  X X^\top  \beta }\nonumber \\
+ & = \sigma_{YY}-2 \sigma_{XY}^\top \beta
+  + \beta^\top \Sigma_{XX} \beta \end{align}
+ In particular, the solution of the optimization problem only depends on the covariance $\Sigma$ of $(X,Y)$. So for $i=1,\dotsc,N$ we could draw samples $(x_i, y_i)$ from a multivariate normal distribution with mean $0$ and the given covariance $\Sigma$. Then we could solve:
+ 
+ \begin{equation}
+ \label{eq:sample_lasso}
+ \min_{\beta} \frac{1}{2 N} \sum_{i=1}^N \p{y_i - x_i^\top \beta}^2 + \lambda  \Norm{\beta}_1
+ \end{equation}
+ For large enough $N$, by the law of large numbers, this would provide a good approximation to the population LASSO objective, since:
+ $$  \frac{1}{N} \sum_{i=1}^N \p{y_i - x_i^\top \beta}^2 \approx  \EE{y_i - x_i^\top \beta}^2.$$
+ 
+ 
+ To use our friend's software we would use the pairs $(x_i, y_i)$ as input and set the penalty parameter to $N \cdot \lambda$. 
+ 
+ 
+ \textbf{A couple details to add if time:}  In light of~\eqref{eq:lasso_decomp}, the approximation can be made uniform in $\beta$ (say for $\beta$ in a compact set; and we can check that for $\lambda > 0$ the optimal $\beta$ for the population problem indeed lies in a compact set). 
+ 
+ Also, we can provide a few more details on drawing samples from the specified multivariate normal distribution. Let $\Sigma = LL^\top$ be the Cholesky decomposition of $\Sigma$\footnote{Instead of the Chomsky decomposition, we could have used the eigen-decomposition $\Sigma = VD^2V^\top$ and then proceeded as above with $L=VD$.} Then let $u_i^j \simiid \mathcal{N}(0, 1),\; j=1,\dotsc,p+1$, $u_i = (u_i^1, \dotsc, u_i^{p+1})$ and set:
+ $$ (x_i, y_i) = z_i = Lu_i$$
+ Then indeed $(x_i, y_i) \sim \mathcal{N}(0, \Sigma)$.
+ 
+ 
+ \item This question is phrased in a somewhat confusing way. My interpretation is as follows: let us assume we can solve~\eqref{eq:sample_lasso} exactly, i.e., let us ignore floating point arithmetic errors. Then, can we use~\eqref{eq:sample_lasso} to exactly solve~\eqref{eq:population_lasso}? It turns out that we can achieve this using \eqref{eq:lasso_decomp} and a factorization of the variance-covariance matrix $\Sigma$.
+ 
+ By using \eqref{eq:lasso_decomp}, to solve this problem we need to construct a set of pseudo-observation for which $\big((x_i,y_i)\big)_{i=1}^{N}$ for which, 
+ 
+ $$\sum_{i=1}^N (y_i -x_i^\top \beta)^2 = \sigma_{YY}-2 \sigma_{XY}^\top \beta + \beta^ \top \Sigma_{XX} \beta.$$
+ 
+ Letting $\bold X \in \mathbb{R}^{N \times p}$ be the matrix of features and $\bold Y \in \mathbb{R}^N$ be the vector of $y_i$'s. The above criterion can be re-expressed as
+ 
+ \begin{equation}
+ \label{eq:exact_lasso_criterion}
+ \sigma_{YY}-2 \sigma_{XY}^\top \beta + \beta^ \top \Sigma_{XX} \beta= \vert \vert \bold Y - \bold X \beta \vert \vert_2^2= \bold Y^\top \bold Y - 2 \bold Y^\top \bold X \beta + \beta^\top \boldX^\top \bold X \beta
+ \end{equation}
+ 
+ 
+ 
+ We can see that~\eqref{eq:exact_lasso_criterion} holds as long as $$\begin{bmatrix}  \bold X & \bold Y \end{bmatrix}^\top \begin{bmatrix}  \bold X & \bold Y \end{bmatrix} =  \begin{bmatrix}  \bold X^ \top \bold X & \bold X^\top \bold Y \\ \bold Y^\top \bold X & \bold Y^\top \bold Y \end{bmatrix} = \begin{bmatrix}  \Sigma_{XX} & \sigma_{XY} \\ \sigma_{XY}^\top & \sigma_{YY} \end{bmatrix} = \Sigma.$$
+ 
+ 
+ 
+ Now we can use the Cholesky decomposition to pick an $L \in \bbR^{(p+1)\times(p+1)}$ such that $\Sigma = LL^\top$. Then we can construct our pseudo-observations by setting $ \begin{bmatrix}  \bold X & \bold Y \end{bmatrix} =   L^\top$. By the previous result these pseudo-observations will satisfy~\eqref{eq:exact_lasso_criterion}, and therefore, applying our algorithm to solve~\eqref{eq:empirical_lasso} for these pseudo-observations, we obtain a solution to~\eqref{eq:population_lasso}.
+ 
+ \end{enumerate}

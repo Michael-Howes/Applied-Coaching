@@ -1,0 +1,96 @@
+\section{Linear Models: Additional topics}
+
+In this section we will touch on three topics that relate to the linear model and may come up on the exam.
+
+\subsection{ANOVA}
+
+\subsubsection*{F-test revisited}
+
+The word ANOVA can be used to refer to a number of things. It is an abbreviation of analysis of variance and is sometimes used to refer to $F$-test for model comparison. Recall that in  Section \ref{sec:F-test}, we had the model,
+\[Y = X_1\beta_1 + X_2\beta_2 + \varepsilon, \]
+and we wanted to test $\mathcal{H}_0: \beta_2 = 0$. Our test-statistic was,
+\[F = \frac{\vert \vert  \hat{Y}_f -\hat{Y}_1  \vert \vert_2^2/p_2}{\vert \vert Y - \hat{Y}_f  \vert \vert_2^2/(n-p_1-p_2)}, \]
+which can be written as,
+\[F =  \frac{(\vert \vert  Y -\hat{Y}_1  \vert \vert_2^2 - \vert \vert Y - \hat{Y}_f \vert \vert_2^2 )/p_2}{\vert \vert Y - \hat{Y}_f  \vert \vert_2^2/(n-p_1-p_2)}. \]
+The term $\vert \vert Y-\hat{Y}_1 \vert \vert_2^2$ is an estimate of the error variance in the full model and $\vert \vert Y-\hat{Y}_1 \vert \vert_2^2$ is an estimate of the error variance in the sub-model. The $F$-test compares these two estimates and rejects the null hypothesis if $\vert \vert Y - \hat{Y}_1 \vert \vert_2^2$ is sustainably larger than $\vert \vert Y-\hat{Y}_f \vert \vert_2^2$. Thus, the $F$ test is an ``analysis of variance.''
+
+\subsubsection*{ANOVA Models}
+
+The word ANOVA is also used to describe linear models with only categorical features. In these models, the categorical features divide the observations into $K$ groups. The inferential goal is to detect differences between the groups. This often done using the $F$-test (aka an analysis of variance).
+
+\subsubsection*{Single Factor}
+
+The simplest version of ANOVA is where there is a single categorical feature. Suppose the feature can take $I$ values, and our each value $1\le i \le I$, we have observations $Y_{i,s}$ for $1\le s \le n_i$. The ANOVA model is,
+\begin{equation}\label{ANOVA1}
+    Y_{i,s} = \mu + \alpha_{i} + \varepsilon_{i,s}, 
+\end{equation}
+with $\varepsilon_{i,s} \simiid \mathcal{N}(0,\sigma^2)$ for $1 \le i \le I$ and $1 \le s \le n_i$. The parameter $\mu$ is the grand mean and $\alpha \in \reals^I$ is a vector of off-sets. As written, the model above is not identifiable. If we let $\ones_I$ denote the length $I$ vector of all ones, then we could add a constant $\nu$ to $\mu$ and subtract $\nu\ones_I$ from $\alpha$ and the distribution of $Y$ will be unchanged. To make the model identifiable, constraints are added to parameters $(\mu,\alpha)$. There are three common approaches,
+\begin{itemize}
+    \item Set $\alpha_1 = 0$. This is what \verb|R| does when use \verb|lm| with a categorical feature. This constraint makes the most sense when category 1 is a ``baseline'' category. The other parameters $\alpha_i, i > 1$ tell you how the mean differs in category $i$ compared to category $1$.
+    \item Require $\sum_{i=1}^I \alpha_i = 0$. This has the nice theoretical property that $\alpha^\top \ones_I = 0$. Thus, the vector of parameters $\alpha$ is orthogonal to any constant vector $\mu \ones_I$. This can simplify calculations. In this model $\alpha_i$ measures the difference between the mean of group $i$ and the grand mean.
+    \item Require $\mu = 0$. In this model $\alpha_i$ is simply the mean of group $i$.
+\end{itemize}
+Each of these constraints are one-dimensional and any of them make $(\mu,\alpha)$ identifiable. The degrees of freedom for the model \eqref{ANOVA1} is $I$. Regardless of the constraint choice, the group means $\mathbb{E}[Y_{i,s}] = \mu + \alpha_i$ are unchanged. The parameters can be fit using constrained least-squares. Under any of the constraints, the fitted values are always the same,
+\[\hat{Y}_{i,s} = \hat{\mu}+\hat{\alpha}_i = \frac{1}{n_i}\sum_{s=i}^{n_s} Y_{i,s} = \bar{Y}_{i,+}. \]
+The difference between two groups are also unchanged,
+\[\hat{\alpha}_{i}-\hat{\alpha}_{i'} = \bar{Y}_{i,+} - \bar{Y}_{i',+}. \]
+
+\subsubsection*{Testing}
+
+To test for a difference between groups, we can use the $F$-test to test $\mathcal{H}_0 : \alpha_1 = \cdots = \alpha_I$. The fitted values in the full model are $\hat{Y}_{i,s}^{\text{full}} = \bar{Y}_{i,+}$. Under the null, the fitted values are 
+\[\hat{Y}_{i,s}^{\text{null}} = \bar{Y}_{+,+} = \frac{1}{n_{+,+}} \sum_{i=1}^I \sum_{s=1}^{n_i} Y_{i,s},\] 
+where $n_{+,+} = \sum_{i=1}^I n_{i}$ is the total number of observations. 
+
+We can also use a t-test to test for a difference between the groups ``in a direction.'' A contrast is any vector $c \in \reals^K$ with $\sum_{i=1}^I c_i = 0$. Under $\mathcal{H}_0$, we have $c^\top \alpha =0$ for any contrast $c$. Common choice of $c$ are pairwise difference $c= e_i-e_{i'}$ or the difference between two subgroups $c = \frac{1}{I_1}\sum_{i=1}^{I_1}e_i - \frac{1}{I-I_1}\sum_{s=I_1+1}^I e_i$ for $1 < i < I$. When testing contrast you need to be careful about multiple testing issues. Your contrasts should not be data dependent, and you have to correct for multiplicity if you do test multiple contrasts.
+
+\subsubsection*{Multiple factors}
+
+The previous section can easily be extended to handle multiple features. For simplicity, we will only discuss two-factor models. Suppose one feature has $I$ levels and the other has $J$ levels. Suppose that in group $i,j$ we have observations $Y_{i,j,s}$ for $1\le s \le n_{ij}$. The ANOVA model \emph{without interactions} is,
+\begin{equation}
+    \label{ANOVA2} Y_{i,j,s} = \mu + \alpha_i + \beta_j + \varepsilon_{i,j,s}
+\end{equation}
+which has $1 + I + J$ parameters but only $I+J-1$ degrees of freedom. I find it useful to think of the parameters as matrices in $\reals^{I\times J}$. We have a constant matrix $\mu \ones_I \ones_J^\top $, a matrix with constant rows $\alpha \ones_{J}^\top$ and a matrix with constant columns $\ones_I \beta^\top$. 
+To make this model identifiable, the typical constraints are,
+\begin{itemize}
+    \item $\alpha_1 = 0$ and $\beta_1 = 0$. Here again we are treating $i=1, j=1$ as a baseline category.
+    \item $\sum_{i=1}^I \alpha_i = 0$ and $\sum_{j=1}^H \beta_j = 0$. Here there is no baseline category and $\alpha_i + \beta_j$ is the difference in mean between category $(i,j)$  and the grand mean. Here again we have orthogonality between the matrices $\mu \ones_I \ones_J^\top $, $\alpha \ones_{J}^\top$ and $\ones_I^\top \beta$.
+\end{itemize}
+Under all of these models the fitted values of $Y$ are,
+\[\hat{Y}_{i,j,s} = \bar{Y}_{i,+,+}+\bar{Y}_{+,j,+} - \bar{Y}_{+,+,+}, \] 
+where $\bar{Y}_{i,+,+}$ is the average value of $Y_{i,j',s'}$ over $j'$ and $s'$, $\bar{Y}_{+,j,+}$ is the average value of $Y_{i',j,s'}$ over $i'$ and $s'$, and $Y_{+,+,+}$ is the grand average over all values of $Y$. From here you can work out $\hat{\mu},\hat{\alpha}$ and $\hat{\beta}$ under the different constraints.
+
+We can also make a two-factor model with interactions,
+\begin{equation}
+    \label{ANOVA3} Y_{i,j,s} = \mu + \alpha_i + \beta_j + \gamma_{ij} + \varepsilon_{i,j,s},
+\end{equation}
+which has $1+I+J+IJ$ parameters but only $IJ$ degrees of freedom. Again it is helpful to think of the parameters $\mu,\alpha,\beta$ and $\gamma$ as living in $\reals^{I\times J}$. To make the parameters identifiable we need $1+I+J$ constraints. The two common choices are
+\begin{itemize}
+    \item $\alpha_1 = 0$, $\beta_1=0$, for all $j$ $\gamma_{1,j}=0$ and for all $i$ $\gamma_{i,1}=0$ (note that the constraint $\gamma_{1,1}=0$ is counted twice.)
+    \item $\sum_{i=1}^I \alpha_i = 0$, $\sum_{j=1}^J \beta_j = 0$, for all $i$ $\sum_{j=1}^J\gamma_{i,j}=0$ and for all $j$ $\sum_{i=1}^I \gamma_{i,j} = 0$ (note that one of the constraints are redundant). These constraints imply that $\mu \ones_I \ones_J^\top $, $\alpha \ones_J^\top$, $\ones_I \beta^\top$ and $\gamma$ are all orthogonal in $\reals^{I \times J}$.
+\end{itemize}
+The fitted values here are $\hat{Y}_{i,j,s} = \bar{Y}_{i,j,+}$ the average value of $Y_{i,j,s'}$ over $s'$. From here you can work out $\hat{\mu},\hat{\alpha},\hat{\beta}$ and $\hat{\gamma}$. Again the F and t-tests can be used to compare groups. 
+
+
+\subsection{Generalized least squares\footnote{Not to be confused with GLMs!}}
+
+In ordinary least squares, we have the linear model,
+\begin{equation}\label{GLS:model}Y = X \beta + \varepsilon, \end{equation}
+where $\varepsilon$ has mean zero and covariance $\sigma^2 I$. The corresponding OLS estimator of $\beta$ is $\hat{\beta}= (X^\top X)^{-1}X^\top Y$. In \emph{generalized least squares} we replace the assumption $\cov(\varepsilon) = \sigma^2 I$ with the assumption $\cov(\varepsilon) = \Omega$ where $\Omega$ is a \emph{known} non-singular covariance matrix. The GLS estimator is given by
+\begin{align*}
+    \hat{\beta}_\Omega &= \argmin_\beta (Y-X^\top \beta)^\top \Omega^{-1} (Y-X^\top \beta)\\
+    &=(X^\top \Omega^{-1} X)^{-1} X^\top \Omega^{-1}Y.
+\end{align*}
+If $\varepsilon \sim \mathcal{N}(0,\Omega)$, then $\hat{\beta}_{\Omega}$ is the MLE for $\beta$. One way to derive the equation of $\hat{\beta}_\Omega$ is by multiplying \eqref{GLS:model} on the left by $\Omega^{-1/2}$ (which exists since $\Omega$ is non-singular and positive semi-definite). This gives the model,
+\[\widetilde{Y} = \widetilde{X}\beta + \widetilde{\varepsilon}, \]
+where $\widetilde{Y}=\Omega^{-1/2}Y$, $\widetilde{X} = \Omega^{-1/2}X$ and $\widetilde{\varepsilon} = \Omega^{-1/2}\varepsilon \sim (0,I)$. Thus, we have a standard OLS model with a transformed response and feature matrix. The OLS estimate for the transformed model is
+\[(\widetilde{X}^\top \widetilde{X})^{-1}\widetilde{X}^\top \widetilde{Y} = (X^\top \Omega^{-1}X)^{-1}\Omega^{-1}Y, \]
+which is exactly $\hat{\beta}_\Omega$. 
+
+
+\subsubsection*{Weighted least squares}
+
+It is unlikely that we will know $\Omega$ exactly and thus generalized least squares doesn't come up that often. An exception is the special case \emph{weighted least squares}. Here we assume that $\varepsilon_i$ are independent and mean zero but with different variances. That is we assume,
+\[ \cov(\varepsilon) = \sigma^2W,\]
+where $W \in \reals^{n \times n}$ is a known diagonal matrix and $\sigma^2$ is unknown. That is, we don't know the exact covariance matrix of $\varepsilon$, but we know that $\varepsilon_i$ are uncorrelated and the variance of $\varepsilon_i$ is proportional to $W_{ii}$. This formulation is useful because the unknown parameter $\sigma^2$ will cancel out in the calculation of $\hat{\beta}_\Omega$. Weighted least squares often comes up in repeated sampling situations where $Y_i$ is an average of $n_i$ observations and $W_{ii} = \frac{1}{{n_i}}$. 
+
+

@@ -1,0 +1,136 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath, mathrsfs, amssymb, amsthm, fullpage, graphicx, mathtools, bbm}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{fancyvrb}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{bm}
+
+\usepackage{relsize}
+
+\usepackage{natbib}
+
+\graphicspath{{./figures/}}
+
+\usepackage{titlesec}
+
+\usepackage{color}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{minted}
+
+
+
+\usepackage{hyperref}
+\usepackage[margin=1.2in]{geometry}
+
+%https://texfaq.org/FAQ-ftnsect
+\usepackage[stable]{footmisc}
+
+\usepackage{stefan_tex}
+
+\setcounter{section}{-1}
+
+
+\newcommand{\bbR}{{\mathbb R}} 
+\newcommand{\bbC}{{\mathbb C}} 
+\newcommand{\bbD}{{\mathbb D}} 
+\newcommand{\bbE}{{\mathbb E}} 
+\newcommand{\bbP}{{\mathbb P}} 
+\newcommand{\bbQ}{{\mathbb Q}} 
+\newcommand{\bbN}{{\mathbb N}} 
+\newcommand{\bbZ}{{\mathbb Z}} 
+\newcommand{\calN}{{\mathcal N}} 
+\newcommand{\supp}{{\text{supp} \ }} 
+
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{conjecture}[proposition]{Conjecture}
+\newtheorem{lemma}[proposition]{Lemma}
+\newtheorem{corollary}[proposition]{Corollary}
+\newtheorem{theorem}[proposition]{Theorem}
+
+\theoremstyle{definition}
+\newtheorem{remark}[proposition]{Remark}
+\newtheorem{definition}[proposition]{Definition}
+\newtheorem{example}[proposition]{Example} 
+
+
+
+\newcommand{\eps}{{\varepsilon}} 
+\newcommand{\vp}{{\varphi}} 
+\newcommand{\ip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\norm}[1]{\left \lVert #1 \right \rVert}
+%\pagestyle{empty}
+
+\DeclarePairedDelimiterX{\infdivx}[2]{(}{)}{%
+  #1\;\delimsize\|\;#2%
+}
+\newcommand*{\KLD}{D_{\mathrm{KL}}\infdivx*}
+\newcommand{\calQ}{\mathcal{Q}}
+
+\newcommand{\colour}[1]{\color{#1}}
+\input{isaac_commands.tex}
+
+\title{Applied Statistics Qualifying Exams Coaching}
+\author{Michael Howes\footnote{With lots of content credit given to previous applied quals coaches}}
+\date{Summer 2023}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+%% Topics
+\include{topics/schedule.tex}
+\newpage
+\include{topics/overview.tex}
+\newpage 
+\include{topics/linear_models.tex}
+\newpage 
+\include{topics/glms.tex}
+\newpage 
+\include{topics/bootstrap.tex}
+\newpage
+\include{topics/EM.tex}
+\newpage
+\include{topics/cross_validation.tex}
+\newpage 
+\include{topics/linear_model_extra.tex}
+\newpage 
+\include{topics/bayesian_models.tex}
+\newpage
+\include{topics/cavi.tex}
+\newpage 
+
+
+%% Solutions
+\include{solutions/applied_2011.tex}
+\newpage 
+\include{solutions/applied_2012.tex}
+\newpage
+\include{solutions/applied_2013.tex}
+\newpage
+\include{solutions/applied_2014.tex}
+\newpage 
+\include{solutions/applied_2015.tex}
+\newpage
+\include{solutions/applied_2016.tex}
+\newpage 
+\include{solutions/applied_2017.tex}
+\newpage
+\include{solutions/applied_2018.tex}
+
+\bibliographystyle{plainnat}
+\bibliography{references.bib}
+
+
+
+
+\end{document}

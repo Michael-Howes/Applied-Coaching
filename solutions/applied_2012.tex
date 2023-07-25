@@ -1,0 +1,238 @@
+\section{Applied 2012: Solution \footnote{Will Fithian, Gene Katsevich, Kenneth Tay, Stephen Bates, Nikos Ignatiadis, Isaac Gibbs, Dan Kluger, M.H.}}
+
+\subsection*{Problem 1: Deviance manipulations}
+Key ideas/tools:
+\begin{itemize}
+\item deviance calculations
+\item The MLE in exponential families matches the observed means of the sufficient statistics
+\end{itemize}
+
+\begin{enumerate}
+\item[(a)] This is a straight-forward manipulation:
+\begin{align*}
+\log \frac{f_\alpha(\hat\beta)}{f_{\alpha_0}(\hat\beta)}
+&= \alpha'\hat\beta - \psi(\alpha) - [\alpha_0'\hat\beta - \psi(\alpha_0)] \\
+&= (\alpha-\alpha_0)'(\hat\beta-\beta_0) + (\alpha-\alpha_0)'\beta_0 - [\psi(\alpha)-\psi(\alpha_0)] \\ 
+&= Q \left(\hat\beta \right) - D(\alpha_0, \alpha) / 2,
+\end{align*}
+as required.
+
+\item[(b)] The notation here can be somewhat confusing. It is useful to recall that $\beta_0 := \mme_{\alpha_0}[\hat{\beta}]$. Then, Hoeffding's formula says that
+\begin{equation*}
+\log \frac{f_\alpha(\hat\beta)}{f_{\hat\alpha}(\hat\beta)} = -D(\hat\alpha, \alpha)/2,
+\end{equation*}
+where $\hat{\alpha}$ is the MLE. Now under the MLE we have that $\beta_0 = \mme_{\alpha_0 = \hat{\alpha}}[\hat{\beta}] = \hat{\beta}_{obs}$ where $\hat{\beta}_{obs}$ denotes the observed data. Thus, Hoeffding's formula is the same as our previous result specialized to $\alpha_0=\hat\alpha$, since in this case $Q = 0$ because $\beta_0=\hat\beta$, i.e. the fitted mean under the MLE is equal to the observed data. 
+
+\item[(c)] By part (a), 
+\begin{equation*}
+\mathbb E_{\alpha_0} \left[ e^{Q(\hat\beta)}\right] = \mathbb{E}_{\alpha_0} \left[ \frac{f_{\alpha}(\hat\beta) }{f_{\alpha_0}(\hat\beta)} e^{D(\alpha_0,\alpha)/2} \right] = \mathbb E_{\alpha_0} \left[\frac{f_{\alpha}(\hat\beta) }{f_{\alpha_0}(\hat\beta)} \right] e^{D(\alpha_0,\alpha)/2} = e^{D(\alpha_0,\alpha)/2}.
+\end{equation*}
+Above we used the following 
+\[\mathbb E_{\alpha_0} \left[\frac{f_{\alpha}(\hat\beta) }{f_{\alpha_0}(\hat\beta)} \right] = \int \frac{f_\alpha(\hat\beta)}{f_{\alpha_0}(\hat\beta)} f_{\alpha_0}(\hat\beta)d\beta = \int f_\alpha(\hat\beta) = 1, \]
+since $f_\alpha$ is the density for $\hat\beta$ at the parameters $\alpha$. 
+
+
+\end{enumerate}
+
+
+% Problem 2
+\subsection*{Problem 2: Weighted least squares and optimal design}
+Key ideas/tools:
+\begin{itemize}
+\item weighted least squares
+\end{itemize}
+
+\begin{enumerate}
+\item[(a)] First, we transform the problem to the homoskedastic linear regression model:
+\begin{equation}\label{homoskedastic}
+x^{-r}y = x^{-r+1}\beta + \eps; \quad \eps \sim \calN(0, \sigma^2 I_n).
+\end{equation}
+The OLS estimate in this model is 
+\begin{equation*}
+\hat \beta = \frac{\sum_{i=1}^n x_i^{-2r+1}y_i}{\sum_{i=1}^n x_i^{-2r + 2}}.
+\end{equation*}
+Equivalently, $\hat{\beta}$ is the weighted least squares estimator using the diagonal covariance matrix $\Sigma = \sigma^2 \text{diag}(x^{2r})$. 
+
+\item[(b)] For this part we view the $x$ values as fixed. From (\ref{homoskedastic}), we see that $\text{Var}(x^{-r} y) = \sigma^2$. Hence,
+\begin{align*}
+\text{Var}[\hat \beta] &= \frac{1}{\left( \sum_{i=1}^n x_i^{-2r + 2} \right)^2} \sum_{i=1}^n \text{Var} \left( x_i^{-2r+1}y_i\right) \\
+&= \frac{1}{\left(\sum_{i=1}^n x_i^{-2r + 2} \right)^2} \sum_{i=1}^n x_i^{-2r + 2} \text{Var} \left( x_i^{-r}y_i\right) \\
+&= \frac{1}{\left(\sum_{i=1}^n x_i^{-2r + 2} \right)^2} \sum_{i=1}^n x_i^{-2r + 2} \sigma^2 \\
+&= \frac{\sigma^2}{\sum_{i=1}^n x_i^{-2r + 2}}.
+\end{align*}
+
+\item[(c)] If $r = 1/2$, then the variance of our estimate is inversely proportional to $\sum_{i = 1}^n x_i$. Hence, we seek to maximize $\sum_{i = 1}^n x_i$ subject to the constraint that $n + \sum_{i = 1}^n x_i \leq 100$. It is clear that the optimal solution to this is $n = 1$ and $x_1 = 99$. Note that if were sure of our linear model, then this is the most efficient choice. However, usually we are not as confident that our model is correct, so fitting a linear regression using only one data point would be a bad idea because we could not use that data point to check the model fit.
+
+\end{enumerate}
+
+
+% Problem 3
+\subsection*{Problem 3: Multiple testing with gene expression data}
+Key ideas/tools:
+\begin{itemize}
+\item multiple testing
+\item computations under the global null
+\end{itemize}
+
+
+\begin{enumerate}
+\item[(a)] Let us first assume that each p-value is uniform, i.e., $P_i \sim U[0,1]$ under then null. Then each null hypothesis has probability 0.01 of being rejected, so using the linearity of expectation we expect $0.01\cdot 7184 \approx 72$ nominally significant genes.
+
+If we have conservative p-values, i.e.,
+
+\begin{equation}
+\label{eq:conservative_pvalue}
+\PP[H_0]{P_i \leq t} \leq t \text{ for all }t,
+\end{equation}
+then the above is still an upper bound.
+
+\item[(b)] Let $X$ be the number of nominally significant genes at the 0.01 level. Let's make a big assumption: that expressions of different genes are independent. Under this assumption, we have $X \sim \text{Bin}(7184, 0.01)$ under the null. To get a p-value for $X = 94$, we can use the normal approximation $X \overset{\cdot}{\sim} N(72, 72)$, which leads to $Z = (94 - 72)/\sqrt{72} \approx 2.6$. This leads to a p-value of about 0.005. Alternatively, since the null distribution is known you could also compute an exact p-value.
+		
+Note that again this (global null) p-value is a valid p-value, as long as the per-gene p-values are conservative.
+
+If we did not want to make the independence assumption (since in reality gene expressions are in fact correlated), then we could apply a permutation test, repeatedly scrambling the treatment labels of the 100 subjects and recomputing $X^*$. This would give a finite sample exact test of the null hypothesis that gene expression levels have the same distribution in treated and untreated subjects. Intuitively, it should also give a reasonable asymptotic test of the intersection null hypothesis that all genes have the same mean expression level, but proving this formally would be technically challenging.
+
+\item[(c)] 
+
+
+Let $X_b$ be the number of p-values falling into $[0,0.01]$ and let $X_c$ be the number of p-values falling into $[0,0.001]$. 
+
+Ignoring the information from part (b), we can simply test the intersection null using the same approach from part (b). In particular $X_c \sim \text{Bin}(7184, 0.001)$, so we can use an exact Binomial test, although this is hard to do on an exam without access to a computer. We can instead use a test based normal approximation with a $Z$-score of $Z_c = (18 - 7.184)/\sqrt{7.184 \times 0.999} \approx 4.04$, and get an approximate p-value of $2.7 \times 10^{-5}$. However, it should be noted that the normal approximation for a binomial doesn't work quite as well when the success probability of a trial is so close to $0$ or $1$ (in fact in this case the exact p-value based on binomial testing is $0.00048$, nearly 20 times higher than the normal-based estimate).
+
+There are a few approaches we could use to test the null using information from part (b) and (c).
+
+
+The first approach is based on a chi-squared test. We have $X_c = 18$ p-values falling into $[0, 0.001]$ and $X_2 = 76$ $p$-values falling into $[0.001, 0.01]$. Assuming independence and uniformity of the underlying p-values, we have approximately $X_c \sim N(7.2, 7.2)$ and $X_2 \sim N(65, 65)$. Now,
+\begin{align*}
+\text{Cov}(X_c,X_2) & = \sum_{i,j} \text{Cov}(\bone_{P_i \leq 0.001},\bone_{0.001 \leq P_j \leq 0.01})\\
+& = \sum_{i} - 0.001*(0.01-0.001) \cong -0.00001*7184 \cong -0.072.
+\end{align*}
+This is very small relative to the variances of $X_c$ and $X_2$ so we can obtain an approximately valid test by treating $X_c$ and $X_2$ as independent. By doing this we get that $Z_c = (18 - 7.184)/\sqrt{7.184 \times 0.999} \approx 4.04 $ and $Z_2 = (76 - 65)/\sqrt{65} \approx 1.4$, and can combine these using the chi squared test ($Z_c^2 + Z_2^2 \overset{\cdot}{\sim} \chi_2^2$), which results in a p-value of about 0.0001. This is higher than the approximate p-value of $2.7 \times 10^{-5}$ that ignores part (b), but lower than the actual p-value of  $0.00048$ when ignoring part (b). Therefore for this approach, whether including the information from part (b) increases or decreases the p-value is very sensitive to the normal approximation being used here and the approximate independence of $X_c$ and $X_2$. If one has a computer they should instead find the null distribution of $Z_c^2 + Z_2^2$ by simulating new p-values under the global null to get a finite sample exact test (assuming all p-values are independent).
+
+A major drawback of the first approach (besides not being able to tell whether the information from part (b) increases or decreases the p-value) is that it is essentially a two-sided test in the sense that it will reject the null the p-values are conservative and $X_c$ and $X_2$ are both very small.
+
+
+A second approach is the following: Let $t = 0.001$ and $\tau = 0.1$, and suppose that: 
+\begin{equation}
+\label{eq:uniformly_conservative}
+\PP[H_0]{P_i \leq t \mid P_i \leq \tau} \leq t/\tau,
+\end{equation}
+in fact $\leq$ is an equality under the uniformity assumption. 
+
+%Under \eqref{eq:conservative_pvalue}, \eqref{eq:uniformly_conservative} and independence of p-values,
+
+%\begin{aligned}
+%\mathhb{P}_{H_0} \big( X_c \geq 18 , X_b \geq 94 \big) & =  \mathhb{P}_{H_0} \big( X_b \geq 94 \big) \mathhb{P}_{H_0} \big( X_c \geq 18 | X_b \geq 94 \big)
+%\\ & \leq \mathbb{P} \big( \text{Binom} (7184,0.01) \geq 94 \big) \mathhb{P}_{H_0} \big( X_c \geq 18 | X_b \geq 94 \big)
+%\end{aligned} WOOPS CANNOT UPPER BOUN THIS WITHOUT TURNING INTO CONVOLUTION
+
+
+
+This suggests a second approach: under the global null
+$$ X_c \mid X_b  \sim \text{Bin}(X_b, 0.1),$$
+which yields a p-value of about $0.001$.
+
+
+Finally, we note that the 2nd approach of keeping only p-values $\leq \tau$ and using~\eqref{eq:uniformly_conservative} can be useful for multiple testing when null p-values are very conservative (i.e., very far from uniform), see ~\citet*{zhao2019multiple} (the first test will reject for small $X_b$ and $X_c$). Such approaches however do not work under ~\eqref{eq:conservative_pvalue}, instead~\eqref{eq:uniformly_conservative} is required. ~\citet*{zhao2019multiple} call p-values that satisfy ~\eqref{eq:uniformly_conservative} for all $t \leq \tau$ ``uniformly conservative''. 
+
+A third approach would be to the p-values uniformly conservative and independent and compute an upper bound on $\mathbb{P}_{H_0} \big( X_c \geq 18 , X_b \geq 94 \big)$, but this will involve summing over many binomial tail probabilities and cannot easily be done by hand for an approximate p-value.
+
+The same caveats about assuming independence across gene expressions apply for this part as well.
+
+
+
+
+\end{enumerate}
+
+% Problem 4
+\subsection*{Problem 4: Separation in logistic regression}
+Key ideas/tools:
+\begin{itemize}
+\item separating hyperplanes in classification
+\item regularization
+\end{itemize}
+
+\begin{enumerate}
+\item[(a)] We have probably found a separating hyperplane (a hyperplane perfectly separating the two classes). This causes the likelihood to diverge, resulting in unstable parameter estimates (note that there are multiple separating hyperplanes, and they are equally good from the point of view of the logistic loss function). We can plot $y$ against $X \hat\beta$ to see whether this is indeed the case. This is a problem with the model, not with the data.  The data might reflect that these ten predictors can actually separate the classes very well, which would be great! Or we might have overfit. To know if we have overfit or not, we could estimate test error by cross-validation or a held-out test set. 
+
+
+\item[(b)] The OLS model will not fit the data more closely. We will probably see $\hat\beta$ oriented in roughly the same direction, but with some negative predictions and some greater than 1. It would not be reasonable to treat these as probability estimates.
+
+\item[(c)] From part (a), it is not clear that we got a bad classifier the first time, only a bad estimate for $\beta$ and for the conditional probabilities.  However, the substantially higher test error indicates that the model could have been overfit. To address the overfitting, we can modify the model by adding some regularization to the parameters (e.g., Ridge,  Lasso, max margin).
+
+\end{enumerate}
+{\bf Comment:} In a logistic model with design matrix $X$ and fitted values $\hat{\pi}$, the estimated covariance matrix for $\hat{\beta}$ is 
+\[\hat{\Sigma} = (X^\top \mathrm{diag}(\hat{\pi}(1-\hat{\pi}))X)^{-1}. \]
+Thus, if $\hat{\pi}\approx 0,1$, then $\hat{\pi}(1-\hat{\pi}) \approx 0$ and the $\hat{\Sigma}$ will have large entries. This is why we are getting large fitted values of $\hat{\beta}$ and large standard errors in (a). 
+
+In the OLS model the covariance matrix for $\hat{\beta}$ is $(X^\top X)^{-1}$. This matrix should have smaller values than $\hat{\Sigma}$. In part (b), we could look at the covariance matrix from the OLS fit. If this matrix also has large standard errors, then there is probably a problem with co-linearity in our features. We could talk to the scientist about what the 10 features are and possible remove some redundant features. This would help reduce the overfitting. 
+
+% Problem 5
+\subsection*{Problem 5: Dimensionality reduction for images}
+Key ideas/tools:
+\begin{itemize}
+\item PCA and sparse PCA
+\end{itemize}
+
+
+\begin{enumerate}
+\item[(a)] Principal component analysis (PCA) would be the natural choice.
+
+\item[(b)] There are various sparse PCA methods we can use. Here is one example due to~\citet*{witten2009penalized}: to obtain the first direction, we solve
+\begin{align*}
+(u,v,d) &= \arg \min\|X-duv^\top\|_F^2 \\ 
+&\text{ subject to } \|u\|_2 = \|v\|_2 = 1, \; \|u\|_1 \leq c_1, \; \|v\|_1 \leq c_2,
+\end{align*}
+where $d$ is a scalar and $u$ and $v$ are vectors. This is equivalent to solving
+\begin{align*}
+(u,v) &= \arg \max u^\top Xv \\ 
+&\text{ subject to } \|u\|_2, \|v\|_2 \leq 1, \; \|u\|_1 \leq c_1, \; \|v\|_1 \leq c_2,
+\end{align*}
+which is bi-convex in $u$ and $v$, so we can use some alternating method to solve it. Once we have $u$ and $v$ it is then easy to solve for $d$.
+		
+We can then obtain $X^{(2)} = X - duv^\top$ and solve the same problem for $X^{(2)}$ to get the next direction. By iterating, we can get multiple directions.
+
+\item[(c)] We can solve the same problem for (say) $4\times 4$ pixel chunks, then replace each pixel chunk with a few principal components and apply the approach from part (b) to the resulting matrix.
+
+\item[(d)] Cross-validation.  For each fold, redo all the feature extraction steps with the given choices of tuning parameters.
+		
+If we have many tuning parameters, CV might be inappropriate because we are doing a high-dimensional search over tuning parameters.  A better approach might be to try to set most of the parameters in an unsupervised fashion, and then only cross-validate to select one or two tuning parameters at the end.
+
+\end{enumerate}
+
+
+\subsection*{Problem 6: Testing for a discrete distribution}
+Key ideas/tools
+\begin{itemize}
+\item Bare-hands calculations under the null hypothesis.
+\item Geometric distribution.
+\end{itemize}
+
+
+% Problem 6
+It should be noted that Alice and Bob's statements are not diametrically opposed to each other. For example, it is possible that Q appears in all letters, but with lower frequency than other letters: in this setting both Alice and Bob are wrong. Also it is possible that Q only appears as the middle letter but appears in 3 out of every 26 lisence plates and has the same overall frequency as other letters: in this setting both Alice and Bob are right. \newline
+
+To perform hypothesis testing we will need to define two disjoint hypotheses, a null and and an alternative. If Alice's statement is the null hypothesis, then it will be hard to conduct a hypothesis test, because Alice's statement doesn't specify a null distribution. Therefore, we should make the null hypothesis reflect Bob's statement rather than Allison's.
+ Let $(X_i,Y_i,Z_i)$ denote the first, second and third letters of the $i$th car. A reasonable null hypothesis, which implies that with Bob's statement is true, is that $$H_0: (X_i,Y_i,Z_i) \stackrel{IID}{\sim} \text{Unif} \Big( \{A,B,\dots, Y,Z\}^3 \Big).$$ 
+
+The alternative hypothesis can be Alice's statement. In particular our alternative is $$H_A: \mathbb{P} (X_i=Q \text { or } Z_i=Q)=0 \ \ \forall_{i}.$$
+
+
+
+\begin{enumerate}
+\item[(a)]  Let $N$ be the number of cars we see before one of the $X_i$ or $Z_i$ is a Q. Then under $H_0$, $N \sim \text{Geom}\left( 1 - (25/26)^2 \right)$. We can reject Bob's null hypothesis as soon as $N$ passes its $1-\alpha$ quantile under the null, whereas as soon as we see a Q in position 1 or 3 we can reject Alice's alternative.
+
+\item[(b)] We need to calculate the $1-\alpha$ quantile of $N$ under $H_0$. $\mathbb P(N > n) = (25/26)^{2n}$.  So we set $\alpha = (25/26)^{2n}$ and obtain $n=\lceil\frac{1}{2} \log_{25/26}(\alpha)\rceil$.
+
+\item[(c)] Alternatively, we could count the number of ``Q''s that we observe in the middle slot before we observe a ``Q'' in the first or third slot. Let $N$ be the number of ``Q''s that we observe in the middle slot before observing any ``Q''s in the first or third slot. Then under the null, $N \sim \text{Geom}(2/3)$. The critical threshold is then the $1-\alpha$ quantile of this distribution, which we will call $N_0$. If we see $N \ge N_0$ cars with a Q in the center slot before seeing any with a Q in the first or third slot, we would cease collecting data and reject the null hypothesis. If we observe any ``Q''s in the first or third slot before then we could reject Alice's claim.
+
+The rejection threshold when $\alpha = .05$ is the smallest value $N_0$ such that $P(N \ge N_0) = (1/3)^{N_0} < .05$, which is $\log(.05) / \log(1/3) \approx 2.73$. Thus, if we observe 3 cars with a ``Q'' in the center slot, we would reject the null hypothesis. The number of cars that would be needed is random in this case, but under Bob's hypothesis we would need $3 \cdot 26$ cars in expectation because the number of cars with a ``Q'' in the center slot is distributed as $\text{Geom}(1/26)$
+
+\end{enumerate}
+
+
+We remark that we could have made different choices for $H_0$ and $H_A$. For example, let $\pi_Q$ denote the probability that any arbitrary license plate letter is a Q. A null that reflects Bob's statement along with a simple alternative that is consistent with Alice's statement is $$H_0: \pi_Q= \frac{1}{26} \quad \text{and} \quad H_A: \pi_Q = \frac{1}{3 \times 26}.$$
+This can be tested by simply considering the 3n letters (ignoring their order) and using Binomial testing in part (a) and then a power calculation which uses normal approximations to the binomial in part (b), but this approach will be messier and require more calculations (here our results will be in terms of some prespecified level $\alpha$ and power $\beta$, whereas in the setup originally considered, the power is 1, so there is no need to consider power in part (b)). This approach also doesn't really relate to Alice's statement that $Q$ can only be in the 2nd position or leverage the order of the letters. 
+
+
+	

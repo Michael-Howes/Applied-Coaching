@@ -1,0 +1,327 @@
+\section{Applied 2014: Solution \footnote{Stefan Wager, Gene Katsevich,  Kenneth Tay, Stephen Bates, Nikos Ignatiadis, Isaac Gibbs, D.K.}} \label{sec:2014 exam}
+
+\subsection*{Problem 1: Modeling relative intensity of light sources}
+
+See Section \ref{sec:case_study_1}.
+
+\subsection*{Problem 2: Big data linear regression}
+
+\begin{enumerate}
+\item Let $X^1, \dots, X^K \in \RR^p$ be the unique values of $X_i$ in the dataset. Then, we can approximate the linear regression model with
+	\begin{equation*}
+	Y_i = \sum_{\ell = 1}^{K} \mu_\ell I(X_i = X^\ell) + \eps_i = \mu_{A_i} + \eps_i, \quad \eps_i \overset{\text{i.i.d.}}{\sim} N(0, \sigma^2).
+	\end{equation*}
+	This is just a cell-means ANOVA model. The MLE for this model is
+	\begin{equation}
+	\hat \mu_\ell = \frac{\sum_{i = 1}^n I(A_i = \ell) Y_i}{\sum_{i = 1}^n I(A_i = \ell)};
+	\label{MLE}
+	\end{equation}
+	i.e. the averages for each group. To apply this model to new data, we would need the new $X$ values to belong to the set $\{X^1, \dots, X^K\}$. (If the new $X$ values do not belong to this set, we could approximate $X$ by an element in the  set $\{X^1,X^2,\dots ,X^K \}$ based on some criterion, for example, nearest neighbor in Euclidean distance. One could also consider predicting $Y$ with a weighted average of the $\hat{\mu}_{\ell}$'s where the weights are some monotone decreasing function of the distance between $X^l$ and the new test point.)
+
+\item Let $f_\mu(X_i) = \mu_{A_i}$ be the fitted value for $X_i$. Note that in part 1, we implicitly used the loss function
+	\begin{equation*}
+	\mathcal L(\mu) = \sum_{i = 1}^n \frac{1}{n}(f_\mu(X_i) - Y_i)^2.
+	\end{equation*}
+	which puts equal weight on each observation. If we know that the test set will have different proportions of $X_i$, then it makes sense to change our loss function to weight data points $X_i$ more heavily if they are more likely to show up in the test set:
+	\begin{equation*}
+	\mathcal L_\pi(\mu) = \sum_{i = 1}^n \pi_{A_i}(f_\mu(X_i) - Y_i)^2.
+	\end{equation*}
+	In this example these two loss functions have the same minimizer (\ref{MLE}). This is a result of the fact that we are fitting a separate $\mu$ for each value of $X_i$ without sharing any information across the different values. Hence, with this model it is impossible to take advantage of $\pi$ to improve the fit on the test data. (Note that if the goals was to predict $A$ from $Y$ rather than to predict $Y$ from $A$, then the $\pi$ can be used to improve predictions, but in this setting the goal is to predict $Y$ from $A$).
+
+\item Suppose that the actual additive model is
+	\begin{equation*}
+	Y_i = X_i^T \beta + \eps_i, \quad \eps_i \overset{\text{i.i.d.}}{\sim} N(0, \sigma^2).
+	\end{equation*}
+	Then, $\beta$ is related to $\mu$ via
+	\begin{equation}\label{20142_linear_system}
+	(X^\ell)^T \beta = \mu_\ell, \quad \ell = 1, \dots, K.
+	\end{equation}
+	So, given the true value of $\mu$ we can solve for $\beta$ whenever the $K \times p$ matrix $\tilde{X}  = \begin{bmatrix} X^1 & X^2 & \dots & X^K \end{bmatrix}^T$ has full column rank. If $K>p$, $\tilde{X}$ has full column rank, and we have only an estimate $\hat{\mu}$ of $\mu$ it could be the case that the system (\ref{20142_linear_system}) does not have a solution. In this case we could let $n_l \equiv \sum_{i=1}^n I(A_i=l)$  we could look for $\hat{\beta}$ minimizing $\sum_{\ell =1}^K n_l ||(X^\ell)^T \beta - \hat{\mu}_\ell||^2_2$, i.e. we could take $\hat{\beta} = (\tilde{X}^T \mathcal{W} \tilde{X} )^{-1} \tilde{X}^T \mathcal{W} \hat{\mu}$, where $\mathcal{W}=\text{diag}(n_1,n_2,\dots, n_K)$.\\ 
+	
+	
+On the other hand if $K<p$ is small then (\ref{20142_linear_system}) is undetermined and there is no unique solution. This situation is comparable to a standard linear model with collinear columns and we could consider fitting $\beta$ by adding additional regularization. For example, we could let $\hat{\beta}$ be the minimum norm solution to $ (X^\ell)^T \hat{\beta} = \hat{\mu}_\ell, \quad \ell = 1, \dots, K$. Note that in this case $\mu$ is sufficient, namely it completely specifies $\hat{Y}$, and thus we haven't lost anything by considering $\mu$ and we can still solve the OLS problem exactly.
+
+More generally, the fact that the $X_i$ only take on $K$ unique values suggests that we did a bad job parametrizing our regression problem, and that we have many redundant features. We may want to re-think the specification of our regression model, e.g., by deleting or combining redundant features. For example, if the $X_i$ are responses to a survey, we could try summarizing answers to similar questions in a single variable.
+
+\end{enumerate}
+
+
+% Problem 3
+\subsection*{Problem 3: Paired versus unpaired regression models}
+Key ideas/tools:
+\begin{itemize}
+	\item correlated errors in linear regression
+	\item mixed effects modeling
+\end{itemize}
+
+Maybe some kids are prone to a sedentary lifestyle, whereas other kids like running around the playground at full speed for the entire duration of recess. Kids in the former category are likely to have BMI above the mean for both ages, given their treatment status, and kids in the latter category are likely to have BMI below the mean for both ages. This means that $\eps_{i1}$ and $\eps_{i2}$ are correlated, whereas regression model (1) implicitly assumes they are independent, which means we might get misleading error estimates based on this model. Indeed in the scatter plot we see a very strong correlation between $Y_{i1}$ and $Y_{i2}$ within each of the two treatment status buckets, suggesting that $\eps_{i1}$ and $\eps_{i2}$ are highly correlated.
+
+A more reasonable model for this data would be model (1) with an extra random effect for each child:
+\begin{equation*}
+Y_{ij} = \beta_0 + \beta_1 X_i + \beta_2 Z_j + \beta_3 X_i Z_j + b_i + \eps_{ij}, \quad b_i \overset{\text{i.i.d.}}\sim N(0, \sigma_1^2), \ \eps_{ij} \overset{\text{i.i.d.}}{\sim} N(0, \sigma_2^2).
+\end{equation*}
+The random $b_i$ terms capture fluctuations in children's BMI not explained by age or treatment status. 
+
+Note that this model implies that
+\begin{equation*}
+D_i = Y_{i2} - Y_{i1} = \beta_2 + \beta_3 X_i + \eps_i, \quad \eps_i \overset{\text{i.i.d.}}\sim N(0, 2\sigma_2^2),
+\end{equation*}
+which is equivalent to model (2). Hence, model (2) is the correct one. 
+
+Now, we are used to seeing neglected correlations resulting in \textit{inflated significance} rather than deflated significance, whereas here model (2) is the one with the very low p-value. Why does this happen? The short answer is that if the random effects model holds, but we ignore the random effect, then the random effect will contribute extra variance ($\sigma_1^2$) to your coefficient estimates. On the other hand, using the correct model allows us to cancel this random effect and thus we only get the variance from the residual error terms $\eps_{ij}$.
+
+To make the above discussion more transparent, let us consider the model for $Y_{ij}$ for the kids in the control group (i.e. $X_i = 0$):
+\begin{equation*}
+Y_{ij} = \beta_0 + \beta_2 Z_j + b_i + \eps_{ij},
+\end{equation*}
+and suppose we want to estimate $\beta_2$, which is the BMI gained from $t_1$ to $t_2$. This is the paired samples problem. Note that assuming no random effect (model (1)) makes this an unpaired samples problem. Whether we assume paired or unpaired data, we have
+\begin{equation*}
+\hat \beta_2 = \bar Y_{\cdot 2} - \bar Y_{\cdot 1}.
+\end{equation*}
+The difference between the two models lies in the variance of $\hat \beta_2$. Under the paired samples model, we have
+\begin{equation*}
+\text{Var}[\hat \beta_2] = \frac{2}{n}\sigma_2^2.
+\end{equation*}
+The model of statistician (2) would consistently estimate the above variance term. On the other hand, under the unpaired model, the residual variance is $\sigma_1^2 + \sigma_2^2$. So the statistician treating the two measurement of the same child as independent, would get a variance estimate of
+\begin{equation*}
+\widehat{\text{Var}}[\hat \beta_2] \approx \frac{1}{n}(\sigma_1^2 + \sigma_2^2).
+\end{equation*}
+The factor `2` that is missing could make inference anti-conservative. However, a large $\sigma_1^2$ will offset this and make the `wrong method' also behave even more conservatively.
+
+Finally, just to get a visceral understanding of this situation, suppose that $\sigma_1$ is large, $\beta_2$ is small, and $\sigma_2 = 0$. This means that every single kid's BMI increases exactly by the small amount $\beta_2$. However, the variance in baseline BMI is huge. So if you forgot about the pairing and just plotted the histograms of BMI before and after, they would look fairly similar. However, if you accounted for the pairing and took BMI differences, you would get a spike at $\beta_2$.
+
+The moral of the story is that if you have paired data, use a paired t-test instead of an unpaired two-sample t-test. For a similar problem but with discrete data see ``Combining $2\times 2$ Contingency Tables'' in \citet{millerCasebook}.
+
+
+% Problem 4
+\subsection*{Problem 4: Time series regression}
+Key ideas/tools:
+\begin{itemize}
+	\item data reduction with PCA
+	\item correlated errors, block bootstrap
+\end{itemize}
+
+\begin{enumerate}
+\item \begin{enumerate}
+\item All features matter as they are each proxies for temperature, so sparsity induced by the LASSO is inappropriate. However, the features are likely highly correlated with each other as they are all proxies for temperature, so low-rank modeling is appropriate.
+
+\item The environmental statistician can use cross-validation. However, we need to be careful to ensure that the different folds are (at least approximately) independent. Because there might be local temporal dependency, it is a good idea to use temporally contiguous folds. Another idea since we are interested in hindcasting would be to reserve the first few years as a validation set and use more recent years as training. \\
+
+\textbf{Alternative Solution:} Another option is to look for an elbow on a scree plot. However, given that the goal is to create good hindcasts the cross-validation method suggested above is probably a better idea. If you suggested a scree plot in this part you could then suggest using CV in part c.
+
+\item Since we have already gone to the effort of finding the optimal number of principal components, we might as well use exactly that number of principal components.
+
+\end{enumerate}
+
+\item The wording of the question is a little vague. To make things a little more precise let $\{\hat{T}_t\}_{1000 \leq t \leq 1849}$ denote our hindcasts. My interpretation of the question is that the goal is to understand the variability in $\hat{T}_t$ with respect to new draws of the observed data $\{T_t\}_{1850 \leq t \leq 2000}$, $\{P_t\}_{1000 \leq t \leq 2000}$. The obvious thing to do is to run a block bootstrap that re-samples the entire set of training data. Note that when you do this you need to preserve the dependence between $T_t$ and $P_t$. To do this you should resample the data from times $1850-2000$ separately from the data from 1000-1849. A downside of this is that it may not correctly model the distribution of your predictions on years just prior to 1850. Namely, this procedure breaks the dependence between the training data  $\{(P_t,T_t)\}_{1850 \leq t \leq 2000}$ and the testing points $P_t$ that are close in time to $1850$. Unfortunately, I do not see an easy way to avoid this.
+
+Now, if we used a Scree plot to pick the number of principle components in part 1 this bootstrap procedure should work reasonably well. However, issues arise due to the fact that we cross-validated. In particular, we need to re-run our entire fitting procedure, including the cross validation, inside the bootstrap samples. However, due to the presence of repeated samples the folds we get in CV will not be independent and thus the CV error will be biased downwards. As a result we do not expect our bootstrap samples to faithfully replicate what would occur if we sampled an entirely new dataset.\\
+
+Finding a correction for this issue seems quite difficult. A previous coach suggested to abandon the bootstrap and instead use subsampling. The idea behind subsampling is as follows. For simplicity, suppose we have and i.i.d. sample $X_1,\dots,X_n \sim F$ and we want a confidence interval for $\mu := \mme[X_i]$. Since we know that $\sqrt{n}(\bar{X} - \mu) \stackrel{D}{\to} N(0,\sigma^2)$ we find that it is sufficient to get an estimate of $\sigma^2 := \text{Var}(X_i)$. There are of course many ways to do this. One way is to subsample:
+\begin{enumerate}
+\item
+For $b = 1,\dots,B:$ Get a subsample $\{X^b_i\}_{1 \leq i \leq m}$ by sampling \textit{without} replacement from $\{X_i\}_{1 \leq i \leq n}$ and let $\hat{\mu}^b := \frac{1}{m}\sum_{i=1}^m X_i$.
+\item
+Let $\hat{\sigma}^2$ be the observed variance of $\{ \hat{\mu}^b\}_{1 \leq b \leq B}$.
+\item
+Return the confidence interval $\hat{C} = [\hat{\mu} - z_{1-\alpha} \sqrt{m/n}\hat{\sigma},\hat{\mu} + z_{1-\alpha} \sqrt{m/n} \hat{\sigma}]$.
+\end{enumerate}
+The idea here is that when $n \gg m$, $ \{X^b_i\}_{1 \leq i \leq m}$ will act as an i.i.d. sample of size $m$ from $F$. Critically, we note that since $m$ is smaller than $n$ we have to rescale our variance estimate in step 3 to account for the change in the sample size. Finally, as an aside I remark that you do not need to have asymptotic normality for this procedure to work. In particular, instead of estimating the standard deviation you could estimate quantiles $\hat{q}(\alpha/2)$, $\hat{q}(1-\alpha/2)$ of $\hat{\mu}^b - \hat{\mu}$ and use the confidence interval $\hat{C} = [\hat{\mu} - \hat{q}(\alpha/2) \sqrt{m/n},\hat{\mu} + \hat{q}(1-\alpha/2)\sqrt{m/n} ]$     \\
+
+Does subsampling make sense in this question? In our case we have that 
+\[
+\hat{T}_t = (P^{proj}_t)^T\hat{\beta} = (P^{proj}_t)^T\beta^* + (P^{proj}_t)^T(\hat{\beta}  - \beta^*) 
+\]
+where here $\beta^*$ denotes the true/optimal value of $\beta$ and $P^{proj}_t$ denotes the projection of $P_t$ onto the lower dimensional space. So, in the limit you may expect that $\hat{T}_t  \sim (\mme[(P^{proj}_t)^T\beta^* ],   \text{Var}((P^{proj}_t)^T(\hat{\beta}- \beta^*))$. In general, we would expect $\text{Var}((P^{proj}_t)^T(\hat{\beta}- \beta^*))$ to scale like the inverse of the sample size. So, if we use subsampling we should probably rescale our estimate of  $\text{Var}(\hat{T}_t)$ by $m/n$, where $n$ is the size of the original sample and $m$ is the size of our subsamples (or alternatively we could re-scale the entire histogram of $\hat{T}_t)$. As before, in order to account for the temporal dependencies we should subsample contigous blocks of the data.\\
+
+Finally, note that in session I erroneously discussed subsampling to get a confidence interval for $\hat{\beta}$. This will not work (or at least it won't work without major adjustments) because the number of selected principle components $k$ can change in each of the subsamples and this will drastically change the behaviour of $\hat{\beta}$.  
+
+
+\item \begin{enumerate}
+\item If we assume i.i.d. errors and base our $p$-values and confidence intervals on that assumption, then we will end up getting $p$-values that are too small and confidence intervals that are too narrow. 
+				
+\item We could either assume a time series model for the errors (e.g. AR(1)), or just use nonparametric methods like the bootstrap described in part 2 to get valid uncertainty estimates.
+\end{enumerate}
+
+\end{enumerate}
+
+
+% Problem 5
+\subsection*{Problem 5: A latent variable model for soccer}
+Key ideas/tools:
+\begin{itemize}
+	\item EM algorithm
+	\item hidden Markov models
+\end{itemize}
+
+\begin{enumerate}
+	\item[(a)] Let $X = \{z_{s_{m,0}},s_{m,1},o_m\}_{1 \le m \le M}$ be the observed data. Our latent variables are the tiers $Z = \{z_s\}_{1 \le s \le S}$ the event $Z_s = j$ corresponds to team $s$ being in tier $j$. Let $\theta = (\pi,p)$ be the model parameters.
+	
+	The above model for $X$ and $Z$ naturally factors as $P_\theta(X,Z) = P_\theta(Z)P_\theta(X\mid Z)$. To write down the complete data likelihood, we need to calculate both of these factors. We know that $Z_s \simiid \mathrm{Multi}(\pi,1)$. Thus,
+	\begin{align*}
+		P_\theta(Z) &=\prod_{s=1}^S \pi_{z_s}\\
+		&=\prod_{s=1}^S \prod_{j=1}^T \pi_j^{I(z_s=j)}\\
+		&=\prod_{j=1}^T \prod_{s=1}^S \pi_j^{I(z_s=j)}\\
+		&=\prod_{j=1}^T \pi_j^{Y_j},
+	\end{align*}
+	where $Y_j = \sum_{s=1}^S I(z_s=j)$ is the number of teams assigned to tier $j$. The term $P_\theta(X\mid Z)$ factors as a product over matches. Recalling that $o_m = 1$ if and only if team $s_{m,1}$ beats team $z_{s_{m,0}}$ we have,
+	\begin{align}\label{eq:2015Q5:1}
+		P_\theta(X \mid Z)&=\prod_{m=1}^M P_\theta(s_{m,1} \text{ beats } {s_{m,0}}\mid Z)^{o_m}P_\theta({s_{m,0}} \text{ beats } s_{m,1})^{(1-o_m)}.
+	\end{align}
+	Since we have conditioned on the latent tiers $Z$, we know that if $z_{s_{m,1}}=j$ and $z_{s_{m,0}} =k$, then 
+	\[P_\theta(z_{s_{m,1}} \text{ beats } z_{s_{m,0}}\mid Z) = p_{jk}, \text{ and } P_\theta(z_{s_{m,0}} \text{ beats } z_{s_{m,1}}) = 1-p_{jk}. \]
+	Thus, we can write \eqref{eq:2015Q5:1} as a product over $1 \le m \le M$ and $1 \le j,k\le T$,
+	\[P_\theta(X \mid Z)=\prod_{m=1}^M \prod_{k=1}^T \prod_{j=1}^TTp_{jk}^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)o_m}(1-p_{jk})^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)(1-o_m)}. \]
+	Next we split each product over $k$ and $j$ into three parts,
+	\begin{align*}
+		&\prod_{k=1}^T\prod_{j=1}^Tp_{jk}^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)o_m}(1-p_{jk})^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)(1-o_m)}\\
+		&=\left(\prod_{k=1}^T\prod_{j=1}^{k-1}p_{jk}^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)o_m}(1-p_{jk})^{I(z_{s_{m,1}}=j,z_{s_{m,0}})(1-o_m)}\right)\\
+		&\times \left(\prod_{k=1}^T p_{kk}^{I(z_{s_{m,1}}=k,z_{s_{m,0}}=k)o_m}(1-p_{kk})^{I(z_{s_{m,1}}=k,z_{s_{m,0}}=k)(1-o_m)}\right) \\
+		&\times \left(\prod_{k=1}^T\prod_{j=k+1}^{T}p_{jk}^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)o_m}(1-p_{jk})^{I(z_{s_{m,1}}=j,z_{s_{m,0}})(1-o_m)}\right).
+	\end{align*}
+	Now recall the assumption that $p_{jk} = 1-p_{kj}$. Thus, $p_{kk}=1/2$ for all $k$ and the middle term is simply a constant $C_m$ that does not depend on our model parameters $\theta$. Furthermore, we can rewrite the last term as follows,
+	\begin{align*}
+		&\prod_{k=1}^T\prod_{j=k+1}^{T}p_{jk}^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)o_m}(1-p_{jk})^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)(1-o_m)}\\
+		&=\prod_{k=1}^T\prod_{j=k+1}^T (1-p_{kj})^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)o_m}p_{kj}^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)(1-o_m)}\\
+		&=\prod_{j=1}^T\prod_{k=1}^{j-1} (1-p_{kj})^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)o_m}p_{kj}^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)(1-o_m)}.
+	\end{align*}
+	If we swap $j$ and $k$, we get
+	\begin{align*}
+		&\prod_{k=1}^T\prod_{j=k+1}^{T}p_{jk}^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)o_m}(1-p_{jk})^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)(1-o_m)}\\
+		&= \prod_{k=1}^T\prod_{j=1}^{k-1} (1-p_{jk})^{I(z_{s_{m,1}}=k,z_{s_{m,0}}=j)o_m}p_{jk}^{I(z_{s_{m,1}}=k,z_{s_{m,0}}=j)(1-o_m)}.
+	\end{align*}
+	We thus have
+	\begin{align*}
+		&\prod_{k=1}^T\prod_{j=1}^Tp_{jk}^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)o_m}(1-p_{jk})^{I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)(1-o_m)}\\
+		&=C_m\prod_{k=1}^T\prod_{j=1}^{k-1} p_{jk}^{W_{jkm}}(1-p_{jk})^{L_{jkm}},
+	\end{align*}
+	where
+	\begin{align*}
+		W_{jkm}&=I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)o_m + I(z_{s_{m,1}}=k,z_{s_{m,0}}=j)(1-o_m)\\
+		L_{jkm}&=I(z_{s_{m,1}}=j,z_{s_{m,0}}=k)(1-o_m) + I(z_{s_{m,1}}=k,z_{s_{m,0}}=j)o_m,
+	\end{align*}
+	In words, $W_{jkm}=1$ if a team in tier $j$ beat a team in tier $k$ in match $m$ and $W_{jkm}=0$ otherwise. Likewise, $L_{jkm}=1$ if a team in tier $j$ lost to a team in tier $k$ in match $m$ and $L_{jkm}=0$ otherwise. Note that $W_{jkm}+L_{jkm}=1$ if a team in tier $k$ played against a team in tier $k$ and $W_{jkm}+L_{jkm}=0$ otherwise. Now, taking a product over $m$, we get
+	\begin{align*}
+		P_\theta(X \mid Z)&=\prod_{m=1}^MC_m\prod_{k=1}^T\prod_{j=1}^{k-1} p_{jk}^{W_{jkm}}(1-p_{jk})^{L_{jkm}}\\
+		&=C\prod_{k=1}^T\prod_{j=1}^{k-1} p_{jk}^{W_{jk}}(1-p_{jk})^{L_{jk}},
+	\end{align*}
+	where $C=\prod_{m=1}^M C_m$ and
+	\begin{align*}
+		W_{jk}&=\sum_{m=1}^M W_{jkm}\\
+		L_{jkm}&=\sum_{m=1}^M L_{jkm}.
+	\end{align*}
+	That is, $W_{jk}$ is the number of times a team in tier $j$ beat a team in tier $k$ and $L_{jk}$ is the number of times a team in tier $j$ lost to a team in tier $j$. We can now write down the complete log-likelihood (up to a term that does not depend on the parameters $\theta = (\pi,p)$).
+	\begin{align*}
+		&\ell(\theta;X,Z)\\
+		&=\log(P_\theta(Z)) + \log(P_\theta(X \mid Z))\\
+		&=\sum_{j=1}^T Y_j \log(\pi_j) + \sum_{k=1}^T\sum_{j=1}^{k-1} W_{jk}\log(p_{jk})+L_{jk}\log(1-p_{jk}).
+	\end{align*} 
+	For the E-step we need to calculate the conditional expectation of $\ell(\theta;X,Z)$ at a given iterate $\hat{\theta}$. The conditional distribution of $Z\mid X$ is tricky to work with since each match introduces dependencies between the teams. However, we are told to not worry about making the E-step computationally efficient. We can thus use Bayes's rule to define and calculate the following, 
+	\begin{align}\label{EM:latent}
+		\omega_{\vec{z}}&=P_{\hat{\pi},\hat{p}}(Z = \vec{z}\mid X)\\
+		&=\frac{P_{\hat{\pi},\hat{p}}(Z = \vec{z})P_{\hat{\pi},\hat{p}}(X \mid Z = \vec{z})}{\sum_{\vec{z'}}P_{\hat{\pi},\hat{p}}(Z = \vec{z'})P_{\hat{\pi},\hat{p}}(X \mid Z = \vec{z'})},\nonumber
+	\end{align}
+	where $\vec{z}$ is an element of $\{1,\ldots,T\}^S$. We can then marginalize over the coordinates of $\vec{z}$ to compute
+	\[P_{\hat{\pi},\hat{p}}(Z_s = j\mid X), \quad \text{and} \quad P_{\hat{\pi},\hat{p}}(Z_{s_1} = j, Z_{s_2}=k\mid X). \]
+	Once we have calculated these probabilities, we can use linearity of expectation and calculate the expected complete log-likelihood,
+	\[\tilde{\ell}(\pi,p) = \sum_{j=1}^T \bbE_{\hat{\pi},\hat{p}}[Y_j]\log(\pi_j) + \sum_{k=1}^T\sum_{j=1}^{k-1} \bbE_{\hat{\pi},\hat{p}}[W_{jk}]\log(p_{jk})+\bbE_{\hat{\pi},\hat{p}}[L_{jk}]\log(p_{jk}).  \]
+	Maximizing with respect to $\pi$ and $p$ gives the M-step
+	\begin{align*}
+		\hat{\pi}'_j &= \frac{\bbE_{\hat{\pi},\hat{p}}[Y_j]}{S}\\
+		\hat{p}'_{jk} &= \frac{\bbE_{\hat{\pi},\hat{p}}[W_{jk}]}{\bbE_{\hat{\pi},\hat{p}}[W_{jk}]+\bbE_{\hat{\pi},\hat{p}}[L_{jk}]}.
+	\end{align*}
+	We could also add constraints that $p_{jk} \le p_{j,k+1}$ for all $j$ and $k$ as this would correspond to teams in the top tiers (close to 1), will perform better and better against teams in the bottom tiers (close to $T$). Since this isn't explicitly in the model, we'll ignore it. 
+	
+	To infer the latent tiers $z_{1:S}$, we can run the EM algorithm until convergence. Then we can use \eqref{EM:latent} to calculate the joint conditional distribution of $z_{1:s}$ given the observations.
+	
+
+	
+	\item[(b)] Cross-validate on matches, making sure that for each fold, the in-fold data do not leave out any teams. For a held-out data point $m$, we can use the conditional probabilities \eqref{EM:latent} and the fitted values of $\hat{p}_{ij}$ to estimate the probability $o_m=1$. We can these use cross-entropy or another loss function to evaluate the fitted model. The number of tiers $T$ will likely be limited by our computational resources. With the description above, the E step has complexity at least $S^T$. Thus, the time it takes to fit the model grows quickly in $S$ and $T$.
+	
+	\item[(c)] Let $z_{s, t}$ be the tier of team $s$ at time $t$. Then, we might model the evolution of a team's tier as a Markov chain. It is probably the case that there is some continuity of tier across time, so a team probably won't jump from the highest tier to the lowest tier from one time point to the next. A reasonable assumption is that a team can either stay at the same tier, or go up or down by one tier. We can model these jump probabilities as tier-specific or universal across tiers. For example, in the latter model, we would have a transition matrix parametrized by the probability of staying at the same tier. Assuming that the probabilities of jumping up and down (when both are possible) are equal, this determines the entire matrix. Taken together, this is a hidden Markov model where the latent state is the class of each team at each time point, and the emission distribution is the generative model from part (a).
+\end{enumerate}	
+
+
+
+% Problem 6
+\subsection*{Problem 6: Selective inference brainstorming}
+Key ideas/tools:
+\begin{itemize}
+	\item  selective inference
+	\item conditional selective inference
+	\item ``Bayes is immune to selection bias''
+	\item data splitting
+	\item bootstrap
+\end{itemize}
+
+	The key in the question is that we care about selective inference; i.e., we want to give statistical inference that is valid on the selected genes. Standard confidence intervals won't work: they have $1 - \alpha$ coverage on all genes, but may have 0 coverage on the selected genes.
+
+	A first question is the following: what is our model? One starting point is to treat the $X$ as fixed and consider independent:
+	\begin{equation}
+	\label{eq:normal_model}
+	Y_i \sim \mathcal{N}(\mu_i, \sigma^2), \; i=1,\dotsc,n
+	\end{equation}
+	We write $\mu = (\mu_1,\dotsc,\mu_n)$. Note that~\eqref{eq:normal_model} does not make the assumption of linearity. The next question is, what is our target?
+	\paragraph{Univariate targets:} Let us start by first discussing the case of univariate targets. We fit the model (for $j=1,\dotsc,p$):
+	\begin{equation}
+	\label{eq:marginal_model}
+	Y = \alpha + \beta_j X_j + \epsilon
+	\end{equation}
+	For simplicity let us assume that $X_j$ has been centered and scaled to have mean $0$ and $X_j^T X_j =1$. Then we get
+	$$ \hat{\beta}_j =  Y^\top X_j  \sim \mathcal{N}( \mu^\top X_j,   \sigma^2)$$
+	Hence we could let our population target be $\beta_j = \mu^\top X_j$. Note that this target makes sense outside the linear model, as long as~\eqref{eq:normal_model} holds. Even with this simple target, we still face the difficulty of needing to form intervals for the selected targets and can try to apply the 3 approaches discussed. In our discussion we make the simplification that $\sigma$ is known, so that $t_j = \hat{\beta}_j/\sigma$.
+
+
+	\begin{enumerate}
+	\item {\bf Censoring:} In this case our goal is to form confidence intervals with the following guarantee:
+	$$\PP[\beta_j]{ \beta_j \in  CI_j  \mid j \in \mathcal{S}}  = \PP[\beta_j]{ \beta_j \in  CI_j  \mid t_j \geq c}  \geq 1-\alpha$$
+	We consider the conditional distribution
+	$$ \mathcal L_{\beta_j}(t_j | t_j > c) \text{ for each } \beta_j \in \RR. $$
+	Denote this conditional distribution by $F_{\beta_j}$. We define the interval
+	$$ \mathcal I_{\beta_j} = \left[F_{\beta_j}^{-1}\left(\frac{\alpha}{2}\right), \, F_{\beta_j}^{-1}\left(1 - \frac{\alpha}{2}\right)\right], $$
+	with the property that $\mathbb P_{\beta_j}[{t_j \in \mathcal I_{\beta_j} | t_j > c}] \geq 1 - \alpha$. In other words if we want to test the null hypothesis:
+	$$ H_0: \beta_j = \tilde{\beta}_j,$$ 
+	for a fixed $\tilde{\beta}_j$, then we get a valid conditional test by rejecting when $t_j \notin \mathcal I_{\tilde{\beta}_j}$. We get a valid confidence set by inverting the hypothesis test, i.e.:
+	$$ CI_j = \left\{\beta_j : t_j \in \mathcal I_{\beta_j}\right\}. $$
+	\textbf{Exercise for STATS300:} Prove that under the assumptions above, i.e., model~\eqref{eq:normal_model} with known $\sigma^2$, that the above set is in fact an interval.
+	An issue raised by Yu is that with the above method it could happen that the final CIs contain $0$, even though we selected features so as not to include $0$. This is true; see~\citet*{weinstein2013selection} for an in-depth discussion of this issue. In a sense, the conditional approach to selective inference requires us to be surprised twice: The first time a feature surprises us, we select it. But e.g., to get a nonzero conditional CI, we need it to surprise us a second time.
+
+	\item {\bf Bayes:} Bayes estimation presents a simple cure to selection bias. Given a prior $\pi(\beta_j)$, we can compute posterior credible intervals $\Gamma(t_j)$ for $\beta_j$. Then,
+	$$ \mathbb P [{\beta_j \in \Gamma(t_j) | t_j}] \geq 1 - \alpha. $$
+	Notice that this statement hold \emph{conditionally} on $t_j$, and so is immune to selection bias. Note 1: Bayes credible intervals are not conditionally valid confidence intervals; but they are still interpretable (and maybe even more interpretable than the former). Note 2: This statement only holds if we have a true prior. If we use a non-informative prior (or a conjugate convenience prior), then selection bias matters. Note 3: If we have lots of data (and get to observe all the $\hat \beta_j$, not just the selected ones), then we can estimate prior $\pi$ by empirical Bayes methods. Options include $g$-estimation, or using Tweedie's formula to get the mean/variance of the posterior, cf.~\citet{efron2011tweedie}.
+
+	\item {\bf Data-splitting:} A simple (but perhaps not so powerful) approach to the problem is {\bf data splitting}: select genes on one half of the data, then do inference on the second half. Because we did not use the second half for selection, we don't have selection bias. Inference on the second half of the data can be done with the bootstrap or with the standard OLS intervals. One issue with the problem at hand is that perhaps our collaborator already chose the set $\mathcal{S}$ of important alleles. If we do data-splitting to select them, then we may get a different set $\mathcal{S}$, that furthermore depends on the seed of the random number generator that determines the split. 
+
+	\item {\bf Bootstrap:} \citet{morrison2018rank} propose a bootstrap approach to this problem. Their idea is the following: let us say we seek to form a confidence interval for the coefficient with the largest $t_j$. If we knew the distribution of $\hat{\beta}_{(1)} - \beta_{(1)}$, then we could directly form intervals for $\beta_{(1)}$. However, since we do not know these, we can proceed as follows:  Resample all our data, say by a $(X,Y)$ pairs-boostrap. In the $b$-th bootstrap replicate, we compute all $\hat{\beta}_j^b, j=1,\dotsc,p$ and then sort them. Let $j(b)$ be the index such that $\hat{\beta}_{j(b)}^b$ is the largest coefficient among the bootstrapped coefficients. Then we pretend that $\hat{\beta}_{j(b)}^b - \hat{\beta}_{j(b)}$ has approximately the same distribution as $\hat{\beta}_{(1)} - \beta_{(1)}$. A caveat of this method is that it must be seen as a heuristic. Using the bootstrap distribution of  $\hat{\beta}_{j(b)}^b - \hat{\beta}_{j(b)}$ is better than completely ignoring selection bias, but also one cannot expect to have any theoretical guarantees for this procedure (e.g., it will be very off in the case where all $\beta_j =0$).
+	\end{enumerate}
+
+	\paragraph{Multivariate target:}
+	What about the multivariate target? Now we posit the model:
+
+	\begin{equation}
+	\label{eq:multivariate_model}
+	Y = \alpha +  X_{\mathcal{S}}\beta_{\mathcal{S}} + \epsilon
+	\end{equation}
+	Then under~\eqref{eq:normal_model}, a target is:
+	\begin{equation}
+	\label{eq:selected_model_target}
+	\beta_{\mathcal{S}} = \p{X_{\mathcal{S}}^\top X_{\mathcal{S}}}^{-1} X_{\mathcal{S}}^\top \mu
+	\end{equation}
+	Let $\beta_{\mathcal{S},j}$ be the coordinate of $\beta_{\mathcal{S}}$ corresponding to feature $j$, assuming $j \in \mathcal{S}$. Then we seek to form pointwise confidence intervals for the selected $\beta_{\mathcal{S},j}$. A somewhat confusing property of this target is that it depends not only on the feature $j$, but also on the selected set.
+
+	An alternative target is the following: If we are willing to assume that~\eqref{eq:normal_model} holds but with $\mu_i = \alpha + \gamma^\top X_i$, then we could let our target be $\gamma_{\mathcal{S}}$, which is different than~\eqref{eq:selected_model_target}. Since for the genomic applications $p>n$, one would need to make a lot of further assumptions (e.g., sparsity) to be able to estimate or do inference for $\gamma_{\mathcal{S}}$.
+
+	Thus we mostly discuss feasible approaches towards estimation of target~\eqref{eq:selected_model_target}.
+
+	\begin{enumerate}
+		\item {\bf Censoring:} In this case, the univariate idea conceptually directly extends to the multivariate target. However, the details become a bit more difficult. 	We let $\mathcal L_{\beta_{\mathcal{S}}} (\hat{\beta}_{\mathcal S}| t_j > c \text{ for } j \in \mathcal{S}, t_j < c \text { for } j \notin \mathcal{S})$ be the conditional distribution of $\hat{\beta}_{\mathcal{S}}$. Using this distribution, we can perform hypothesis tests based on $\hat{\beta}_{\mathcal S}$. The primary challenge is that this likelihood relies on the entire joint regression vector $\beta$, and computing this likelihood may be difficult. However, since we are only interested in pointwise intervals for $\beta_{\mathcal{S},j}$. computation becomes tractable again: \citet{lee2014exact} carries out the details of the computation; also see~\citet{lee2016exact} for the same idea in the context of selection by the Lasso.
+		\item {\bf Bayes:} Under the general model~\eqref{eq:normal_model} it seems difficult to apply Bayes here; one may need to define a prior on $\mu$ so that a posterior will be induced on all possible selective targets $\beta_{\mathcal{S}}$. One way to achieve this is if we are willing to assume that the linear model is well-specified (and seek to estimate the regression coefficients in the full linear model or~\eqref{eq:selected_model_target}), then we can implement Bayes: for example, we could first assume that the components of $\beta$ from the full, joint regression are i.i.d. from some distribution which we would fit from the data (Empirical Bayes). We would then compute intervals such that
+		$$ \mathbb P [{\beta_j \in \Gamma(t_j) | t}] \geq 1 - \alpha. $$
+		\item {\bf Data-splitting:}  The approach here directly generalizes to the multivariate case.
+	\end{enumerate}
+
+	
+
+
+
+

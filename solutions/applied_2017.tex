@@ -1,0 +1,319 @@
+\section{Applied 2017: Solution \footnote{Kenneth Tay, Stephen Bates, Nikos Ignatiadis, Isaac Gibbs, D.K.}}
+
+\subsection*{Problem 1: Bayesian Logistic Regression}
+Key ideas/tools:
+\begin{itemize}
+\item setting up hierarchical models
+\item the connection between the posterior mode and penalized estimation
+\end{itemize}
+
+\begin{enumerate}
+\item[(a)] The model is (treating $x_{ij}$ as fixed)
+\begin{equation}
+\beta \mid \tau \sim \calN(0, \tau^2 I_p), \qquad y_{ij} \mid \beta \stackrel{ind}{\sim} \text{Ber}(p_{ij}), \text{ where } \text{logit}(p_{ij}) = x_{ij}^\top\beta.
+\end{equation}
+
+\item[(b)] In this set-up, we are assuming that $X$ is fixed. Then the posterior is \begin{align*}
+p(\beta \mid y) &\propto p(\beta) p (y \mid \beta) \\ 
+&\propto \exp \left( - \frac{1}{2\tau^2} \|\beta\|^2 \right) \cdot \prod_{i,j} \left[\left( \frac{\exp (x_{ij}^T \beta)}{1 + \exp (x_{ij}^T \beta)} \right)^{y_{ij}} \left( \frac{1}{1 + \exp (x_{ij}^T \beta)} \right)^{1 - y_{ij}}\right] \\ 
+&= \exp \left( - \frac{1}{2\tau^2} \|\beta\|^2 \right) \cdot \prod_{i,j} \frac{\left[\exp (x_{ij}^T \beta) \right]^{y_{ij}}}{1 + \exp (x_{ij}^T \beta)}.
+\end{align*}
+
+Thus, the posterior distribution can be written as
+\begin{equation}\label{eq:posteriorBasketball}
+p(\beta \mid y) = \frac{\exp \left( - \frac{1}{2\tau^2} \|\beta\|^2 \right) \cdot \prod_{i,j} \frac{\left[\exp (x_{ij}^T \beta) \right]^{y_{ij}}}{1 + \exp (x_{ij}^T \beta)}}{\int_{\bbR^p} \exp \left( - \frac{1}{2\tau^2} \|\beta\|^2 \right) \cdot \prod_{i,j} \frac{\left[\exp (x_{ij}^T \beta) \right]^{y_{ij}}}{1 + \exp (x_{ij}^T \beta)} d \beta}.
+\end{equation}
+
+Computing the posterior mode of $\beta$ --also called the MAP (Maximum a-posteriori) estimator-- amounts to minimizing 
+\begin{equation}
+\label{eq:posterior_median}
+- \log p(\beta \mid y) = \frac{1}{2\tau^2} \|\beta\|^2 - \sum_{i,j} \left[ y_{ij} x_{ij}^T \beta - \log (1 + \exp(x_{ij}^T \beta)) \right].
+\end{equation}
+Notice the posterior mode is exactly equivalent to the maximizer of an $L_2$-penalized (Ridge) logistic regression. This is a convex problem and e.g., Newton-Raphson will converge rapidly.
+
+
+To estimate the posterior expectation of $\beta$ (or any function of the posterior distribution of $\beta$), we can use an MCMC algorithm, such as the Metropolis-Hastings (MH) algorithm. (The main idea with these algorithms is that we try to construct a Markov chain whose stationary distribution is the posterior distribution we want to sample from.) The algorithm gives us samples $\beta_1^s, \dots, \beta_n^s$ from the posterior distribution of $\beta$. We can then estimate $\bbE [\beta \mid y]$ with $\frac{1}{n}\sum_{i=1}^n \beta_i^s$.
+
+A simple way of doing MCMC here is with the independence MH algorithm using the fact that a Gaussian approximation is often quite good for the posterior in logistic regression. Concretely:
+$$\beta \mid y \stackrel{\cdot}{\sim} \nn\p{\tilde{\beta}, \tilde{H}},$$
+where a good choice of $\tilde{\beta}$ is the optimizer of \eqref{eq:posterior_median}. For $\tilde{H}
+$ we can use the inverse of the negative Hessian of~\eqref{eq:posterior_median} evalauted at the minimizer. 
+
+The independence MC algorithm then generates samples as follows (we write $q(\beta)$ is the density of $\nn\p{\tilde{\beta}, \tilde{H}}$):
+
+\begin{enumerate}
+\item Start with $\beta_0$.
+\item Draw $\beta \sim q$.
+\item Let $\alpha = \min\cb{1, (\pi_{\text{post}}(\beta)/q(\beta)) \big/ (\pi_{\text{post}}(\beta_0)/q(\beta_0))}$, where $\pi_{\text{post}}(\beta)=p(\beta| y)$ is given by \eqref{eq:posteriorBasketball}).
+\item Let $\beta_1 = \beta$ with probability $\alpha$, else $\beta_1 = \beta_0$.
+\item Repeat for $j=2,\dotsc$
+\end{enumerate}
+
+\citet*[Chapter 3]{rossi2005bayesian} recommend using a multivariate t-distribution with say $6$ degrees of freedom and mean/covariance as above instead of the Normal proposal.
+
+
+
+Note that other answers besides the Independence MH can give full credit. Standard Metropolis-Hastings algorithms where the proposal distribution $q(\cdot )$ is centered about the current value $\beta_j$, would also be a reasonable way to estimate the posterior mean (as long as the proposal distributions aren't too narrow or wide, but this can be checked with trace plots). What about \textbf{Gibbs} sampling? For Probit regression this can be done (i.e., with a probit instead of logit link) by data augmentation, cf. ~\citet{albert1993bayesian}. Coming up with such an algorithm for the logit link turned out be elusive until~\citet*{polson2013bayesian}.
+
+%\iffalse
+
+
+
+%\fi
+
+
+\item[(c)] One possible hierarchical model is
+\begin{align*}
+&\sigma \sim \text{HalfCauchy}(V)\\
+&\beta \sim \calN(0, \tau^2 I_p), \\ 
+&\beta_i | \beta \stackrel{iid}{\sim} \calN(\beta, \sigma^2 I_p)),  \\
+&y_{ij} | \beta_i \stackrel{ind}{\sim} \text{Ber}(p_{ij}), \qquad \text{logit}(p_{ij}) = x_{ij}^\top\beta_i.
+\end{align*}
+
+Our random coefficients are $\beta_i$, and the prior hyperparameters are $\beta$ and $\sigma$. $\beta$ and $\sigma$ themselves h itself has a have hyperparameters $\tau$ and $V$ respectively, which are assumed to be known.
+
+A hierarchical model makes sense as we can think of the players in our sample being drawn from some population players; by setting up a hierarchical model, we are able to pool strength across data from different players to obtain better estimates for our model.
+
+It may be useful to note that an alternative non-Bayesian approach to this modelling problem would be to use a random effects model. This would essentially take the same form as the hierarchical model above except that now $\beta$ and $\sigma$ would be treated as fixed parameters that need to be estimated. 
+
+\item[(d)] For each player $i$, by looking at the posterior distribution of $\beta_i$, we can do inference on how the various covariates affect their probability of making a shot. If player $i$ is on the opponent's team, they can see which covariates $x_{ij}$ are most important to $i$'s probability of scoring; they can then plan their defensive strategies to influence those particular covariate values. If player $i$ is on the opponent's team, they can try to improve the values of those $x_{ij}$ which matter.
+
+We expect players who are 1) most different from the average player and 2) for whom we do not have a lot of data (i.e., they took only a few shots) to have the largest differences in $\beta_i$. This is because they will experience greater shrinkage.
+
+\end{enumerate}
+	  
+
+% Problem 2
+\subsection*{Problem 2: Combining p-values}
+Key ideas/tools:
+\begin{itemize}
+\item Multiple testing
+\item False positives are binomially distributed when tests are independent
+\end{itemize}
+
+\begin{enumerate}
+\item[(a)] Let $X_1, \dots, X_{100}$ be the readings at the 100 sample points. 
+
+We are not told whether we should do a one-sided or two-sided test. By default one would always do a two-sided test, but one-sided is also plausible in this problem (e.g., if the investigators are only interested in detecting events that lead to the emission of many photons). If you were consulting, you would ask your collaborators to clarify. For the qual, you can pick either (or both); as long as you provide a quick justification!
+
+Let us do one-sided tests: Then, the smallest p-value would correspond to the receptor that measured $X_i=20$ photons. The p-value is:
+$$P_i = \PP{\text{Poisson}(10) \geq 20} = 1-0.9965 = 0.0035$$
+Since we are testing $100$ hypotheses, however, we need to apply a multiple testing correction. With a Bonferroni correction at $\alpha=0.05$ we would for example only reject hypotheses with $P_i \leq 5 \cdot 10^{-4}$, and so indeed we would not reject anything and report back to the investigators that no receptor ended up being significant. Unfortunately, other corrections, such as Benjamini-Hochberg, also would lead to no significant results at the 0.05 level, see R code below:
+
+\begin{minted}{R}
+Xs <- seq(0,20)
+Ns <- c(0,0,1,0,3,2,9,7,11,11,8,8,13,7,5,5,2,3,1,3,1)
+pvals <- rep(1 - ppois(1:21 - 1, 10, Ns[1:21]))
+adjusted_pvals <- p.adjust(pvals, method="BH")
+min(adjusted_pvals) #0.08635855
+\end{minted}
+
+
+
+\item[(b)] For each $i$, let $R_i = 1$ if we reject the null $X_i \sim \text{Pois}(10)$ at the 5\% level, $R_i = 0$ otherwise. Let $T = \displaystyle\sum_{i=1}^{100} R_i$. We assume that $R_i$ are independent; this is plausible since the receptors are placed at ``widely scattered'' points and so, under the global null, $T \sim \text{Binom}(100, 0.05)$ (In the setting of this problem we know the exact null distribution but in other applied qual problems we may only know $T$ is stochastically smaller than $\text{Binom}(100, 0.05)$). Based on the table on the right, we reject the global null at the 5\% level if $T > 9$.
+
+Let us check how many rejections we got at $\alpha =0.05$: $X_i = 16$ would lead to (1-sided) p-value of $1-0.9513=0.0487$, while $X_i=15$ would lead to a p-value $>0.05$. Thus, $R_i = \#\cb{i: X_i \geq 16} = 2 +3 + 1 + 3+ 1 = 10$ and we can (barely) reject the global null hypothesis\footnote{Note that if we had computed 2-sided p-values, then we would not have rejected the global null hypothesis.}.
+
+What does this tell us? It provides evidence that at least one of the 100 receptors detected ``something''. In this sense, it counts and could be helpful information for the investigators, e.g., if they want to continue investigating.
+
+On the other hand, from a multiple testing perspective, it does not count: we still cannot tell which receptor is the culprit (``detection'' is easier than ``localization''); at least if we are interested in the guarantee that with high probability we make no false discovery. If, after looking at the data, we pick the most significant values and ask whether they are truly significant or not, we need to account for selection effects through some $p$-value adjustment.
+
+Note that in a situation as the present one, an intermediate approach would be to try to `pool' receptors, say if we can group them according to geographic regions. Then we could compute a (combined) p-value for each group of receptors and perhaps one of the groups would come up as significant. This would be a starting point for the investigators to pinpoint what happened.
+
+\end{enumerate}
+	  
+
+% Problem 3
+\subsection*{Problem 3: Disentangling Days of the Week}
+Key tools/ides:
+\begin{itemize}
+\item formulating the problem as a linear model
+\end{itemize}
+
+First, let's focus on estimating the fraction of weekly sales attributable to each day of the week for a particular country and a particular retail segment (i.e. online or retail). Let the weekly sales be denoted by $W_1, \dots, W_{156}$, and let the monthly sales be denoted by $M_1, \dots, M_{36}$.
+
+Let $p_1, \dots, p_7$ denote the fraction of weekly sales attributable to Monday, $\dots$, Sunday. Note that for each monthly sales figure, we can determine which weeks fell completely within that month. This allows us to subtract the sales for those weeks, and we can model the residual sales figure as a linear combination of the $p_i$'s. To illustrate, assume that $M_1$ has 30 days, and that it starts on a Wednesday and ends on a Thursday. Then we can model
+\begin{equation}\label{eq:2017Q3_month_update}
+M_1 - W_2 - W_3 - W_4 =  (p_3 + \dots + p_7) W_1 + (p_1 + \dots + p_4) W_5+ \eps.
+\end{equation}
+
+We can write such equations for each of the 36 months, resulting in a linear regression model that we can fit by least squares. Note that we could also incorporate the constraints that the $p_i$ lie on the probability simplex, i.e., $\sum p_i = 1$ and $p_i \geq 0$. 
+
+One possible limitation of this model is that months where the first or last has a major holiday could be outliers (e.g. stores may be closed on New Year's day). If your manager wants to know the fraction of weekly sales attributable to each day of the week in a typical week, then you may want to remove months for which the first or last week contains a holiday, but it sounds like you are being asked to estimate on average the fraction of weekly sales attributable to each week in which case, holidays should count towards that average.
+
+What about inference and comparison across countries/retail segments? Let us say we want to compare $p_{1,i}$ vs $p_{1,j}$, where $i,j$ correspond to two different country/retail segment combinations. The procedure described above provides us with a point estimate:
+$$\widehat{\Delta p}_1 = \widehat{p}_{1,i} - \widehat{p}_{1,j}.$$
+To conduct inference, we could try to estimate the standard error of $\widehat{\Delta p_1}$. One way to do this would be to use a block bootstrap on the regression by month. This should help account for the dependencies both between months that have overlapping weekly data and due to autocorrelations that exist in the daily data.\\
+
+ More precisely, let $\{(X^{i}_t,Y^{i}_t)\}_{1 \leq t \leq T}$ and  $\{(X^{j}_t,Y^{j}_t)\}_{1 \leq t \leq T}$ denote the covariate response pairs for the $i_{th}$ and $j_{th}$ country/retail segments formed using (\ref{eq:2017Q3_month_update}). Then, in a block bootstrap we would split the time frame $1 \leq t \leq T$ into $B$ contiguous blocks. In each bootstrap sample we could re-sample $B$ of the blocks of time with replacement to get new bootstrap samples for the sales in the $i_{th}$ and $j_{th}$ segments. Note that here we use the \textbf{same} times for both the $i_{th}$ and $j_{th}$ segments. This will help preserve any dependencies between the sales in the two segments. In each bootstrap sample we could then re-compute the statistic $\widehat{\Delta p}_1^*$ and then form a bootstrap confidence interval for $\Delta p_1$ by looking at the quantiles of $\widehat{\Delta p}_1^* - \widehat{\Delta p}_1$. 
+ 
+
+
+
+
+
+% Problem 4
+\subsection*{Problem 4: Ranking Sports Teams}
+Key tools/ides:
+\begin{itemize}
+\item formulating the problem as a GLM
+\end{itemize}
+
+\begin{enumerate}
+\item[(a)] This is a possible approach, in that we expect good teams to obtain higher scores than bad teams. However, it does have a number of weaknesses:
+\begin{itemize}
+\item Obtaining a high score is not the objective of a game; winning is. While the two are correlated, they are not the same.
+
+\item It does not take the strength of the opponent into account. Obtaining a high score against a strong opponent should count for more than obtaining a high score against a weak opponent. While the approach would be reasonable if each team played all of the other teams the same number of times per season, but we are told that each team only plays a subset of the other teams each season.
+\end{itemize}
+
+\item[(b)] Let there be a total of $n$ games and $p$ teams. Let $\beta_j$ be the strength of team $j$, where a larger value of $\beta_j$ represents a stronger team. For each game $i$, let $Y_{i, \text{home}(i)}$ and $Y_{i, \text{away}(i)}$ be the number of points the home and away teams scored respectively. One possible model is to only model which team won and use the Bradley-Terry model:
+\begin{equation}\label{eqn:4b}
+\text{logit}\p{ \PP{ Y_{i, \text{home}(i)} > Y_{i, \text{away}(i)}}} = \beta_{\text{home}(i)} - \beta_{\text{away}(i)}.
+\end{equation}
+
+
+Note that the model as stated is actually unidentifiable: shifting all the $\beta_i$'s by a constant $c$ gives the same fit. To make it identifiable, we could set $\beta_j = 0$ for some $j$.
+
+
+
+
+An alternative is to more directly model the scores. For example, we could use an cumulative logit model for the values of $Y_{i, \text{home}(i)}  - Y_{i, \text{away}(i)}$. e.g. suppose $Y_{i, \text{home}(i)}  - Y_{i, \text{away}(i)} \in \{-k,-k+1,\dots,k-1,k\}$. Then, we could use the model
+\[
+\forall -k \leq j \leq k-1,\ \text{logit}\left(\mmp(Y_{i, \text{home}(i)}  - Y_{i, \text{away}(i)} \leq j)\right) = \alpha_j + \beta_{\text{away}(i)} -  \beta_{\text{home}(i)}.
+\]
+This could work well in low-scoring games that have only a few possible values for $Y_{i, \text{home}(i)}  - Y_{i, \text{away}(i)}$. One should note that the current parametrization of this model does not treat the home and away teams symmetrically. If we want to treat the two teams symmetrically we should require that
+\[
+\text{logit}\left(\mmp(Y_{i, \text{away}(i)}  - Y_{i, \text{home}(i)} \leq j)\right) = \alpha_j + \beta_{\text{home}(i)} -  \beta_{\text{away}(i)}.
+\]
+In our current model we have that 
+\begin{align*}
+\text{logit}\left(\mmp(Y_{i, \text{away}(i)}  - Y_{i, \text{home}(i)} \leq j)\right) & = \text{logit}\left(\mmp(Y_{i, \text{home}(i)}  - Y_{i, \text{away}(i)} > -j  -1)\right)\\
+& = -\alpha_{-j-1} + \beta_{\text{home}(i)} -  \beta_{\text{away}(i)}.
+\end{align*}
+So to enforce the desired symmetry we should require that $-\alpha_{-j-1} = \alpha_j$ for all $j$. 
+
+
+\item[(c)] We can introduce a parameter $\alpha$ for ``home-field advantage''. For example for the Bradley-Terry model:
+\begin{equation*}
+\text{logit}\p{ \PP{ Y_{i, \text{home}(i)} > Y_{i, \text{away}(i)}}} = \alpha + \beta_{\text{home}(i)} - \beta_{\text{away}(i)}.
+\end{equation*}
+Alternatively, in the cumulative logit model we could remove the symmetry constraint.
+
+\item[(d)] 
+
+Consider the undirected graph where each team is a node and we draw an edge between teams if they have played each other. Fitting, e.g., \eqref{eqn:4b} is a problem if this graph has more than 1 connected component, since again we have the same identifiability problem discussed earlier: We can shift the ``ability'' $\beta$ of the teams in each component by an arbitrary amount, and the model would be the same. To get identifiability, we would need to anchor a team in each component, to e.g., $\beta_j=0$. Since this anchoring is arbitrary, we can however not compare coefficients across components: If Duke is in the same connected component as Stanford, then we could compare their coefficients, otherwise not. 
+
+If we \emph{really} want to try to make a guess about Stanford Vs Duke and they are not in the same connected component, this could perhaps be possible if we are willing to assume that two teams $j,j'$ across the two components have the same skill. Then we could set these two teams as the baseline in each component.
+	  	
+\end{enumerate}
+
+
+% Problem 5
+\subsection*{Problem 5: Do I Need to Use Bonferroni?}
+Key ideas/tools:
+\begin{itemize}
+\item different tests have different purposes
+\item p-values must be interpreted in context
+\end{itemize}
+
+Assume we are testing hypotheses $H_1, \dots, H_n$ at the same level $\alpha$, say $\alpha=0.05$. Then applying the Bonferroni correction controls the family-wise error rate (FWER), i.e. the probability of at least 1 false rejection is $\leq \alpha$. FWER is fundamentally a conservative criterion, protecting against just 1 false rejection. This often leads to very few or no rejections, as well as an increase the Type II error rate. 
+
+A middle-of-the-road approach is to apply the Bonferroni correction to sets of tests that have the same objective. For example, in marginal testing for differential expression of genes, we are looking for a subset of genes which are differentially expressed among healthy and diseased subjects, so it makes sense to do multiple testing correction. On the other hand, it does not make sense to apply a multiple testing correction to all hypothesis tests one has ever done over their entire career.
+
+In $S$'s situation, even though the 3 hypothesis tests were grouped together in the same paper, they are testing fundamentally different scientific objectives. Hence, a Bonferroni correction across these $p$-values does not seem appropriate.
+
+Furthermore, it appears that the scientist is conscientious and would report the finding only if $P_{\text{Negative}} > \alpha$, $P_{\text{Confirm}} < \alpha$ and $P_{\text{New}} < \alpha$. However, the announced discovery, only corresponds to the ``New'' experiment. In particular, from the scientists perspective, the interest is not to announce ``New'' if it is null. Let us say it is null though, then the probability of making a type-I error is:
+$$ \PP{ \text{``New'' discovered}} = \PP{ P_{\text{New}} < \alpha, P_{\text{Confirm}} < \alpha, P_{\text{Negative}} > \alpha} \leq \PP{ P_{\text{New}} < \alpha } \leq \alpha $$
+So indeed it appears that the scientist is more conservative than most by doing these additional checks while running the experiment.
+
+In summary, I would tell $S$ that the reviewers were wrong and suggest that she argue to the reviewers and editors that a Bonferroni correction is not needed in her case because (i) only one new variant of the disease model is being consider (not 3 new ones) and because (ii) the approach of running ``Confirm" and ``Negative" and making sure they are significant and not significant (respectively) is actually conservative. If $S$'s paper is still rejected, I would suggest she present the 3 p-values in different sections of the paper (e.g. the ``Confirm" and ``Negative" can be presented in the methods section while ``New" could be presented in the results section), so that future reviewers do not make the same mistake.
+
+% Problem 6
+\subsection*{Problem 6: A Gaussian Hierarchical Model}
+Key ideas/tools:
+\begin{itemize}
+\item computations involving convolved Gaussians
+\item computing the Bayes risk
+\end{itemize}
+
+We assume that the $g_i \mid s$ are conditionally independent of each other.
+
+\begin{enumerate}
+\item[(a)] 
+\begin{align*}
+p(s \mid g_1, g_2) &= \frac{p(s, g_1, g_2)}{p(g_1, g_2)} = \frac{p(g_1, g_2 \mid s) p(s)}{\int p(g_1, g_2 \mid s) p(s) ds} \\ 
+&\propto p(g_1 \mid s) p(g_2 \mid s) p(s),
+\end{align*}
+where we have used the assumption on independence of conditional distributions. Using the distributions given in the question,
+\begin{align*}
+p(g_1 \mid s) p(g_2 \mid s) p(s) &\propto \exp \left[ - \frac{[g_1 - (s+\Delta)]^2}{2\sigma^2} - \frac{[g_2 - (s-\Delta)]^2}{2\sigma^2} - \frac{s^2}{2} \right] \\ 
+&\propto \exp \left\{ - \frac{1}{2\sigma^2} \left[ (2 + \sigma^2)s^2 - 2(g_1 + g_2) s \right] \right\} \\ 
+&\propto \exp \left\{ - \frac{2 + \sigma^2}{2\sigma^2} \left[ s^2 - 2 \frac{g_1 + g_2}{2 + \sigma^2} s \right] \right\} \\ 
+&\propto \exp \left[ - \frac{2 + \sigma^2}{2\sigma^2} \left( s - \frac{g_1 + g_2}{2 + \sigma^2} \right)^2 \right].
+\end{align*}
+
+Hence, the posterior distribution of $s \mid g_1, g_2$ is $\text{Normal}\left( \dfrac{g_1 + g_2}{2 + \sigma^2}, \dfrac{\sigma^2}{2 + \sigma^2} \right)$.
+
+\item[(b)] The fastest way to do this problem is just to immediately notice that the Bayes risk is equal to the expected posterior variance. i.e.
+\[
+\mme[(\hat{s} - s)^2] = \mme[\mme[(\hat{s} - s)^2|g_1,g_2]] = \mme[\text{Var}(s|g_1,g_2)] = \frac{\sigma^2}{2+\sigma^2}.
+\]
+If you did not notice this fact then you could instead do the brute force computation, which would go as follows. Given $s$, we have
+\begin{align*}
+\bbE_{g_1, g_2} \left[ \dfrac{g_1 + g_2}{2 + \sigma^2} \right] &= \frac{s + \Delta + s - \Delta}{2 + \sigma^2} = \frac{2s}{2 + \sigma^2}, \\ 
+\bbE_{g_1, g_2} \left[ \left(\dfrac{g_1 + g_2}{2 + \sigma^2}\right)^2 \right] &= \frac{(\sigma^2 + (s + \Delta)^2) + (\sigma^2 + (s - \Delta)^2) + 2 (s + \Delta)(s - \Delta) }{(2 + \sigma^2)^2} \\ 
+&= \frac{2\sigma^2 + 4s^2}{(2 + \sigma^2)^2}.
+\end{align*}
+
+Thus, the Bayes risk with squared error loss is given by
+\begin{align*}
+\bbE_{s, g_1, g_2} \left[ \left( \bbE [s \mid g_1, g_2] - s \right)^2 \right] &= \int_{-\infty}^\infty \left[\frac{2\sigma^2 + 4s^2}{(2 + \sigma^2)^2} - 2s \frac{2s}{2 + \sigma^2} + s^2 \right] \phi(s)ds \\ 
+&= \int_{-\infty}^\infty \frac{2 \sigma^2 + \sigma^4 s^2}{(2 + \sigma^2)^2} \phi(s) ds \\ 
+&= \frac{2\sigma^2}{(2 + \sigma^2)^2} + \frac{\sigma^4}{(2 + \sigma^2)^2} = \frac{\sigma^2}{2 + \sigma^2}.
+\end{align*}
+
+\item[(c)] A fast way to do this question is to notice that $g_3 \stackrel{D}{=} s+z$ where $z \sim N(0,\sigma^2)$ is independent of $s,\ g_1,$ and $g_2$. We already  calculated the distribution of $s|g_1,g_2$ in part a). Moreover, conditional on $g_1,g_2$ we have that $z \perp s$ with $z \sim N(0,\sigma^2)$. Thus,
+\[
+g_3 \stackrel{D}{=} s+z =\text{Normal}\left( \dfrac{g_1 + g_2}{2 + \sigma^2}, \dfrac{\sigma^2}{2 + \sigma^2} \right) + N(0,\sigma^2) = \text{Normal}\left( \dfrac{g_1 + g_2}{2 + \sigma^2}, \dfrac{\sigma^2(3+\sigma^2)}{2 + \sigma^2} \right).
+\]
+Alternatively, one can also derive this result by a direct calculation of the posterior distribution as follows.
+\begin{align*}
+p(g_3 \mid g_1, g_2) &= \int_s p(g_3 \mid s, g_1, g_2) p(s \mid g_1, g_2) ds \\ 
+&= \int_s p(g_3 \mid s) p(s \mid g_1, g_2) ds \\ 
+&\propto \int_{-\infty}^\infty \exp \left[ - \frac{(g_3 - s)^2}{2 \sigma^2} - \frac{2+\sigma^2}{2\sigma^2} \left( s - \frac{g_1 + g_2}{2 + \sigma^2} \right)^2 \right] ds \\ 
+&\propto \int_{-\infty}^\infty \exp \left\{ -\frac{1}{2\sigma^2} \left[ (g_3 - s)^2 + (2 + \sigma^2)s^2 - 2 (g_1 + g_2)s \right] \right\} ds \\ 
+&= \exp \left( - \frac{g_3^2}{2\sigma^2} \right) \int_{-\infty}^\infty \exp \left\{ -\frac{1}{2\sigma^2} \left[ (3 + \sigma^2)s^2 - 2(g_1 + g_2 + g_3)s \right] \right\} ds \\ 
+&\propto \exp \left( - \frac{g_3^2}{2\sigma^2} \right) \exp \left[ \frac{3 + \sigma^2}{2\sigma^2} \left( \frac{g_1 + g_2 + g_3}{3 + \sigma^2} \right)^2 \right]  \\ &\qquad \cdot \int_{-\infty}^\infty \exp \left[ -\frac{3 + \sigma^2}{2\sigma^2} \left( s - \frac{g_1 + g_2 + g_3}{3 + \sigma^2} \right)^2 \right] ds \\ 
+&\propto \exp \left[ - \frac{g_3^2}{2\sigma^2} + \frac{(g_1 + g_2 + g_3)^2}{2\sigma^2(3 + \sigma^2)} \right] \\ 
+&\propto \exp \left[ - \frac{2 + \sigma^2}{2\sigma^2 (3 +\sigma^2)} \left[ g_3^2 - 2\left( \frac{g_1 + g_2}{2 + \sigma^2}\right) g_3 \right] \right].
+\end{align*}
+
+Thus, the posterior predictive distribution is $\text{Normal}\left( \dfrac{g_1 + g_2}{2 + \sigma^2}, \dfrac{\sigma^2(3 + \sigma^2)}{2 + \sigma^2} \right)$.
+
+\item[(d)] A fast way to do this question is to note that observing $g_3$ is equivalent to observing $g_1 + \Delta$ and then to apply the result of part a). On the other hand, a brute force calculation would proceed as follows.
+ \begin{align*}
+p(s \mid g_2, g_3) &\propto p(g_2 \mid s) p(g_3 \mid s) p (s) \\ 
+&\propto \exp \left[ - \frac{[g_2 - (s-\Delta)]^2}{2\sigma^2} - \frac{(g_3 - s)^2}{2\sigma^2} - \frac{s^2}{2} \right] \\
+&\propto \exp \left\{ - \frac{1}{2\sigma^2} \left[ (2 + \sigma^2)s^2 - 2(g_2 + g_3 + \Delta) s \right] \right\} \\ 
+&\propto \exp \left[ - \frac{2 + \sigma^2}{2 \sigma^2} \left( s - \frac{g_2 + g_3 + \Delta}{2 + \sigma^2} \right)^2 \right].
+\end{align*}
+
+Hence, the posterior distribution of $s \mid g_2, g_3$ is $\text{Normal}\left( \dfrac{g_2 + g_3 + \Delta}{2 + \sigma^2}, \dfrac{\sigma^2}{2 + \sigma^2} \right)$.
+
+\item[(e)] Once again the fastest way to get the result is to observe that the Bayes risk is exactly the expected posterior variance. A slower brute force computation would go as follows. Given $s$, we have
+\begin{align*}
+\bbE_{g_2, g_3} \left[ \dfrac{g_2 + g_3 + \Delta}{2 + \sigma^2} \right] &= \frac{(s - \Delta) + s + \Delta}{2 + \sigma^2} = \frac{2s}{2 + \sigma^2}, \\ 
+\bbE_{g_2, g_3} \left[ \left(\dfrac{g_2 + (g_3 + \Delta)}{2 + \sigma^2}\right)^2 \right] &= \frac{(\sigma^2 + (s - \Delta)^2) + (\sigma^2 + (s + \Delta)^2) + 2 (s + \Delta)(s - \Delta) }{(2 + \sigma^2)^2} \\ 
+&= \frac{2\sigma^2 + 4s^2}{(2 + \sigma^2)^2}.
+\end{align*}
+
+Thus, the Bayes risk with squared error loss is given by
+\begin{align*}
+\bbE_{s, g_2, g_3} \left[ \left( \bbE [s \mid g_2, g_3] - s \right)^2 \right] &= \int_{-\infty}^\infty \left[\frac{2\sigma^2 + 4s^2}{(2 + \sigma^2)^2} - 2s \frac{2s}{2 + \sigma^2} + s^2 \right] \phi(s)ds \\ 
+&= \frac{\sigma^2}{2 + \sigma^2},
+\end{align*}
+which is the same as the Bayes risk we got in (b). This makes sense: since the bias $\Delta$ is known, observing $g_3$ gives exactly the same information as observing $g_3 + \Delta$, which has the same conditional distribution as $g_1$.
+
+	  	
+\end{enumerate}

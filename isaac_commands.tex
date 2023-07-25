@@ -1,0 +1,33 @@
+\usepackage[ruled,vlined]{algorithm2e}
+
+\newcommand\independent{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+
+\newcommand{\mme}[0]{\mathbb{E}}
+\newcommand{\mmp}[0]{\mathbb{P}}
+\newcommand{\mmr}[0]{\mathbb{R}}
+\newcommand{\mmn}[0]{\mathbb{N}}
+\newcommand{\mmq}[0]{\mathbb{Q}}
+\newcommand{\mmz}[0]{\mathbb{Z}}
+\newcommand{\bone}[0]{\mathbbm{1}}
+
+\newcommand{\mcf}[0]{\mathcal{F}}
+\newcommand{\mcg}[0]{\mathcal{G}}
+\newcommand{\mcb}[0]{\mathcal{B}}
+\newcommand{\mcx}[0]{\mathcal{X}}
+\newcommand{\mcl}[0]{\mathcal{L}}
+\newcommand{\mch}[0]{\mathcal{H}}
+\newcommand{\mcp}[0]{\mathcal{P}}
+\newcommand{\mcz}[0]{\mathcal{Z}}
+
+\DeclarePairedDelimiterX{\inp}[2]{\langle}{\rangle}{#1, #2}
+
+\newcommand{\wt}[0]{\widetilde{T}}
+
+\DeclareRobustCommand{\rchi}{{\mathpalette\irchi\relax}}
+\newcommand{\irchi}[2]{\raisebox{\depth}{$#1\chi$}} % inner command, used by \rchi
+\newcommand{\range}{\mathrm{range}}
+\newcommand{\kernel}{\mathrm{ker}}
+\newcommand{\reals}{\mathbb{R}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\logit}{\mathrm{Logit}}

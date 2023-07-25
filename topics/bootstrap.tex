@@ -1,0 +1,159 @@
+\section{The Bootstrap \footnote{This section was written by Isaac Gibbs (with light edits by Dan Kluger and M.H.)}}
+
+The bootstrap is one of the most useful tools that you can have under your disposal on the applied qual. Many questions ask you to test a null hypothesis for which there is no obvious standard test. In these cases a common approach is to first design a test statistic that you expect will behave differently under the null and alternative hypotheses and then turn this test statistic into a valid testing procedure by using the bootstrap to approximate its distribution under the null. This allows you to consider more complicated tests without performing extensive calculations. A second common application of the bootstrap is in problems with temporal or spatial correlations. Here a block bootstrap can help you  avoid modelling the correlation structure.
+
+As this is the \textit{applied} qual your focus should be on designing reasonable procedures that pass a high level inspection. You should always ask \textit{does this bootstrap procedure accurately mirror the data generating procedure?} In particular, the bootstrap relies on an i.i.d. assumption which is often violated in applications. If you can provide a reasonable answer to the above question, then you don't need to worry about the technicalities. That being said, we have included some comments on theory of the bootstrap. This is put at the end of this section, feel free to skip over it.
+
+\subsection{The different kinds of bootstraps}
+
+The key idea behind the bootstrap is to create simulated data by resampling our data set \emph{with replacement} many times. By re-running our statistical procedure on the simulated data we can get an estimate for the variation in our statistical procedure. This in turn can give us a confidence interval for a parameter of interest. 
+
+
+\subsubsection*{The core procedure}\label{sec:the_standard_bootstrap}
+
+
+The main bootstrap procedure is presented below. It is also the primary procedure you should consider using when answering qual questions. When we refer to ``the bootstrap'' this is the procedure we are referring to.
+
+Suppose we have data $X_1,\dots,X_n \simiid P_{\theta}$ where $\theta \in \mmr$ is a one-dimension parameter for which we would like a confidence interval. If we have a procedure that produces point estimates $\hat{\theta} = \hat{\theta}(X_1,\dots,X_n)$, then we can get a confidence interval for $\theta$ by ``bootstrapping'' $\hat{\theta}$. 
+\begin{enumerate}
+\item
+    For $b=1,2,\dots,B$: Let $\{X^b_i\}_{1 \le i \le n}$ be an i.i.d. sample from the uniform distribution on  $\{X_i\}_{1 \le i \le n}$. Use $\{X^b_i\}_{1 \le i \le n}$ to compute an estimate $\hat{\theta}^*_b$ of $\theta$.
+\item
+  Let $\hat{q}(\alpha/2)$ and $\hat{q}(1-\alpha/2)$ and be the empirical $\alpha/2$ and $1-\alpha/2$ quantiles of $\{\hat{\theta}^*_b - \hat{\theta}\}_{1 \leq b \leq B}$. 
+  \item
+  Return the confidence interval $\hat{C} = [\hat{\theta} - \hat{q}(1-\alpha/2), \hat{\theta} - \hat{q}(\alpha/2)]$. 
+\end{enumerate}
+Under standard assumptions we will have that $\lim_{n \to \infty} \mmp(\hat{\theta} \in  \hat{C} ) = 1-\alpha$. At a high level the reason why this works is that the uniform distribution on $\{X_i\}_{1 \le i \le n}$  is a good approximation to $P_{\theta}$ and therefore the distribution of $\hat{\theta}^*_b -\hat{\theta}$ is very close to that of $\hat{\theta} - \theta$. Note that we are approximating the distribution of the \emph{difference} $\hat{\theta}-\theta$, and we are not directly approximating the distribution of $\hat{\theta}$. 
+
+\subsubsection*{The percentile bootstrap}
+
+The percentile bootstrap is actually the original bootstrap that was proposed by Brad in his 1979 paper \cite{efron79}. In contrast to the standard bootstrap, this method calculates the empirical quantiles of $\{\hat{\theta}^*_b:1 \le b \le B\}$ instead of $\{\hat{\theta}^*_b-\hat{\theta} : 1 \le b \le B\}$. Again, step 1 is the same as in the standard bootstrap, but steps 2 and 3 become,
+\begin{enumerate}[label={\arabic*$'.$},start=2]
+\item
+  Let $\tilde{q}(\alpha/2)$ and $\tilde{q}(1-\alpha/2)$ and be the empirical $\alpha/2$ and $1-\alpha/2$ quantiles of $\{\hat{\theta}^*_b \}_{1 \leq b \leq B}$. 
+  \item
+  Return the confidence interval $\tilde{C} = [ \tilde{q}(\alpha/2),  \tilde{q}(1-\alpha/2)]$. 
+\end{enumerate}
+Although they look similar, the percentile and standard bootstraps give different results. The transformation $z\mapsto z-\hat{\theta}$ is monotone and therefor,
+\begin{align*}
+  \tilde{q}(\alpha/2)&=\mathrm{Quantile}_{\alpha/2}(\{\hat{\theta}_b^* \}_{1 \le b \le B}) \\
+  &=\mathrm{Quantile}_{\alpha/2}(\{\hat{\theta}_b^*-\hat{\theta} \}_{1 \le b \le B}) + \hat{\theta}\\
+  &=\hat{q}(\alpha/2) + \hat{\theta},
+\end{align*}
+and, by the same reasoning 
+\[\tilde{q}(1-\alpha/2) = \hat{q}(1-\alpha/2)+\hat{\theta}.\]
+The percentile bootstrap confidence interval is therefore 
+\[\tilde{C} = [\hat{q}(\alpha/2)+\hat{\theta}, \hat{q}(1-\alpha/2)+\hat{\theta}], \]
+which is not the same as the core bootstrap confidence interval,
+\[\hat{C} = [\hat{\theta} - \hat{q}(1-\alpha/2), \hat{\theta} - \hat{q}(\alpha/2)].\]
+The difference between these two intervals is biggest when the distribution of $\hat{\theta}-\theta$ is asymmetric. If the limiting distribution of $\hat{\theta}-\theta$ is skewed, then only the standard bootstrap will gives asymptotically valid confidence intervals.
+
+
+The percentile bootstrap is however useful when there is no target parameter $\theta$ that you are trying to estimate. In these cases we cannot look at the difference $\theta - \hat{\theta}$, so the standard bootstrap doesn't make sense. For example, you may be trying to study the null distribution of a test statistic $T$. In this case, there may not be a true value $T^*$ that you expect $T$ to concentrate around. However, the percentile bootstrap can still be an intuitively reasonable way to ascertain the quantiles of $T$\footnote{Rigorously justifying the use of the percentile bootstrap in these instances is non-trivial, but can usually be done.}.
+
+
+
+\subsubsection*{Bootstrapping to find the standard deviation}
+
+Some applied qual problems explicitly ask you to use the bootstrap to find the standard deviation of $\hat{\theta}$. In this case step 1 is still the same, but we replace steps 2 and 3 with
+\begin{enumerate}[label={\arabic*$''.$},start=2]
+\item 
+Let $\hat{\sigma}$ be the empirical standard deviation of $\{\hat{\theta}^*_b - \hat{\theta} \}_{1 \leq b \leq B}$.
+\item
+Return the confidence interval $\hat{C} = [\hat{\theta} - z_{1-\alpha/2}\hat{\sigma}, \hat{\theta} + z_{1-\alpha/2}\hat{\sigma}]$.
+\end{enumerate}
+This procedure is usually valid whenever $\hat{\theta} - \theta$ is asymptotically normal. I would advise you to only use this procedure if a question explicitly asks for it.
+
+To summarize so far, the core bootstrap is correct in most settings. The percentile bootstrap is correct when the limiting distribution of $\hat{\theta}-\theta$ is symmetric and the standard deviation bootstrap is correct when the limiting distribution of $\hat{\theta}-\theta$ is normal.
+
+
+
+
+\subsubsection*{The parametric bootstrap}
+
+Instead of sampling $X_i^b$ from the uniform distribution we could instead consider sampling $X_i^b$ from $P_{\hat{\theta}}$. This is known as the \textit{parametric} bootstrap. The procedure is useful for testing a composition hypothesis $H_0:X_i \simiid P_\theta$ for some $\theta \in \Omega$. To use the procedure you need to be able to sample from $P_{\theta_0}$ for a fixed value of $\theta_0$. The parametric bootstrap proceeds as follows. 
+
+\begin{enumerate}[start = 0]
+  \item Choose a test statistic $T = T(X_1,\ldots,X_n)$ that should show deviations from the composite null $X_i \simiid P_\theta$ for some $\theta \in \Omega$. 
+  \item Let $\hat{\theta}$ be a consistent estimator for $\theta$ under the null $H_0$ (e.g. the MLE). For $1 \le b \le B$ sample $\{X_i^b\}_{1 \le i \le n}$ i.i.d. from $P_{\hat{\theta}}$. 
+  \item Calculate $T^*_b= T(X_1^b,\ldots, X_n^b)$.
+  \item If $T$ is in the top $\alpha$ proportion of $\{T,T_1^*,\ldots,T_B^*\}$, then reject $H_0$ at significance level $\alpha$.
+\end{enumerate}
+
+The above is not a valid testing procedure because $T,T_1^*,\ldots,T_B^*$ are not exchangeable under the null. However, it can still be used to give evidence against the null. For a similar testing procedure which is valid, see \cite{BarberGoF}.
+
+\subsubsection*{The block bootstrap}
+
+Suppose now that $X_1,\dots,X_n$ are dependent. The most common example of this is that $X_1,\dots,X_n$ are a time series with $\text{Cov}(X_i,X_j)$ a decreasing functions of $|i-j|$. The bootstrap sampling methods outlined above treat the data as an i.i.d. sample and thus will fail to give accurate confidence intervals. A better procedure to use in these instances is the block bootstrap. This method accounts for the correlation structure by sampling contiguous blocks of the data. In the simplest version of this procedure the data is divided into $M$ non-overlapping blocks of approximately equal size. Bootstrap samples are then generated by sampling $M$ blocks with replacement.\footnote{ This procedure is often referred to as the non-overlapping block bootstrap. It is just one type of block bootstrap.}  
+
+As in all bootstraps it is critical that the sampling procedure correctly mirrors the way in which the original data were generated. In this case, this means that the bootstrap method needs to correctly model the dependence structure of the data. So, for example, if $X_1,\dots,X_n$ are a time series in which the size of the dependence between $X_i$ and $X_j$ decays with $|i-j|$ we could use the temporally adjacent blocks $\{X_1,\dots,X_{n/M}\},\{X_{n/M+1},\dots,X_{2n/M}\},\{X_{n-n/M+1},\dots,X_n\}$. Alternatively, if the data are spatially correlated we may instead look to form blocks of spatially adjacent points. 
+
+\subsection{The bootstrap in linear regression}
+
+As a case-study we consider bootstrapping for the linear model. In particular, suppose we have data $(X_1,Y_1),\dots,(X_n,Y_n)$, and we fit the standard linear model $Y_i = X_i^\top\beta + \varepsilon_i$ with $\beta \in \reals^p$. Let's consider the problem of forming a confidence interval for $\beta_j$, the $j$th coordinate of $\beta$. We consider two procedures based on the OLS estimate $\hat{\beta} = (X^\top X)^{-1}X^\top Y$.
+
+\subsubsection*{Bootstrapping pairs}
+One way to get a confidence interval for $\beta_j$ is by \emph{bootstrapping pairs}. We proceed as follows
+\begin{enumerate}
+\item
+ For $b=1,2,\dots,B:$ Let $\{(X^b_i,Y^b_i)\}_{1 \le i \le n}$ be an i.i.d. sample from the uniform distribution on $\{(X_i,Y_i)\}_{1 \le i \le n}$. Let 
+ \begin{align*}
+ \hat{\beta}^b &= (X(b)^\top X(b))^{-1} X(b)^\top Y(b), \\
+ s_b &= \sqrt{\frac{1}{n-p} \sum_{i=1}^n (Y_i^b - (X_i^b)^\top\hat{\beta}^b)^2},\\
+ t_b^* &= \frac{\hat{\beta}^b_j - \hat{\beta}_j}{s_b\sqrt{[(X(b)^\top X(b))^{-1}]_{jj}} },
+ \end{align*}
+ where $X(b)$ is the feature matrix with rows $X_i^b$ and $Y(b)$ is the response vector with entries $Y_i^b$. 
+\item
+  Let $\hat{q}(\alpha/2)$ and $\hat{q}(1-\alpha/2)$ and be the empirical $\alpha/2$ and $1-\alpha/2$ quantiles of $\{t_b^* : 1 \le b \le B\}$. 
+  \item
+  Return the confidence interval \[\hat{C} = [\hat{\beta}_j - \hat{q}(1-\alpha/2)s\sqrt{[(X^\top X)^{-1}]_{jj}}  , \hat{\beta}_j - \hat{q}(\alpha/2) s\sqrt{[(X^\top X)^{-1}]_{jj}}]\] where
+  \[
+  s := \sqrt{\frac{1}{n-p} \sum_{i=1}^n (Y_i - X_i^\top \hat{\beta})^2}.
+  \]
+\end{enumerate}
+
+\subsubsection*{Bootstrapping residuals} 
+
+\emph{Bootstrapping residuals} gives a different way to do step 1. 
+\begin{enumerate}[label={\arabic*$'.$},start=1]
+\item
+ For $b=1,2,\dots,B:$ Let $\hat{\varepsilon}_1,\dots,\hat{\varepsilon}_n$ denote the fitted residuals from the linear regression. Sample $\{\hat{\varepsilon}_i^b\}_{1 \le i \le n}$ from the uniform distribution on $\{\hat{\varepsilon}_i\}_{1 \le i \le n}$ and define
+ \[
+ Y_i^b = X_i^\top\hat{\beta} + \hat{\varepsilon}^b_i.
+ \]
+Let 
+\begin{align*}
+    \hat{\beta}^b &= (X^\top X)^{-1} X^\top Y(b), \\
+    s_b^* &= \sqrt{\frac{1}{n-p} \sum_{i=1}^n (Y_i^b - X_i^\top\hat{\beta}^b)^2},\\
+    t_b^* &= \frac{\hat{\beta}^b_j - \hat{\beta}_j}{s_b\sqrt{[(X^\top X)^{-1}]_{jj}} },
+    \end{align*}
+\end{enumerate}
+That is, instead of resampling pairs $(X_i,Y_i)$ we keep $X_i$ fixed and resample the residuals $\hat{\varepsilon}_i$. These resampled residuals in turn give us resampled $Y_i$. Once we have calculated $\{t_b^*\}_{1 \le b \le b}$, we proceed as in bootstrapping pairs. 
+
+In both procedures, we used the bootstrap samples to calculate the t-statistics $t^*_b$. This is for somewhat technical reasons, but the main idea is when bootstrapping, the distribution of $\hat{\theta}^*_b$ may be ``far away'' from the distribution of $\hat{\theta}$ but the distribution of $\hat{\theta}^*_b - \hat{\theta}$ will be surprisingly close to the distribution of $\hat{\theta}-\theta$. When using the t-statistics we go one step further and use $(\hat{\theta}^*_b - \hat{\theta})/\widehat{\mathrm{SD}}(\hat{\theta}^*_b)$ to approximate the distribution of $(\hat{\theta}-\theta)/\widehat{\mathrm{SD}}(\hat{\theta})$. It turns out that this transformation is necessary for bootstrapping residuals but optional for bootstrapping pairs. On the applied qual, it would be safe to ignore this and work with $\hat{\beta}^b_j - \hat{\beta}_j$.
+
+\subsubsection*{Comparison} 
+
+
+The pairwise bootstrap is more computationally intensive than the residual bootstrap. This is because the feature matrix is changing with every bootstrap iterate. Furthermore, when resampling pairs, we will have many observations with the exact same features $X_i^b$. If $p$ is comparable to $n$, then this could cause $X(b)$ to be rank deficient and $\hat{\beta}^b$ will be undefined. Also, when using the bootstrapping residuals procedure the inference is conditional on the feature matrix $X$ which can be desirable in some applications.
+
+While the bootstrapping residuals procedure has the above nice properties, bootstrapping pairs is valid under weaker assumptions. At a high-level the bootstrapping pairs procedure will return asymptotically valid confidence intervals whenever $\{(X_i,Y_i)\}_{1 \le i \le n}$ are i.i.d.. This is true even if the assumptions of the linear model do not hold. So, for example, we can have that $\varepsilon_i$ is heteroskedastic and depends on $X_i$. On the other hand, the residual bootstrap will only work if the assumptions of the linear model hold. Namely, we require that $Y_i = X_i^\top\beta + \varepsilon_i$ with $\varepsilon_1,\dots,\varepsilon_n$ i.i.d. and independent of $X$. 
+
+
+
+\subsection{Bootstrap theory - nothing comes for free\footnote{
+    For the applied qual, I think the only bit of theory you (maybe) need to know is that bootstrap samples let you approximate the distribution of $\hat{\theta}-\theta$ not the distribution of $\hat{\theta}$ directly. - M.H.}}
+
+
+It sometimes seems that bootstrap has a mystical air around it that leads one to believe that bootstrapping is a universal tool that always produces valid intervals without any modelling assumptions or asymptotic calculations. Unfortunately, this is very far from the case. The most standard proofs of bootstrap validity frequently proceed in three steps.
+\begin{enumerate}
+\item
+Show that $\sqrt{n}(\hat{\theta} - \theta)$ has a limiting distribution.
+\item
+Use a triangular array theorem to show that $\sqrt{n}(\hat{\theta}^b - \hat{\theta})$ has the same limiting distribution as $\sqrt{n}(\hat{\theta} - \theta)$. 
+\item
+Conclude that the estimated bootstrap quantiles $\hat{q}(\alpha/2)$ and $\hat{q}(1-\alpha/2)$ converge to the corresponding quantiles of this limiting distribution.
+\end{enumerate}
+What does this mean for you in practice? If you want to be able to prove that your bootstrap procedure works you should aim to bootstrap a statistic that you believe has a limiting distribution. For example, above we have frequently bootstrapped the statistic $(\hat{\theta}^b - \hat{\theta})$, which is equivalent to bootstrapping $\sqrt{n}(\hat{\theta}^b - \hat{\theta}) $. Under standard assumptions this last expression will have a limiting normal distribution. There are some examples of papers that do not take this path and instead derive finite sample bounds on the difference between the distributions of $\sqrt{n}(\hat{\theta}^b - \theta)$ and  $\sqrt{n}(\hat{\theta}^b - \hat{\theta})$. However, this is a technically challenging route that I do not think you should expect to work for any arbitrary test statistic.
+
+When do we know the bootstrap will fail? The bootstrap tends to behave poorly for statistics that have sharp boundary conditions. It also tends to be invalid in high dimensions. In these cases the asymptotic distribution  of $\sqrt{n}(\hat{\theta} - \theta)$ usually depends on the aspect ratio $p/n$. This ratio will be smaller in the bootstrap samples than in the original data.

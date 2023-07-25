@@ -1,0 +1,101 @@
+\section{Bayesian Modelling\footnote{Kenneth Tay, Stephen Bates, Dan Kluger and M.H.}}
+
+\subsection{Overview}
+
+In Bayesian inference we have unobserved parameters $\theta$ and observed data $X$. We have a probabilistic model for the joint distribution of $(\theta,X)$. Typically, this is typically presented as a prior on $\theta$ and a conditional distribution (or likelihood) on $X$ given $\theta$. That is
+\begin{align*}
+    \theta &\sim p(\theta) \quad \text{(prior)},\\
+    X \mid \theta &\sim p(X\mid \theta) \quad \text{(likelihood)}.
+\end{align*}
+Our joint distribution is thus,
+\[p(\theta,X) = p(\theta)p(X \mid \theta). \]
+A primary goal in Bayesian modelling is to make inferences on $\theta$ based on the observed data $X$. This is typically done with respect to the \emph{posterior distribution} of $\theta$,
+\begin{align*}
+    p(\theta \mid X) &=\frac{p(\theta,X)}{\int_\Theta p(\theta',X)d\theta'}\\
+    &=\frac{p(\theta)p(X \mid \theta)}{\int_\Theta p(\theta')p(X \mid \theta')d\theta'}
+\end{align*}
+The posterior distribution on $\theta$ captures all the information (assuming our model) about $\theta$ in $X$. This includes uncertainty in $\theta$. Many quantities of interest can be expressed as functional of the posterior distribution $p(\theta \mid X)$. Common examples are:
+\begin{itemize}
+    \item The posterior mode or MAP of $\theta$, $\argmax_\theta p(\theta \mid X)$, another point estimate for $\theta$.
+    \item The posterior mean of $\theta$, $\bbE[\theta \mid X]$ which is a point estimate for $\theta$.
+    \item The posterior variance of $\theta$ or the posterior expectation of a function $h(\theta)$, $\bbE[g(\theta)\mid X]$.
+    \item The quantiles of the posterior distribution which provide a ``credible set'' for the values of $\theta$.
+\end{itemize}
+
+Broadly speaking, there are two types of quals questions about Bayesian modelling that I think could come up. 
+\begin{enumerate}
+    \item You are given a description of some data, and you're asked to describe a Bayesian model for the data. In this question describing the model would be the main part of the question and you would only need to sketch how you would do inference. This would be ``Type J''.
+    \item You are given a model and are asked to do some calculations related to doing inference. This would be ``Type C''. Typical tools are conjugacy, EM, MCMC and CAVI.
+\end{enumerate}
+
+\subsection{Describing a model}
+
+The notation 
+\[p(\theta,X) = p(\theta)p(X \mid \theta), \]
+hides a lot of possible complexity. Bayesian modelling is very flexible and can easily account for complicated relationships between your parameters $\theta$ and your data $X$. A typical example of this is \emph{hierarchical modelling} where the distribution of some parameters depend on others. Here DAGs are a powerful tool. Let's consider a concrete example.
+
+\subsubsection*{Binomial hierarchical model}
+
+Suppose we want to make inference on a proportion $\theta$ where our data follows $X \sim \mathrm{Binom}(n,\theta)$. A natural prior in this case is the beta distribution $\theta \sim \mathrm{Beta}(\alpha,\beta)$ where $\alpha,\beta$ are fixed hyper-parameters. The posterior distribution of $\theta \mid X$ is $\mathrm{Beta}(\alpha + X,\beta + (n-X))$. 
+
+Here the hyperparameters $\alpha,\beta$ were considered fixed. In theory, hyperparameters will be based on genuine prior knowledge from previous experiments. However, if we have $J$ samples $X_j \sim \mathrm{Binom}(n_j,\theta_j)$, then we can put priors on $(\alpha,\beta)$ and ``pool'' our estimation of $(\theta_1,\ldots,\theta_J)$ across the $J$ samples. One model would be,
+
+\begin{align*}
+    \alpha, \beta &\simiid \mathrm{Gamma}(5,1),\\
+    \theta_j\mid \alpha,\beta &\simiid \mathrm{Beta}(\alpha,\beta),\\
+    X_j \mid \theta_j & \simind \mathrm{Binom}(n_j,\theta_j). 
+\end{align*}
+The choice of a Gamma distribution here is arbitrary. You could use any other distribution supported on $[0,\infty)$. In the hierarchical model, we want to make inference on the full posterior,
+
+\[p(\theta,\alpha,\beta \mid X) \propto p(\alpha,\beta)p(\theta\mid \alpha,\beta)p(X \mid \theta,\alpha,\beta).\]
+
+Unlike the case when $\alpha$ and $\beta$ where fixed, the above won't have a closed form and so you'll have to perform one of the approximations described below.
+
+\subsection{Inference}
+
+\subsubsection*{Conjugacy}
+
+To find a posterior distribution, you can ignore all factors that don't depend on the parameters $\theta$ since these we will be integrated out. Thus, you should have a list of distributions and try to pattern match your posterior with one of the known distributions. It is also very helpful to have a list of moments for different distributions. These can be very helpful when calculating posterior expectations.
+
+\subsubsection*{EM}
+
+The EM algorithm can be used to find the posterior mode $\hat{\theta}_{MAP} = \argmax_{\theta}p(\theta\mid X)$. This algorithm is likely to come up and is often used in latent variable models. See Section \ref{sec:review_EM}
+
+\subsubsection*{MCMC}
+
+Markov Chain Monte Carlo (MCMC) is a general purpose tool for sampling from posteriors. It can be used calculate posterior expectations and approximate $p(\theta \mid X)$. Two general purpose MCMC samplers are the ``Gibbs sampler'' and ``Metropolis--Hastings''. These samplers aren't used in modern Bayesian modelling software but you might get asked calculation questions about them. Both algorithms gennerate samples $\theta^1,\theta^2,\ldots,\theta^S$ such that for sufficiently large $s$, $\theta^s \sim p(\theta \mid X)$. These samples are then used to estimate posterior expectations
+
+\begin{equation}\label{eq:MCMC-est} \bbE[h(\theta)\mid X] \approx \frac{1}{S}\sum_{s=1}^S h(\theta^s).\end{equation}
+The Gibbs sampler is based on the conditional distributions $p(\theta_j \mid \theta_{-j},X)$ where $\theta_j$ is one coordinate of the vector $\theta \in \reals^d$ and $\theta_{-j} \in \reals^{d-1}$ are the remaining coordinates. The Gibbs sampler proceeds as follows,
+
+\begin{enumerate}
+    \item Initialize at some $\theta^0 \in \reals^d$.
+    \item For $s=1,\ldots,S$,
+    \begin{enumerate}
+        \item Let $j \in \{1,\ldots,d\}$ be such that $j=s \bmod d$.
+        \item Draw $\theta_j^{\mathrm{new}}$ from $p(\theta_j \mid \theta_{-j}^{s-1},X)$. 
+        \item Set,
+        \[ \theta_i^s = \begin{cases}
+            \theta_j^{\mathrm{new}} & \text{if } i = j,\\
+            \theta_i^{s-1} & \text{if } i \neq j. \end{cases}\]
+    \end{enumerate}
+\end{enumerate}
+The algorithm as described above is called the \emph{systematic scan Gibbs sampler},
+as we update  the $d$ coordinates in order systematically. The \emph{random scan Gibbs
+sampler} replaces step 2(a) with $j \sim \mathrm{Unif}(\{1,\ldots,d\})$. 
+
+The \emph{Metropolis--Hasting algorithm}\footnote{Although there is a case that is should be called the Rosenbluth--Hasting algorithm \url{https://youtu.be/rZk2FqX2XnY?t=1276}} requires a proposal distribution $q(\theta;\theta^{\mathrm{old}})$ which we can sample from. It proceeds as follows,
+\begin{enumerate}
+    \item Initialize at some $\theta^0 \in \reals^d$.
+    \item For $s=1,\ldots,S$,
+    \begin{enumerate}
+        \item Sample a proposal $\theta^* \sim q(\theta;\theta^{s-1})$.
+        \item Let $\alpha = \frac{p(\theta^*\mid X)q(\theta^*;\theta^{s-1})}{p(\theta\mid X)q(\theta^{s-1};\theta^*)}$. Then set,
+        \[\theta^s = \begin{cases}
+            \theta^* &\text{with probability } \min\{1,\alpha\},\\
+            \theta^{s-1}&\text{with probability } 1-\min\{1,\alpha\}.
+        \end{cases} \]
+    \end{enumerate}
+\end{enumerate}
+
+

@@ -1,0 +1,219 @@
+\section{Applied 2013: Solution\footnote{Stefan Wager, Gene Katsevich, Kenneth Tay, Nikos Ignatiadis, M.H.}}
+
+
+\subsection*{Problem 1: Finding the optimal line through a point cloud}
+
+Key ideas/tools:
+\begin{itemize}
+\item setting up objective functions
+\item solving non-convex optimization problems
+\end{itemize}
+
+
+
+
+As the City Statistician, part of your job is to talk to the City Council and clarify exactly what they want. There might be a few different options, each could lead to a valid answer.
+
+\begin{enumerate}
+\item Perhaps they want to the houses to be close to the railroad track on average.
+
+\item Perhaps the City Physicist has a model for how the noise of the siren travels and thus the probability that a resident will hear the siren if her house is at a given distance from the railroad track. The City Council might then want to maximize the sum of the probabilities of hearing the siren across all residents.
+
+\item Or, perhaps the City Council is interested in a worst-case analysis, and wants to minimize the maximum distance from any house to the railroad track.
+\end{enumerate}
+
+Let $x_1, \dots, x_n \in \RR^2$ be the locations of the houses. We can parameterize the train tracks using a normal vector $\eta$ of unit length and an offset $c$, such that $d_{\eta, c}(x_i) = |\eta^\top x_i + c|$. Let's go through the three options. 
+\begin{enumerate}
+	\item In this case, we might want to minimize the average distance to the tracks:
+	\begin{equation*}
+	\text{minimize}\  \frac{1}{n}\sum_{i = 1}^n |\eta^\top x_i + c|, \quad \text{subject to } \norm{\eta}_2 = 1.
+	\end{equation*}
+	Note that this problem is non-convex due to the constraint $\norm{\eta}_2 = 1$. Nevertheless, it can be solved using a 2D grid search over $(\eta, c)$. In an ideal physical setting, sound follows an inverse square law, and so we could instead minimize the average squared distance
+	\begin{equation*}
+	\text{minimize}\  \frac{1}{n}\sum_{i = 1}^n (\eta^\top x_i + c)^2, \quad \text{subject to } \norm{\eta}_2 = 1.
+	\end{equation*}
+	This optimization problem is solved by PCA. The train track will run along the first principal component. Equivalently, the optimal $\eta$ is orthogonal to the first principal component of the centered locations $z_i = x_i - \bar{x}$ and the optimal $c$ is $-\eta^\top \bar{x}$ (so that the train line will pass through the location $\bar{x}$). 
+
+	This connection with PCA is probably why this question was asked. It's a nice connection, but the other answers are valid and may be better for actually creating a warning system. 
+	\item Option 2 might depend on what the physical model is for the probability of hearing the siren, but it'll probably end up being a non-convex optimization problem we need to solve by grid search.
+	\item Option 3 corresponds to
+	\begin{equation*}
+	\text{minimize}\  \max_i |\eta^\top x_i + c|, \quad \text{subject to } \norm{\eta}_2 = 1,
+	\end{equation*}
+	which again is convex except for the constraint.
+\end{enumerate}
+
+
+
+
+	
+
+
+% Problem 2
+\subsection*{Problem 2: Dropout in linear regression}
+
+Key ideas/tools:
+\begin{itemize}
+\item writing out the score equation
+\item analytic formulation of ridge regression
+\end{itemize}
+
+
+
+\paragraph{Some context:} This problem follows the paper by~\citet*{wager2013dropout} who propose a simple model to study dropout~\citep{srivastava2014dropout}, a regularization method used to train deep nets. 
+\paragraph{Solution:}
+Often it's easier to work with vectors and matrices then with individual elements. Let $X_I$ be the (random) design matrix that is the element-wise product of $X$ and $I$ (i.e., $X_I = X \odot I$, where $\odot$ is the Hadamard product of two matrices). Then, our loss function is
+\begin{equation*}
+L_I = \norm{y - X_I \beta}^2.
+\end{equation*}
+For fixed $I$, the score equations are
+\begin{equation*}
+0 = \nabla_\beta L_I = -X_I^\top  (y - X_I \hat \beta) \quad \Longleftrightarrow \quad X_I^\top  y = X_I^\top  X_I \hat \beta.
+\end{equation*}
+Now, let us calculate the expectation of both sides of the above expression with respect to the randomness in $I$. First of all, note that $\mathbb E[I_{ij}] = 1$ and $\mathbb E[I_{ij}^2] = 1/\phi$. It follows that $\mathbb E[X_I] = X$, and
+\begin{equation*}
+\left(\mathbb E[X_I^\top  X_I]\right)_{j_1 j_2} = (X^\top  X)_{j_1, j_2}, \quad j_1 \neq j_2
+\end{equation*}
+and
+\begin{equation*}
+\left(\mathbb E[X_I^\top  X_I]\right)_{j j} = \frac{1}{\phi}(X^\top  X)_{j, j}.
+\end{equation*}
+Putting it together,
+\begin{equation*}
+\mathbb E[X_I^\top  X_I] = X^\top  X + \frac{1-\phi}{\phi} \text{diag}(X^\top  X),
+\end{equation*}
+where $\text{diag}(X^\top  X)$ in this case denotes the diagonal matrix with diagonal coinciding with that of $X^\top  X$.
+Hence, the expected score equations are
+\begin{equation*}
+X^\top  y = \left(X^\top  X + \frac{1-\phi}{\phi} \text{diag}(X^\top  X)\right)\hat \beta.
+\end{equation*}	
+Hence, we are adding terms to the diagonal of $X^\top  X$ before inverting, which is similar to ridge regression. If the columns of $X$ are all normalized to have unit norm, then $\text{diag}(X^\top  X)$ becomes the identity, and the result is exactly ridge regression, with regularization parameter $(1-\phi)/\phi$.
+
+We can view dropout as adding noise to the features, which will perturb the fit more when $\norm{\beta}_2$ is large. Thus, both dropout and ridge make you ``pay" for using a needlessly large $\beta$.
+
+\paragraph{Additional question:} What if we repeat the above question with additive noise? Say, if instead of $X_I = X \odot I$ we consider $X_E = X + E$ where $E_{ij} \simiid \nn(0, \sigma^2)$.
+
+% Problem 3
+\subsection*{Problem 3: Combining quantile estimators}
+Key ideas/tools:
+\begin{itemize}
+\item normal approximation of sample quantiles
+\item combining estimates with weighted least squares
+\end{itemize}
+
+Let $\alpha = 0.05$. Assuming $n_i$ are large enough, we have the normal approximation	
+	\begin{equation*}
+	Q_i \overset{\cdot}{\sim} N\left(Q^{\alpha}, \, \frac{1}{n_i} \frac{\alpha (1 - \alpha)}{f^2\left({Q^\alpha}\right)}\right),
+	\end{equation*}
+	where $f$ is the density of $Y$ (van der Vaart Cor 21.5). This density $f$ is unknown. We can write the problem as the following homoskedastic linear regression model:
+	\begin{equation*}
+	\sqrt{n_i} Q_i = \sqrt{n_i}Q^\alpha + \eps_i, \quad \eps_i \simiid N(0, \sigma^2),
+	\end{equation*}
+	where $\sigma^2 = \frac{\alpha(1-\alpha)}{f^2(Q^\alpha)}$ and $i=1,\ldots,N$. From this we get the MLE
+	\begin{equation*}
+	\hat Q^\alpha = \frac{\sum_{i=1}^N n_i Q_i}{\sum_{i=1}^N n_i}.
+	\end{equation*}
+	Our variance estimate for $\hat Q^\alpha$ is
+	\begin{equation*}
+	\widehat{\text{Var}}[\hat Q^\alpha] = \frac{\hat \sigma^2}{\sum_{i=1}^N n_i},
+	\end{equation*}
+	where
+	\begin{equation*}
+	\hat \sigma^2 = \frac{1}{N-1}\sum_{i = 1}^N n_i(Q_i - \hat Q^\alpha)^2.
+	\end{equation*}
+
+
+% Problem 4
+
+\subsection*{Problem 4: Dependence in time series regression}
+Key ideas/tools:
+\begin{itemize}
+\item correlated data points in linear regression
+\item block bootstrap
+\end{itemize}
+
+\begin{enumerate}
+\item[(a)] In linear regression, $ \hat \beta = \left(X^\top X\right)^{-1} X^\top Y$, so 
+\[\text{Var}(\hat \beta) = \left(X^\top X\right)^{-1} X^\top \Sigma X \left(X^\top X\right)^{-1},\] 
+where $\Sigma = \text{Var}(Y)$. The \texttt{lm} function in \texttt{R} assumes that $\Sigma = \sigma^2 I$, i.e., that the noise is homoskedastic and uncorrelated. With that assumption, the variance simplifies to $\smash{\text{Var}(\hat \beta) = \sigma^2 \left(X^\top X\right)^{-1}}$. With auto-correlated data, however, $\Sigma$ is not even close to being a multiple of $I$, so this approach does not work.
+
+\item[(b)] As a simple example, suppose that $X = (1, 1, \dots, 1)^\top$ so our model is,
+\[Y_i = \beta + \varepsilon_i, \]
+where $\beta \in \reals$ is a scalar modelling the mean of $Y$ and $\varepsilon \sim \calN(0,\Sigma)$. In this case the OLS estimate for $\beta$ is $\hat{\beta} = \bar{Y}$ and 
+	\[ \text{Var}(\hat \beta) = \frac{1}{n^2} \sum_{i,j} \Sigma_{ij}. \]
+	If $\Sigma = \sigma^2 I$, this reduces to $\sigma^2/n$. On the other hand, suppose $\Sigma$ is AR-1 with positive autocorrelation $\rho \in (0,1)$. This means that $\Sigma_{ij} = \sigma^2\rho^{|i -j|}$ and the variance of $\hat{\beta}$ is
+	\[\frac{\sigma^2}{n^2} \sum_{i,j=1}^n \rho^{|i-j|}\ge \frac{\sigma^2}{n}\sum_{k=0}^{n-1}\rho^k = \frac{\sigma^2(1-\rho^n)}{n(1-\rho)} \gg \frac{\sigma^2}{n}.\] 
+	The last line holds for $n$ large and $\rho \approx 1$.
+
+	An even simpler and more extreme example is when the $Y_i$'s are identical. This corresponds to $\Sigma = \sigma^2\mathbf{1}\mathbf{1}^\top$ and $\var(\hat{\beta})=\sigma^2 \gg \sigma^2/n$.
+
+\item[(c)] We could use a year-wise block bootstrap.
+
+\end{enumerate}
+
+
+% Problem 5
+\subsection*{Problem 5: Estimating out-of-sample error}
+
+Key ideas/tools
+\begin{itemize}
+\item training data cannot be used for validation
+\end{itemize}
+
+
+\begin{enumerate}
+\item[(a)] Here the goal is to figure out how well the model selected by cross validation will do on a held-out test set, as measured by $R^2$. Hence, we care about out-of-sample performance, whereas the $R^2$ value obtained by Statistician 1 is in-sample, computing on the same data that the model was fit on.
+
+\item[(b)] Consider splitting the data into ten folds. For each fold, run the entire procedure, including cross-validation, on the in-fold data. Use the resulting model to make predictions on the out-of-fold data. Once we do this for each fold, we get a prediction for each data point, from which we can calculate an $R^2$ value. This time, we are doing a better job estimating out-of-sample performance.
+
+
+\end{enumerate}
+
+
+
+\subsection*{Problem 6: Estimating a Poisson mixture}
+
+Key ideas/tools
+\begin{itemize}
+\item EM algorithm
+\item Fisher Information
+\end{itemize}
+
+
+\begin{enumerate}
+\item[(a)] Suppose that $\mu_0$ and $\mu_1$ are the two Poisson parameters, and let $\pi$ be the mixing proportion. Then, the log likelihood is
+		\begin{equation*}
+		\ell(\mu_0, \mu_1, \pi; Y) = \sum_{i = 1}^n \log\left((1-\pi) e^{-\mu_0} \frac{\mu_0^{Y_i}}{Y_i!} + \pi e^{-\mu_1}\frac{\mu_1^{Y_i}}{Y_i!}\right).
+		\end{equation*}
+
+\item[(b)] Consider $Z_i \overset{\text{i.i.d.}}\sim \text{Ber}(\pi)$, and $Y_i|Z_i = z \sim \text{Poi}(\mu_z)$ for $z = 0, 1$. The complete data log likelihood is
+		\begin{equation*}
+		\begin{split}
+		\ell(\mu_0, \mu_1, \pi; Y, Z) &= \sum_{i = 1}^n (1-Z_i)(\log (1-\pi) - \mu_0 + Y_i \log \mu_0) + Z_i(\log \pi - \mu_1 + Y_i \log \mu_1) \\
+		&= \log(1-\pi)\sum_{i = 1}^n (1-Z_i) - \mu_0 \sum_{i = 1}^n (1-Z_i) + \log \mu_0 \sum_{i = 1}^n (1-Z_i)Y_i \\
+		&\quad + \log \pi \sum_{i = 1}^n Z_i - \mu_1 \sum_{i = 1}^n Z_i + \log \mu_1 \sum_{i = 1}^n Z_i Y_i.
+		\end{split}
+\end{equation*}
+
+\item[(c)] Given parameters estimates $\hat \theta^t = (\hat \mu_0^{(t)}, \hat \mu_1^{(t)}, \hat \pi^{(t)})$, we need to compute
+		\begin{equation*}
+		\hat \tau_i^{(t)} = \mathbb E_{\hat \theta^{(t)}}[Z_i|Y_i] = \mathbb P_{\hat \theta^{(t)}}[Z_i = 1|Y_i] = \frac{\hat \pi^{(t)}e^{-\hat \mu_1^{(t)}}(\hat \mu_1^{(t)})^{Y_i}}{(1-\hat \pi^{(t)})e^{-\hat \mu_0^{(t)}}(\hat \mu_0^{(t)})^{Y_i} + \hat \pi^{(t)}e^{-\hat \mu_1^{(t)}}(\hat \mu_1^{(t)})^{Y_i}},
+		\end{equation*}
+		and use this to find the expected complete data log likelihood
+		\begin{equation*}
+		\begin{split}
+		\tilde \ell(\mu_0, \mu_1, \pi; Y) &= \mathbb E_{\hat \theta^{(t)}}[\ell(\mu_0, \mu_1, \pi; Y, Z)|Y] \\
+		&= \log(1-\pi)\sum_{i = 1}^n (1-\hat \tau^{(t)}) - \mu_0 \sum_{i = 1}^n (1-\hat \tau^{(t)}) + \log \mu_0 \sum_{i = 1}^n (1-\hat \tau^{(t)})Y_i \\
+		&\quad + \log \pi \sum_{i = 1}^n \hat \tau^{(t)} - \mu_1 \sum_{i = 1}^n \hat \tau^{(t)} + \log \mu_1 \sum_{i = 1}^n \hat \tau^{(t)} Y_i.
+		\end{split}
+		\end{equation*}
+		We can then maximize this with respect to the parameters via
+		\begin{equation*}
+		\hat \pi^{(t+1)} = \frac{\sum_i \hat \tau_i^{(t)}}{n},  \quad \hat \mu_0^{(t+1)} = \frac{\sum_i (1-\hat \tau_i^{(t)}) Y_i}{\sum_i (1 - \hat \tau_i^{(t)})}, \quad \hat \mu_1^{(t+1)} = \frac{\sum_i \hat \tau_i^{(t)} Y_i}{\sum_i \hat \tau_i^{(t)}}.
+		\end{equation*}
+		We can use the observed Fisher information matrix $-\ddot \ell(\hat \mu_0, \hat\mu_1, \hat \pi; Y)$ to get a variance estimate for $\hat \pi$ and hence an asymptotic confidence interval. These confidence intervals are based on the general asymptotic theory for the MLE. An alternative would be use the bootstrap. If we do use the bootstrap, we need to be careful that no label flipping occurs, i.e., we should enforce that $\hat{\mu}_1$ is always larger than $\hat{\mu}_2$.\\
+
+		{\color{red} \textbf{A note of caution}:}  Let $\tilde\ell^T(\mu_0, \mu_1, \pi; Y)$ be the expected complete data log-likelihood in the last iteration $T$. One may try to use the Hessian of the objective $\tilde\ell^T(\mu_0, \mu_1, \pi; Y)$, i.e., $-\nabla^2 \tilde\ell^T(\hat{\mu}^{(T)}_0, \hat{\mu}^{(T)}_1, \hat{\pi}^{(T)}; Y)$ as an estimate of the information matrix. This however is \textbf{wrong}. It approximates the information matrix of the complete data log-likelihood based on $(Z,Y)$, which however is larger than the information based on only $Y$:
+		$$ \mathcal{I}_Y(\theta) = \mathcal{I}_{Z,Y}(\theta) - \mathcal{I}_{Z | Y}(\theta),$$
+		where e.g., $\mathcal{I}_Y(\theta)$ is the information matrix for estimating $\theta$ based on $Y$ (which is what we need for asymptotically valid inference). See \citet{louis1982finding} for further elaboration, as well as a method that allows one to (correctly) extract the observed information matrix while running the EM algorithm.
+\end{enumerate}

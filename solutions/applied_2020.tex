@@ -1,0 +1,290 @@
+\section{Applied 2020: Solution\footnote{Isaac Gibbs and D.K.}}
+
+\subsection*{Problem 1: Maximum Likelihood for Truncated Data}
+
+\begin{enumerate}
+\item[a)]
+Both t.test($Y$) and lm($Y \sim 1$) compute the mean and standard deviation $Y$. This is not possible without observing the full dataset. By default both of these functions will simply ignore the missing values. This will cause us to overestimate the mean of $Y$ and produce a confidence interval that is biased upwards.
+\item[b)]
+The methods in part a) give estimates that have a positive bias. To derive a likelihood based method let $Z_1,\dots,Z_n$ denote the latent values of the light emmisions. We are told that $Z_i \sim N(\mu,\sigma^2)$ for some unknown values $\mu$ and $\sigma^2$ and  we observe 
+\[
+Y_i = \begin{cases}
+Z_i, \ \text{if } Z_i > C\\
+\text{NA}, \text{ otherwise}
+\end{cases}.
+\] 
+Let $\Phi$ and $\phi$ denote the cdf and pdf of $N(0,1)$, respectively. Let $\delta_i := \bone_{Y_i \neq NA}$. Then, the likelihood of the observed data is 
+\[
+p(Y;\mu,\sigma) = \prod_{i=1}^n \left( \frac{1}{\sigma} \phi\left( \frac{Y_i - \mu}{\sigma} \right) \right)^{\delta_i } \Phi\left( \frac{C - \mu}{\sigma} \right)^{1 - \delta_i} 
+\]
+We could try to maximize this likelihood (or its log) to get estimates for $\mu$ and $\sigma$. There are multiple challenges to this optimization problem. The largest one is that the likelihood and the log-likelihood are both non-convex. Since we have only two parameters a grid search for the optimal values of $(\mu,\sigma)$ could be reasonable. Alternatively, we could try running gradient ascent. A small barrier to gradient ascent is that $\Phi(\cdot)$ has no closed form. However, this is only a minor obstacle since the gradient of $\Phi(\cdot)$ is known and the values of $\Phi(\cdot)$ can be computed numerically by evaluating a one-dimensional integral. Since the problem is non-convex we may want to run gradient ascent with many different random initializations. One potentially good initialization is to use the empirical mean and standard deviation of the observed $Y_i$ with the missing values replaced by $C$. If $C$ is not too large these should be reasonable starting estimates.
+
+Another alternative is to use EM. In the E-Step we would need to compute
+\[
+\mme_{\hat{\mu}^t,\hat{\sigma}^t}[\log(p(Z;\mu,\sigma) ) | Y].
+\]
+By expanding $\log(p(Z;\mu,\sigma) )$ we will find that it is sufficient to compute 
+\[
+ \mme_{\hat{\mu}^t,\hat{\sigma}^t}[Z_i | Y_i] \ \ \ \text{ and } \ \ \ \mme_{\hat{\mu}^t,\hat{\sigma}^t}[Z_i^2 | Y_i].
+\]
+If $Y_i \neq NA$ then $ \mme[Z_i | Y_i]  = Y_i$ and $\mme[Z_i^2 | Y_i] = Y_i^2$. Otherwise, computing these expectations reduces to computing the mean and variance of a truncated Gaussian, which is a straightforward computation that we could carry out. Finally, in the M-step we have to optimize $\mme_{\hat{\mu}^t,\hat{\sigma}^t}[\log(p(Z;\mu,\sigma) ) | Y]$ over $\mu$ and $\sigma$, which is a straightforward two dimensional calculus problem which yields:
+
+$$\hat{\mu}^{t+1} = \frac{1}{n} \sum_{i=1}^n \mathbb{E}_{\hat{\mu}^t,\hat{\sigma}^t}[Z_i|Y_i] \quad \text{and} \quad (\hat{\sigma}^{t+1})^2 = \frac{1}{n} \sum_{i=1}^n \Big( \mme_{\hat{\mu}^t,\hat{\sigma}^t}[Z_i^2|Y_i] -2 \hat{\mu}^{t+1}  \mme_{\hat{\mu}^t,\hat{\sigma}^t}[Z_i|Y_i] + (\hat{\mu}^{t+1})^2 \Big)$$
+\item[c)]
+Intuitively we should have that the observed data $Y_1,\dots,Y_n$ come from a truncated normal distribution. Thus, we could maximize the likelihood
+\[
+p(Y;\mu,\sigma) = \prod_{i=1}^n \frac{1}{\sigma} \phi\left(\frac{Y_i - \mu}{\sigma}\right)\left( 1- \Phi\left(\frac{C - \mu}{\sigma}\right) \right)^{-1}.
+\]
+Once again optimizing this function is likely a non-convex problem. Running gradient ascent starting from  many random initializations or performing a two-dimensional grid search are both still reasonable methods that we could try. Without doing any rigorous calculations (assuming both devices take measurments for the same amount of time) we suspect that the device in b) should give a better estimate of $\mu$ and $\sigma$ than the device in c). This is due to the fact that in b) we observe strictly more data than in c).
+
+\textbf{Aside:} The question explicitly says that we do not need to do a rigorous calculation. However, I think that seeing a rigorous calculation could still be informative, thus I will give a rigorous derivation of the likelihood below. This calculation shows that the likelihood written out above is actually the conditional likelihood for the $Y_i$, conditional on the number of observations that we observe.
+
+The calculation proceeds as follows. Let $Z_1,\dots,Z_m$ denote the latent non-truncated measurements of light brightness. Then, we observed $Z_{i_1},\dots,Z_{i_n}$ where $1 \leq i_1<i_2<\dots < i_n \leq m$ are the indices at which $Z_{i_j}  > C$. Note that $n$ is itself random here. Now, for any $x > C$ and $1 \leq i \leq n$ we have that  
+\begin{align*}
+ \mmp(Y_i > x | n = k)  = \sum_{i_1,\dots,i_k}  & \mmp(Y_i > x | n=k, Z_{i_1},\dots,Z_{i_k} > C, Z_j \leq C, \forall j \notin \{i_1,\dots,i_k\} )\\
+& \cdot \mmp(Z_{i_1},\dots,Z_{i_k} > C, Z_j \leq C, \forall j \notin \{i_1,\dots,i_k\}|n=k) .
+\end{align*}
+Given fixed values for the indices $i_1,\dots,i_k$ let $j^*$ be the index such that $Y_i = Z_{i_{j^*}}$. Then,
+\begin{align*}
+& \mmp(Y_i > x | n=k, Z_{i_1},\dots,Z_{i_k} > C, Z_j \leq C, \forall j \notin \{i_1,\dots,i_k\} )\\
+ & =  \frac{\mmp(Z_{j^*} > x, Z_{i_1},\dots,Z_{i_k} > C, Z_j \leq C, \forall j \notin \{i_1,\dots,i_k\} )}{\mmp(  Z_{i_1},\dots,Z_{i_k} > C, Z_j \leq C, \forall j \notin \{i_1,\dots,i_k\} )}\\
+ & =  \frac{\left(1-\Phi\left( \frac{x-\mu}{\sigma}\right)\right)  \Phi\left( \frac{C-\mu}{\sigma}\right)^{m-k}   \left( 1- \Phi\left( \frac{C-\mu}{\sigma}\right)\right)^{k - 1} }{\Phi\left( \frac{C-\mu}{\sigma}\right)^{m-k}  \left(1- \Phi\left( \frac{C-\mu}{\sigma}\right)\right)^{k}} \\
+ & = \frac{1-\Phi\left( \frac{x-\mu}{\sigma}\right) }{1-\Phi\left( \frac{C-\mu}{\sigma}\right) }.
+\end{align*}
+Differentiating this last expression gives the claimed formula for the likelihood.
+\item[d)]
+We are told to replace $\mu$ in the above likelihoods with $\mu_i = X_i^T\beta$. Since we are given a function for the gradient of the log-likelihoods we can use gradient ascent to maximize the objective. Assuming that $\sigma^2$ is fixed and known the updates would look like 
+\begin{equation}\label{2020Q1grad_desc}
+\beta_{t+1} = \beta_t + \eta \text{grad\_log}(Y,X\beta_t,\text{sigma\_sq},C)^TX,
+\end{equation}
+where $\eta > 0$ is a fixed step-size parameter. If $\sigma^2$ is unknown then we would still use the update (\ref{2020Q1grad_desc}), but in this update we would only use the first $n$ coordinates of $\text{grad\_log}(Y,X\beta_t,\text{sigma\_sq},C)$, we would replace sigma\_sq with $\sigma^2_t$, and we would additionally have the update
+\[
+\sigma_{t+1} = \sigma_t + \eta \Big[ \text{grad\_log}(Y,X\beta_t,\sigma^2_t,C) \Big]_{n+1}.
+\]
+Finally, we could use the function logl($Y$,mu,sigma\_sq,$C$) to judge the results of gradient ascent with multiple different random initializations.
+\end{enumerate}
+
+\subsection*{Problem 2: Low-Rank Matrix Factorization}
+
+\begin{enumerate}
+\item[a)]
+The goal is to find matrices $A \in \mmr^{T \times 13}$ and $B \in \mmr^{990 \times 13}$ that minimize $||X - AB^T||_2^2$. We know that the skinny SVD optimizes this objective. Namely, let
+\[
+X = \sum_{i=1}^{990} \sigma_i u_i v_i^T
+\]
+denote the SVD of $X$ where $\vert \sigma_1 \vert \geq \dots \geq \vert \sigma_{990} \vert \geq 0$. Then, we can take 
+\[
+\hat{A} = U_{1:13}\text{diag}(\sigma_1,\dots, \sigma_{13}) \ \ \ \text{ and } \ \ \ \hat{B}^T =  (V_{1:13})^T
+\]
+where $U_{1:13}$ and $V_{1:13}$ denotes the matrices with columns $u_1,\dots,u_{13}$ and $v_1,\dots,v_{13}$, respectively.
+\item[b)]
+The individual matrices $A$ and $B$ will not be unique. Namely, given an optimal solution $(A,B)$ we have that for any orthogonal matrix $O$, $AB^T = AOO^TB^T$ and thus $(AO,BO)$ is also a solution. On the other hand, $AB^T$ will be unique iff $\sigma_{13} > \sigma_{14}$ since in this case the skinny SVD is unique.
+\item[c)]
+Let $A_1,\dots,A_{T}$ denote the rows of $A$ and $B_1,\dots,B_{990}$ denote the rows of $B$. Then,
+\[
+||X - AB^T||_2^2 =  \sum_{i=1}^{T}  \sum_{j=1}^{990}   (X_{ij} - B_j^TA_i )^2.
+\]
+For each fixed value of $i \in \{1,\dots,T\}$ we recognize $ \sum_{j=1}^{990}   (X_{ij} - B_j^TA_i )^2$ as a linear regression problem with feature-response pairs $\{(B_j,X_{ij})\}_{1 \leq  j \leq 990}$. Using known results from linear regression this expression will be minimized by taking
+\[
+A_i = (B^TB)^{-1}B^Tx_i.
+\]
+By the separability of the objective function in $i$ it follows that for a fixed $B$, $A$ is optimized when setting $A^T = (B^TB)^{-1} B^T X^T$. Note that this assumes that $B$ is full-rank. If it is not full rank then you can replace the inverse by a pseudo-inverse.
+
+\item[d)]
+Using the same reasoning as in part c) we have that the minimizing value for $B$ will be given by
+\[
+B^T = (A^TA)^{-1} A^TX.
+\]
+Note that this assumes that $A$ is full-rank. If it is not full rank then you can replace the inverse by a pseudo-inverse.
+\item[e)]
+Letting $x_{T+1,\mathcal{O}}  \in \mathbb{R}^{990-45}$, denote the vector of observations at time $T+1$ with the entries dropped and let $B_{\mathcal{O}} \in \mathbb{R}^{(990-45) \times 13}$ denote the matrix $B$ with the rows which correspond to missing entries of $x_{T+1}$ removed. We could estimate $a_{T+1}$ be setting
+\[
+\hat{a}_{T+1} = \arg \min_{a} ||x_{T+1,\mathcal{O}} - B_{\mathcal{O}} a ||_2^2,
+\]
+As in parts c) and d) solving this optimization problem is equivalent to solving a linear regression problem and obtain that $\hat{a}_{T+1}=(B_{\mathcal{O}}^T B_{\mathcal{O}})^{-1} B_{\mathcal{O}}^T x_{T+1,\mathcal{O}}$. Then, we could estimate the missing values in the full vector by looking at the corresponding entries of $\hat{x}_{T+1} = B\hat{a}_{T+1}$. 
+\end{enumerate}
+
+\subsection*{Problem 3: Poisson GLMs}
+
+\begin{enumerate}
+\item[a)]
+You can take $X$ to be the matrix with $n_i$ copies of row $x_i$ and $Y \in \mmr^{N}$ to be the vector with entries $y_{ij}$ and then use the R call glm($Y \sim X-1$, family=poission(link="log")).
+\item[b)]
+The likelihood for the data is 
+\[
+p(Y;X,\beta) = \prod_{ij} \frac{ \exp( y_{ij} x_i^T\beta - \exp(x_i^T\beta )) }{y_{ij}!} \propto \prod_i \exp(\sum_{j} y_{ij} x_i^T\beta - n_i\exp(x_i^T\beta)). 
+\]
+Additionally, note that $T_{i} := \sum_{j} y_{ij} \sim \text{Poisson}(n_i\exp(x_i^T\beta))$. So, the likelihood for $T_{1},\dots,T_{I}$ is 
+\[
+p(T_{1},\dots,y_{I};x_1,\dots,x_I,\beta) \propto \prod_i \exp(T_{i} x_i^T\beta - n_i\exp(x_i^T\beta)).
+\]
+In particular, we find that the likelihood for the data  $\{T_{i}\}$ is proportional to the likelihood for $\{y_{ij}\}$. Thus, maximum likelihood based inference will be the same for these two datasets.  Under, the current model we have that the mean of $T_{i}$ is $\mu_{i\cdot}$ with 
+\[
+\log(\mu_{i\cdot}) = \log(n_i) + x_i^T\beta
+\] 
+We recognize this as a GLM with offsets. Let $T =(T_1,\dots,T_I) \in \mmr^I$, $\tilde{X} \in \mmr^{I \times p}$ be the matrix with rows $x_i$, and $n = (n_1,\dots,n_I)$. Then, we find that the model from part a) can be fit using the GLM call glm($T \sim \tilde{X} - 1$,family=poisson(link="log"),offset=log(n)).
+
+Note that your justification above need not explicitly write out the likelihood and could use a sufficient statistics argument instead. % in terms of the $T_1,\dots,T_I$ and you can simply say that the sum of $n_i$ IID Poissons with rate parameter $\lambda_i$ follows a $\text{Pois}(n_i \lambda_i)$ distribution and the sum a sufficient statistic for estimating $\lambda_i$.
+\item[c)]
+Extending our previous model it may now be reasonable to posit that the events for galaxy $i$ come from a homogeneous Poisson process with mean parameter $\exp(x_i^T\beta)$. i.e. we have that $y_{ij}$ are independent Poisson random variables with  
+\[
+\log(\mu_{ij}) = \log(\ell_{ij}) + x_i^T\beta. 
+\]
+We can fit this model using the call glm($Y \sim X-1$, family=poission(link="log"),offset = log($\ell$)) where $\ell$ is the vector of lengths and $Y$ and $X$ are as in part a).
+\end{enumerate}
+
+\subsection*{Problem 4: Estimating Starfish Diversity}
+
+\begin{enumerate}
+\item[a)]
+$S_i$ will be larger for less diverse antibody pools. One way to see this is to observe that 
+\[
+S_i = \sum_{j=1}^J \hat{p}_{ij}^2 \leq \sum_{j=1}^J \hat{p}_{ij} = 1,
+\] 
+with equality for vectors $\hat{p}_{i \cdot}$ that satisfy $\hat{p}_{ij} = 1$ for some $j$ and $\hat{p}_{ij'} = 0$ for all other $j' \neq j$. i.e. $S_i$ is maximized by the least diverse antibody pools. Moreover, by Jensen's inequality we have that 
+\[
+S_i =  J  \sum_{j=1}^J \frac{\hat{p}_{ij}^2}{J} \geq J \left( \sum_{j=1}^J \frac{\hat{p}_{ij}}{J} \right)^2 = \frac{1}{J}
+\]
+with equality being obtained by the uniform distribution. i.e. $S_i$ is minimized by the most diverse populations. 
+\item[b)]
+Perhaps the largest issue with $S_H$ is that its value can be dominated by a single starfish that has very large counts for all antibodies. This is a major concern because we are told that "the absolute numbers $n_{ij}$ depend  a  lot  on  how  the  sample  was  taken,  and  so  the  ratios  are  considered  more useful." For a concrete example, suppose 9/10 of the starfish collected have very diverse antibodies and a relatively small total number of antibodies measured and the final remaining starfish does not have very diverse antibodies, but has a large total number of antibodies. Then, the value of $S_H$ will be dominated by the one non-diverse starfish and we will estimate that the population does not have a very diverse set of antibodies even though 9/10s of the starfish have a large diversity. Cases like this where some samples have larger total counts than others are common in many types of biological data (e.g. RNA-seq).
+
+A better method would be to weight all of the starfish equally regardless of the magnitude of their total counts. To do this we could define 
+\[
+S_{H,i} = \sum_{j=1}^J \left( \frac{n_{ij}}{\sum_{j'=1}^J n_{ij'}} \right)^2
+\]
+to be the diversity measure for the $i_{th}$ high-salinity starfish and then define the new estimator 
+\[
+\tilde{S}_H = \frac{1}{10} \sum_{i=1}^{10} S_{H,i}.
+\]
+We could do the same thing for the low salinity starfish and compute the estimate $\tilde{S}_H - \tilde{S}_L$.
+
+\item[c)]
+
+Their bootstrap procedure does not appear to reflect the data generating mechanism and account for the clustered nature of their data. In particular, their bootstrap procedure treats each observed antibody in the high-salinity water as a sample, and samples the $\sum_j n_{H,j}$ antibodies with replacement. It does not account for the fact that the antibodies were measured by taking sampling antibodies in 10 different starfish (each of which could have different proportions of each antibody).
+
+A better approach would be to use clustered bootstrap which resamples entire starfish with replacement but does not resample data within starfish (See Strategy 1 of Section 3.8 in \cite{davison_hinkley_1997}). You can think of this as a block bootstrap where each starfish is a block.  More specifically, for each $b=1,\dots,B$ we would obtain bootstrap datasets of starfish-level diversity scores $\{ S_{H,i}^b\}_{1 \leq i \leq 10}$ and $\{ S_{L,i}^b\}_{1 \leq i \leq 10}$ where $ S_{H,i}^b \sim \text{Unif}( S_{H,1},\dots, S_{H,10})$ and $ S_{L,i}^b \sim \text{Unif}( S_{L,1},\dots, S_{L,10})$. We would then use these datasets to get new estimates of the difference in means given by $$\tilde{S}_H^b - \tilde{S}_L^b = \frac{1}{10} \sum_{i=1}^{10} S_{H,i}^b -  \frac{1}{10} \sum_{i=1}^{10} S_{L,i}^b$$ and then form a confidence interval by looking at the empirical quantiles of $\{\tilde{S}^b_H - \tilde{S}^b_L\}_{1 \leq b \leq B}$ (see Section \ref{sec:the_standard_bootstrap}).
+
+An alternative to the previous procedure is to use a clustered bootstrap, where you sample starfish with replacement, and subsequently resample the antibodies within each starfish with replacement (See Strategy 2 of Section 3.8 in \cite{davison_hinkley_1997}). In particular, for $b=1,\dots, B$, to construct the bootstrap dataset for the high-salinity starfish, sample 10 high-salinity with replacement $i_1,\dots,i_{10}  \stackrel{IID}{\sim} \text{Unif} \{1,\dots,10 \}$ then for $k=1, \dots,10$, compute $S_{H,k}^b$, by resampling the antibodies from starfish $i_k$ with replacement (this can be done by sampling a multinomial on $\{1 , \dots ,J \}$ with probabilities $\hat{p}_{i_k,j}$ with $\sum_{j} n_{i_k j}$ trials for the multinomial) and then using the resampled antibody counts in starfish $i_k$ to compute the diversity score $S_{H,k}^b$. You would do the same procedure to generate bootstrap samples of the diversity scores $S_{L,k}^b$  in the Low salinity waters. Finally you would let the $b$th bootstrap statistic be  $$\tilde{S}_H^b - \tilde{S}_L^b=\frac{1}{10} \sum_{k=1}^{10} S_{H,k}^b -  \frac{1}{10} \sum_{k=1}^{10} S_{L,k}^b,$$ and use the empirical quantiles of $\{\tilde{S}^b_H - \tilde{S}^b_L\}_{1 \leq b \leq B}$ to compute a bootstrap confidence interval.
+
+While this is out of scope for quals, Section 3.8 in \cite{davison_hinkley_1997} recommends Strategy 1 over Strategy 2, but either would be an acceptable answer for quals.
+
+
+%Their bootstrap procedure appears to be motivated by a Poisson model in which $n_{ij} \sim \text{Poisson}(\mu_j)$. While their procedure is valid in this context, it does not appear to be easy be rigorously justified under other models. 
+
+%In particular, for part b) we proposed a new estimator 
+%\[
+%\tilde{S}_H - \tilde{S}_L = \frac{1}{10} \sum_{i=1}^{10} S_{H,i} -  \frac{1}{10} \sum_{i=1}^{10} S_{L,i}.
+%\]
+%This is just a difference in means estimator and thus the obvious way to estimate its null distribution is simply to re-sample starfish.
+
+
+
+\end{enumerate}
+
+
+\subsection*{Problem 5: EM for a Mixture of Regressions}
+
+\begin{enumerate}
+\item[a)] 
+We have that 
+\[
+\log(p_{\theta}(Y)) = \sum_{i=1}^n \log\left(\sum_{j=1}^k \pi_j \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{1}{2\sigma^2} \left(Y_i - a_j - b_jX_i\right)^2 \right) \right)
+\]
+and 
+\begin{align*}
+\log(p_{\theta}(Y,Z)) & = \sum_{i=1}^n \log\left( \pi_{Z_i} \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{1}{2\sigma^2} \left(Y_i - a_{Z_i} - b_{Z_i}X_i\right)^2 \right) \right)\\
+& = \sum_{i=1}^n \log(\pi_{Z_i}) - \frac{1}{2\sigma^2}  \left(Y_i - a_{Z_i} - b_{Z_i}X_i\right)^2 - \frac{1}{2}\log(2\pi\sigma^2)\\
+& = \sum_{i=1}^n \left( \sum_{j=1}^k \left( \log(\pi_{j}) Z_{ij} - \frac{1}{2\sigma^2}  \left(Y_i - a_{j} - b_{j}X_i\right)^2 Z_{ij} \right)- \frac{1}{2}\log(2\pi\sigma^2) \right).
+\end{align*}
+There are $k$ independent parameters for the $a_j$'s, $k$ independent parameters for the $b_j$'s, $k-1$ independent parameters for the $\pi_j$, and one parameter for $\sigma$ for a total of $3k$ independent parameters.
+\item[b)]
+The notation here isn't very good. In order to run EM we will need to compute $\mme_{\tilde{\theta}}[\log(p_{\theta}(Y,Z))]$ not $\mme_{\theta}[\log(p_{\theta}(Y,Z))]$ where $\tilde{\theta}$ and $\theta$ are two potential values for the fitted parameters. Thus, I will re-define $\tau_{ij} = \mmp_{\tilde{\theta}}(Z_i = j|Y)$. This gives the expression
+\begin{equation}\label{2020Q4_expect_ll}
+\mme_{\tilde{\theta}}[\log(p_{\theta}(Y,Z))] = \sum_{i=1}^n \left( \sum_{j=1}^k \left( \log(\pi_{j})\tau_{ij} - \frac{1}{2\sigma^2}  \left(Y_i - a_{j} - b_{j}X_i\right)^2 \tau_{ij}  \right) - \frac{1}{2}\log(2\pi\sigma^2) \right).
+\end{equation}
+\item[c)]
+The description of EM given in the problem statement is quite bad. The expression $\mme_{\theta,\tau}[\cdot]$ doesn't really make any sense and should be $\mme_{\hat{\theta},\tau}[\cdot]$. Regardless we will solve the problem ignoring the notational issues using the correct version of the EM algorithm. The goal is to optimize (\ref{2020Q4_expect_ll}) over $(a,b,\pi,\sigma)$ (strangely the question does not ask us to optimize $\pi$, but $\pi$ is part of $\theta$ so we certainly need to optimize over it). Optimizing over $\pi$ is a straightforward Lagrange multipliers calculation from which you should find that 
+\[
+\hat{\pi}_j = \frac{ \sum_{i=1}^n \tau_{ij}}{\sum_{k=1}^K \sum_{i=1}^n \tau_{ik}} = \frac{ \sum_{i=1}^n \tau_{ij}}{n},
+\]
+where one easily checks that from the definitions we must have that $\sum_{j=1}^K \tau_{ij} = 1$ for all $i$. Optimizing $a_j$ and $b_j$ splits into $K$ standard weighted least squares problems. Let $T_j = \text{diag}(\tau_{1j},\dots,\tau_{nj})$ and let $X= \begin{bmatrix} \bm{1} & (X_i)_{i=1}^n \end{bmatrix}$. Then, we have that 
+\begin{align*}
+& \left( \begin{matrix}
+ \hat{a}_j \\ \hat{b}_j
+\end{matrix} \right) = (X^TT_jX)^{-1} X^TT_jY\\
+& = \frac{1}{(\sum_{i=1}^n \tau_{ij} X_i^2)(\sum_{i=1}^i \tau_{ij}) - (\sum_{i=1}^n \tau_{ij}X_i)^2}\\
+& \ \ \ \ \ \cdot \left( \begin{matrix}
+(\sum_{i=1}^n \tau_{ij} X_i^2)(\sum_{i=1}^i \tau_{ij}Y_i) - (\sum_{i=1}^n \tau_{ij}X_i)(\sum_{i=1}^n \tau_{ij}X_iY_i) \\ (\sum_{i=1}^n \tau_{ij})(\sum_{i=1}^i \tau_{ij}X_iY_i) - (\sum_{i=1}^n \tau_{ij}X_i)(\sum_{i=1}^n \tau_{ij}Y_i)
+\end{matrix} \right) 
+\end{align*}
+Finally, by differentiating in terms of $\sigma^2$ and re-arranging one can easily compute that 
+\[
+\hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^n \sum_{j=1}^k (Y_i - \hat{a}_j - \hat{b}_jX_i)^2 \tau_{ij}.
+\]
+\item[d)]
+The correct way to compute BIC is to use the \textbf{observed} data log-likelihood. This gives the value
+\[
+\text{BIC} = 3k\log(n) + 2\cdot 116.36 = 9\cdot\log(39) + 2\cdot 116.36 \approx 265.7.
+\]
+\item[e)]
+
+In our setting there are $n=39$ samples and $k=3K$ independent parameters, so we can use the definition of AIC and BIC to compute the AIC and BIC values for $K \in \{1,\dots,5 \}$ in the table presented below. AIC is minimized at $K=5$ so AIC selects $K=5$ (or it could select $K>5$ depending on un-presented log likelihood values) . On the other hand the BIC  is minimized at and selects $K=4$. There are many different alternative ways to select the number of clusters. One option is to use information in the forestry literature to set a prior on $K$ and also a prior on $\theta \mid K$ and then compute the mode of the posterior distribution of $K$ given the data. %For example, we could hard threshold the clustering by assigning each $Y_i$ to the cluster that maximizes $\tau_{ij}$ at the fitted value of $\theta$ and then choose the value of $K$ that minimizes the within-cluster sum of squares.
+\end{enumerate}
+
+\begin{center}
+\begin{tabular}{|| l l l l l l l ||} 
+ \hline
+ Method & Formula & $K=1$ & $K=2$ & $K=3$  & $K=4$ & $K=5$ \\ [0.5ex] 
+ \hline
+AIC & $6K-2 \log p_{\hat{\theta}}(Y)$ & 294.08 & 270.38 & 250.72  & 241.56 & 239.16 \\
+ \hline
+ BIC & $3K \log(39)-2 \log p_{\hat{\theta}}(Y)$ & 299.0707 & 280.3614 & 265.6921  & 261.5227 & 264.1134 \\
+ \hline
+\end{tabular}
+\end{center}
+
+\subsection*{Problem 6: Estimating the Mutation Rate}
+
+There are many possible models you could consider. Two obvious choices are a Poisson model and a linear model. In what follows I will answer parts a, b, and c separately for each of these two choices. \\
+
+\noindent \textbf{Solution using a Poisson model}\\
+
+\noindent One potential model is that the $d_{i,r}$ values are independent with 
+\[
+d_{i,r}|t_i - t_r \sim \text{Poisson}((t_i-t_r)\mu).
+\]
+One nice aspect of this model is that the variance of $d_{i,r}$ scales linearly in the mean, which seems consistent with what we observe in the plot of the data.  A straightforward calculation shows that this gives the maximum likelihood estimator 
+\[
+\hat{\mu} = \frac{\sum_{i=1}^n d_{i,r}}{\sum_{i=1}^n t_i - t_r}.
+\]
+This estimator is unbiased for $\mu$ and since it is a sum of independent random variables it should also be consistent under only mild assumptions on the times $t_i - t_r$. To do inference for $\mu$ we could form the standard confidence interval for the MLE. This would be valid as long as the Poisson model is accurate. If we want to avoid this parametric assumption an alternative is to use the fact that $\hat{\mu}$ is unbiased and an average of independent random variables and thus directly derive a CLT for $\hat{\mu}$. The main thing we will need here is an estimate of the variance of $\hat{\mu}$. We have that 
+\[
+\text{Var}(\hat{\mu}) = \frac{1}{(\sum_{i=1}^n t_i - t_r)^2} \sum_{i=1}^n \text{Var}(d_{i,r}).
+\]
+We know that $\text{Var}(d_{i,r}^2) = \mme[(d_{i,r} - (t_i-t_r)\mu)^2]$. Since $\hat{\mu}$ is consistent for $\mu$ a reasonable way to estimate this quantity is using the estimator
+\[
+\hat{\sigma}^2 =  \frac{1}{(\sum_{i=1}^n t_i - t_r)^2}  \sum_{i=1}^n (d_{i,r} - (t_i - t_r)\hat{\mu})^2.
+\]
+Finally we can use the normal approximation $\hat{\mu} \stackrel{\cdot}{\sim} N(\mu,\hat{\sigma}^2)$ to get a confidence interval for $\mu$.
+
+One flaw in our model is that it assumes a Poisson distribution for the mutations. However, above we derived a non-parameteric method for computing a confidence interval for $\mu$ and thus this modelling assumption is not critical. A potentially larger issue is the presence of outliers in the dataset. In particular, we see that at some of the larger time points there are a few outlying points with very large numbers of mutations (note that a Pois(10) Random variable is 40 or larger with probability less that $10^{-12}$).  These points could have a large influence on the estimator $\hat{\mu}$ and thus heavily impact our estimate of the mutation rate. As a first step we should investigate how the data was collected and try to determine if there were any possible errors in the data collection process that could lead to these outlying points. Alternatively, maybe there is a biological mechanism that would tell us that some rare cases will deviate from the Poisson model presented. In both of these cases we might want to remove these outlying points from the dataset before fitting the model. If we think these outlying points are true data points that cannot be ignored then we could still use the above estimator $\hat{\mu}$. However, we should be conscious of the fact that these points may have an outsized influence on the estimator that will invalidate our normal approximation. To try to judge the size of the influence of these points we could compute $\hat{\mu}$ both with and without removing the outliers and report both values.
+
+Another issue with our model assumption is the assumption of independent observations. In particular, it could be that many observations had a recent ancestor that is also in the data. For example, an observation in January 2020 may be correlated with its direct descendants in the data (if a virus observed in January 2020 has a relatively high hamming distance from from the original strain, it is likely the descendants of that virus also have a relatively high hamming distance from the original strain). It is hard to tell from the information given whether there will be a lot of dependency between the samples without domain knowledge or additional information beyond $d_{r,i}$, $t_i$ and $t_r$. That being said, even if the samples are correlated, the proposed estimator for $\mu$ should still be unbiased and consistent, but the confidence intervals would likely be too small. \\
+
+\noindent \textbf{Solution using a linear model}\\
+
+\noindent An alternative to fit a linear model
+\[
+d_{i,r} = (t_i-t_r)\mu + \epsilon_i.
+\]
+Intuitively, it is reasonable to expect that the variance of $\epsilon_i$ will be larger for larger times as there is more time for mutation events to occur and thus more time to accumulate deviations from the mean. From the plot of the data it looks like a reasonable model would be that $\text{Var}(\epsilon_i)$ increases linearly with time. Thus, we could model that $\text{Var}(\epsilon_i) = (t_i-t_r)\sigma^2$. Using weighted least squares this would give the estimator
+\[
+\hat{\mu} = \frac{\sum_{i=1}^n d_{i,r}}{\sum_{t=1}^n t_i-t_r},
+\]
+which is the same as the estimator from the Poisson model. All the considerations from the previous section still apply to this estimator. Here it is even more clear that we should not make standard modelling assumptions like $\epsilon_i \sim N(0,(t_i-t_r)\sigma^2)$ since we know that the $d_{i,r}$ are discrete. The normal approximation given in the previous section could still be a good way to form a confidence interval for $\mu$. 
+
+
+
+
+

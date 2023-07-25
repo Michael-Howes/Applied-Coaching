@@ -1,0 +1,212 @@
+\section{Applied 2011: Solution \footnote{Will Fithian, Gene Katsevich, Kenneth Tay, Stephen Bates, Nikos Ignatiadis, Dan Kluger and M.H.}}
+
+% Problem 1
+\subsection*{Problem 1: Multiple-testing across genes}
+Key ideas/tools:
+\begin{itemize}
+  \item recognizing multiple testing
+  \item Bonferroni correction
+\end{itemize}
+
+
+With the Bonferroni correction, $0.0003$ becomes $0.3$, so this $p$-value is not so impressive.  On the other hand, IPF1 is not subject to the same multiple comparisons issue since it was pre-selected before looking at the data. Hence, there's no need to ``abandon" IPF1. To try and lend support to IPF1, Dr. Fatti should try to present evidence that he didn't p-hack and was genuinely only looking at the association between IPF1 and insulin production.
+
+\textbf{Other observations:} Note that it is possible for multiple genes to affect insulin production, so there isn't necessarily a binary choice between IPF1 and RG45. It is also possible that many genes show up as significant in this setting because we are testing for marginal association, so genes that are correlated with each other can all show up as significant. Assuming that in John Newsense's analysis, RG45 had the lowest p-value, we are not facing the latter issue of finding genes that aren't directly associated with insulin due to correlations between genes.
+
+% Problem 2
+\subsection*{Problem 2: Poisson GLM modeling of call centers}
+Key ideas/tools:
+\begin{itemize}
+  \item Poisson loglinear models
+  \item using $L_1$-penalization to promote sparsity
+\end{itemize}
+
+First of all, the problem seems to suggest we actually know the rates $\alpha_i$, but that would trivialize things, so let's assume $\alpha_i$ are unknown and are to be estimated through historical data.
+
+\begin{enumerate}
+\item[(a)] A simple model for a day's worth of historical data is $H_i \overset{\text{ind}}\sim \text{Poi}(\alpha_i)$, and after perturbation by $\beta_i$, we have $X_i \overset{\text{ind}}\sim \text{Poi}(\alpha_i \cdot \beta_i)$. Note that independence might be a bad or not bad assumption depending on the application. Often ``traffic" (e.g. at call centers) is modeled using a Poisson process, which has independent increments. However, if it is phone traffic just between two phone numbers, then independence doesn't seem reasonable.
+
+\item[(b)] If we try to fit separate parameters for every single time interval, then the maximum likelihood estimates are $\hat \alpha_i = H_i, \ \hat \beta_i = X_i/H_i$. Depending on how much traffic there actually is, these might or might not be reasonable estimates. For example, if there's not much traffic, and $H_i = 0$ for some $i$, then $\hat \beta_i$ is not even defined. On the other hand, if there is a lot of traffic then the standard deviation of $\hat{\alpha}_i$ is $\sqrt{\alpha_i^*}$ which is small relative to $\alpha_i^*$ when $\alpha_i^*$ is large. Here we use $\alpha_i^*$ to denote the true value of the parameters in the case where the model is true.
+
+An alternative approach is to fit a smooth model to the traffic rate:
+\begin{equation*}
+\log \alpha_i = \sum_{j = 1}^k \gamma_j h_j(t_i); \quad \log(\alpha_i \cdot \beta_i) = \sum_{j = 1}^k \delta_j h_j(t_i),
+\end{equation*}
+where $t_i$ is the time at the midpoint of interval $i$, and $h_j$ are a set of cubic spline functions. Then, we can fit Poisson regressions to $H_i$ and $X_i$ to obtain $\hat \gamma_j$ and $\hat \delta_j$, and then define
+\begin{equation*}
+\hat \alpha_i = \exp\left(\sum_{j = 1}^k \hat \gamma_j h_j(t_i)\right); \quad \hat \beta_i = \exp\left(\sum_{j = 1}^k (\hat \delta_j - \hat \gamma_j) h_j(t_i)\right).
+\end{equation*}
+
+\item[(c)] Instead of modeling $\beta_i$ smoothly using a basis expansion, let's fit each $\beta_i$ separately, but use a lasso penalty to regularize. Let $b_i = \log(\beta_i)$. Then, we assume
+\begin{equation*}
+\log \alpha_i = \sum_{j = 1}^k \gamma_j h_j(t_i); \quad \log (\alpha_i \cdot \beta_i) = b_i + \sum_{j = 1}^k \gamma_j h_j(t_i).
+\end{equation*}
+We can throw this all into one big Poisson regression and then regularize using an $L_1$ penalty on $b_i$.
+
+\item[(d)] If we had $(H^1, \dots, H^M)$, then $\sum_{m = 1}^M H^m_i \sim \text{Poi}(M \alpha_i)$ would be sufficient, so this essentially reduces to the previous problem. Here are two reasons why this could be useful: Perhaps, if we really have many days of traffic data (and also expect that traffic times have not changed over these days), then perhaps we would have enough data to abandon the smooth basis expansion for the modeling of the historical $\log(\alpha_i)$ and include each $\alpha_i$ as an individual parameter in the model (the other considerations described above would still apply).  Furthermore, having several days of historical data may be useful for a	different reason: it affords us a simple way to check the Poisson assumption. e.g. we could check for over-dispersion and if we detect over-dispersion, we can fit a negative binomial GLM instead.
+
+\end{enumerate}
+
+
+% Problem 3
+\subsection*{Problem 3: Pearson $\chi^2$ puzzle}
+Key ideas/tools:
+\begin{itemize}
+\item definition of $\chi^2$ test
+\end{itemize}
+
+Suppose we have the following expected counts:
+$$
+\begin{array}{|c|c|}
+\hline
+E_{11} & E_{12} \\ \hline
+E_{21} & E_{22} \\ \hline
+\end{array}$$
+Under the assumption of independence, the expected counts become:
+\begin{align*}
+E_{11} &= \frac{(a + b)(a + c)}{a + b + c + d} &
+E_{12} &= \frac{(a + b)(b + d)}{a + b + c + d} \\
+E_{21} &= \frac{(c + d)(a + c)}{a + b + c + d} &
+E_{22} &= \frac{(c + d)(b + d)}{a + b + c + d}.
+\end{align*}
+Recall that in this case the pearson $\chi^2$ statistic is 
+\begin{equation} \label{eq:cs-stat}
+X^2 := \frac{(a - E_{11})^2}{E_{11}} + \frac{(b - E_{12})^2}{E_{12}} + \frac{(c- E_{21})^2}{E_{21}} + \frac{(d - E_{22})^2}{E_{22}},
+\end{equation}
+and this has a limiting $\chi^2$ distribution with 1 degree of freedom. As a result, a test will be rejected at the $.05$ level if $X^2 \ge 1.96^2 \approx 4$.
+
+Intuitively, we have two ways of making $X^2$ large. One option is to set $a=1$ and take $b=c$ large (that is $(0,0)$ occurs much less frequently than $(0,1)$ and $(1,0)$). The other option is to take $b=c=1$ and $a$ large (that is $(0,0)$ occurs much more frequently than $(0,1)$ and $(1,0)$). It turns out the second option will give us what we want. This is because the question requires $d \ge 1$. 
+
+We will show that if $a >> b,c$, then the chi-squared test will reject as long as $d \ge 1$. Set $b=c=1$, then $E_{22} = \frac{(d+1)^2}{a+d+2}$, and the last term in $\eqref{eq:cs-stat}$ becomes
+\begin{equation*}
+\frac{(d-E_{22})^2}{E_{22}} = E_{22} - 2d + \frac{d^2}{E_{22}} \geq - 2d + \frac{d^2}{(d+1)^2} (a+d+2) \geq - 2d + \frac{1}{4}(a+d+2), 
+\end{equation*}
+where the last inequality uses the fact that $d \geq 1$. So, for example, if we set $a=10^6$, the $\chi_1^2$ statistic is extremely significant for $1\leq d\leq 10^5$ due to this term.  On the other hand, if $a,d>10^5$ then $E_{12}=\frac{(a+1)(d+1)}{a+d+2}\gg 1$ and the $\chi_1^2$ statistic is extremely significant due to the $b$ term in \eqref{eq:cs-stat}. Therefore with $a=10^6,b=c=1$, and any $d \geq 1$, the Pearson $\chi^2$ test of independence will be rejected at the $0.05$ level.
+
+% Problem 4
+\subsection*{Problem 4: Assessing time series correlations}
+Key ideas/tools:
+\begin{itemize}
+\item time series have correlated data points 
+\item block bootstrap or randomization for timeseries
+\end{itemize}
+
+The problem doesn't seem to be going for this, but one thing to note is that the wily graduate student has done ``a bit of searching in a published table of stock market trends'' to find SKRN. Even if the test for correlation was valid, it would need to be corrected for how many other stocks the graduate student looked at.
+
+\begin{enumerate}
+\item[(a)] One way to test for correlation is to test significance in a linear regression of say $Y_i \sim X_i$. The p-value produces by \text{cor.test} is made under the assumption that $(X_i,Y_i)$ i.i.d. normal with correlation 0. Under this assumption,
+\[\frac{\sqrt{n-2}r_n}{\sqrt{1-r_n^2}} \sim t_{n-2}, \]
+where $r_n$ is the sample correlation, $n$ is the number of samples and $t_{n-2}$ is the t distribution with $n-2$ degrees of freedom. 
+
+For the confidence interval \texttt{cor.test} uses Fisher's transformation: recall \[\text{arctanh}(u) = 1/2 \log((1+u)/(1-u)).\] 
+If all the pairs $(X_i,Y_i)$ are i.d.d. from some joint distribution with correlation $\rho$, then
+$$ \text{arctanh}(r_n) \approx \nn\p{ \text{arctanh}(\rho),  \frac{1}{n-3}}. $$
+Thus, both the p-value and the confidence interval are made under the assumption that the pairs $(X_i,Y_i)$ are i.i.d.
+
+In any case, we are making an assumption that the different time points are independent, which is contradicted by a cursory glance at the data. The non-independence will lead our $t$ statistic to have much higher variance than its nominal null distribution.
+	  	
+\item[(b)] If the pairs $(X_i,Y_i)$ were really i.i.d. pairs, we could do a standard permutation test (i.e. permute the $Y_i$ and leave the $X_i$ fixed) to obtain null distributions of whatever test statistic we might like. Alternatively, we could bootstrap by resampling $(X_i,Y_i)$ pairs with replacement. Both these methods will fail due to the temporal dependence.
+
+\item[(c)] We could use the block bootstrap to create a confidence interval for the correlation coefficient, and check if the block bootstrap confidence interval contains 0. Looking at the data, it seems reasonable to choose 20 blocks (each with 10 consecutive days) or to choose 10 blocks (each with 20 consecutive days).
+\end{enumerate}
+
+
+% Problem 5
+\subsection*{Problem 5: Entropy of Gaussians, (sparse) PCA and ``ICA''}
+Key ideas/tools:
+\begin{itemize}
+\item directly computing the entropy
+\item definition of PCA
+\item Ideas from ICA (FastICA) and sparse PCA?
+\end{itemize}
+
+\begin{enumerate}
+\item[(a)] Note that $Z=\Sigma^{-1/2}(X-\mu)$ has standard normal distribution. Thus,
+\begin{align*}
+H(X)
+&= -\mathbb E\left[\frac{-1}{2}(X-\mu)^\top \Sigma^{-1}(X-\mu) - \frac{1}{2}\log|\Sigma| - \frac{p}{2}\log 2\pi\right]  \\
+&= \frac{1}{2}\mathbb E \left[ Z^\top Z \right] + \frac{1}{2}\log|\Sigma| + \frac{p}{2}\log 2\pi\\
+&= \frac{1}{2} \left( p + \log|\Sigma| + p \log 2\pi \right).
+\end{align*}
+
+\item[(b)] $Y = a^\top X \sim N_1(a^\top \mu,a^\top \Sigma a)$, so by part (a), its entropy is
+\[ H(Y) = \frac{1}{2}(1+\log a^\top \Sigma a + \log 2\pi). \]
+
+Maximizing $H(Y)$ is equivalent to maximizing $a^\top \Sigma a$. Thus, the entropy-maximizing direction is the first eigenvector of $\Sigma$.
+
+\item[(c)] The MLE for an IID sample of multivariate Gaussians is $$\hat{\mu} =\bar{x}_N = \frac{1}{N} \sum_{i=1}^N x_i \quad  \text{and} \quad \widehat\Sigma = \frac{1}{N} \sum_{i=1}^N (x_i -\bar{x}_N) (x_i -\bar{x}_N)^\top.$$ 
+
+This fact can be derived by hand or see equation (4.2.3) in \cite{Mardia1979}, among others, for a reference about this fact. $\hat a$ is the unit vector in the direction of the leading eigenvector of $\widehat\Sigma$, which by definition of PCA is the first principal component direction of the data.
+
+\item[(d)] It's not too clear what the question is going for, perhaps one interpretation is that we seek to find the first direction from a sparse PCA approach. That is to solve 
+\[\begin{array}{ll}
+  \mbox{maximize} & a^\top \widehat{\Sigma} a - \lambda \Vert a \Vert_1 \\
+  \mbox{subject to} & \Vert a \Vert_2 = 1
+\end{array} \]
+This problem is not convex, but it can be solved heuristically. As for not assuming a parametric form of the density, one can give non-parametric justifications for PCA, and so the above is still a reasonable answer.
+
+Another interpretation is that we seek to find a direction that maximizes the population entropy. Let $\sigma^2(a) =  a^\top \Sigma a$, the variance along the $a$-th direction. For simplicity also assume that $\mu=0$. Also assume that $P$ is absolutely continuous w.r.t. the Lebesgue measure. Then let $\tilde{p}_a$ be the Normal distribution with variance $\sigma^2(a)$ and note
+$$
+\begin{aligned}
+\EE{-\log(P_a)} &= - \int \log(p_a)p_a d\lambda \\
+ &=  -\int \log(p_a/\tilde{p}_a)p_a d\lambda -   \int \log(\tilde{p}_a) p_a \lambda \\
+ &= - D_{\text{KL}}(p_a, \tilde{p}_a) + \frac{1}{2}(1+\log(\sigma^2(a)) + \log 2\pi).
+\end{aligned}
+$$
+So we want to find a direction that leads to both a large variance and is close in KL-Divergence to a Normal distribution with the same variance (note KL divergence is affine invariant too). One way to approach this would be to try similar heuristics as in FastICA. Sparsity could be enforced by an $L1$ penalty or perhaps a forward-stepwise approach.
+\end{enumerate}
+
+
+
+\subsection*{Problem 6: Logistic regression modeling with spatial data}
+Key ideas/tools:
+\begin{itemize}
+\item correlations within spatial data
+\item cross-validation with correlated data points
+\end{itemize}
+
+% Problem 6
+\begin{enumerate}
+\item[(a)]
+\begin{enumerate}
+\item[(i)] We model 
+\begin{equation}\label{lr_model}
+Y_i \overset{\text{ind}}\sim \text{Ber}(p_i), \quad \text{logit}(p_i) = \beta_0 + \beta^\top X_i.
+\end{equation}
+
+Once we fit $\hat \beta_0, \ \hat \beta$, we classify a new observation $X^*$ based on $Y^* = I(\hat \beta_0 + \hat \beta^\top X^* > 0)$. Hence, this classifier has a linear decision boundary.
+	  			  		
+\item[(ii)] We can estimate the classification error using either cross-validation or a held-out test set.
+	  			  		
+\item[(iii)] Equation (\ref{lr_model}) states our assumptions, namely that the $Y_i$ are independent given $X_i$, and follow the Bernoulli distribution with the given parametric form.
+	  		
+\end{enumerate}
+
+\item[(b)] 
+
+{\bf Assessing classification accuracy}
+
+First note that if the main goal is classification, then it is not very crucial to check all the statistical assumptions of logistic regression. Since the scientist is primarily interested in classification accuracy, the main thing we should be worried about is that our cross-validation estimate of accuracy is not valid when the data points are not independent. In this case, we are probably concerned primarily about some sort of spatial or temporal correlation among the samples. We can check for spatial dependence by plotting a heatmap of the residuals (see below), with coordinates given by the coordinates of each sampled region. A non-random pattern here would suggest spatial correlation. We can do the same for temporal correlation if the samples were collected at different times.
+
+If there is important spatial structure, we can instead do a grouped cross-validation, where we put points that are spatially close into the same fold. This will ensure that the test points are nearly independent of the training points for each fold, which will result in a more reliable estimate of classification accuracy.
+
+{\bf Assessing linearity and independence}
+
+Modeling assumptions matter most when we want to do inference based on the model. If the environmental scientist still cares about model fit, then we could do the following.
+	  	
+\begin{enumerate}
+\item[(i)] Diagnosing both linearity and independence are usually done by looking at various plots involving residuals. For logistic regression, we can define Pearson residuals via
+\begin{equation*}
+r_i = \frac{Y_i - \hat p_i}{\sqrt{\hat p_i(1 - \hat p_i)}}.
+\end{equation*}
+To check linearity, we can plot these residuals versus each of the predictor variables. Seeing a non-random pattern might suggest that high-order terms or interactions need to be included in the model. (We can also look at deviance residuals, note though that in general ``residuals'' for general GLMs are hard to interpret compared to linear regression residuals.)
+	  			  		
+
+	  		
+\item[(ii)] We can augment the logistic regression with higher order terms or interactions if the linearity of the model is in question, though once we start adding lots of these terms we should start regularizing (see also part (c)). If there is spatial or temporal autocorrelation, we could add extra spatial or temporal spline terms to the regression to mitigate this effect. If we care about finding standard errors for our coefficients in the presence of autocorrelation, we could bootstrap by resampling spatial blocks of data points.
+\end{enumerate}
+
+\item[(c)] Some form of dimension reduction or regularization would be advisable in this context. As far as dimension reduction goes, principal components regression would apply if we had correlated features. An alternative is to regularize. In particular, if we think a small subset of the predictors is relevant, we can apply $L_1$ regularization; if predictors are correlated we can apply $L_2$ regularization; if both apply then we could use elastic net regularization. To choose the tuning parameters, we should perform cross-validation using folds that respect the spatial structure, as described in part (b).
+
+\end{enumerate}
+	

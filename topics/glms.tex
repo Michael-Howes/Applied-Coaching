@@ -1,0 +1,233 @@
+\section{Generalized Linear Models \footnote{Gene Katsevich, Stephen Bates, Nikos Ignatiadis, Isaac Gibbs, Dan Kluger and M.H.}}
+
+\subsection{Definitions}
+
+Let
+\begin{equation}\label{exp}
+    f_\eta(y) =  \exp\left(\eta y - \psi(\eta)\right)f_0(y), 
+\end{equation}
+be a one-parameter exponential family with \emph{natural parameter} $\eta \in \reals$, cumulant generating function 
+\[
+    \psi(\eta) = \log\left(\int \exp(\eta y)f_0(y)dy\right),
+\]
+and reference measure $f_0(y)$. Through-out we will assume that the density \eqref{exp} is with respect to a fixed base measure $\nu$ which will either be a Lebesgue measure or some sort of counting measure. Define,
+\[\mu=\mu(\eta) = \bbE_\eta[Y], \quad \text{and}\quad  W(\eta) = \var_\eta[Y]. \]
+By swapping differentiation and integration we get,
+\[\mu(\eta) = \dot{\psi}(\eta), \quad \text{and}\quad  W(\eta) = \ddot{\psi}(\eta). \]
+Since $\ddot{\psi}(\eta) = W(\eta) \ge 0$, the function $\dot{\psi}(\eta)$ is non-decreasing in $\eta$. We will restrict to examples when $\ddot{\psi}(\eta) >0$ for all $\eta$ and hence $\dot{\psi}(\eta)$ is strictly increasing. It follows that $\dot{\psi}(\eta)$ is injective. Therefor there exists $g = \dot{\psi}^{-1} : \range(\dot{\psi}) \to \reals$ such that
+\[\eta = g(\mu). \]
+The function $g$ is called the \emph{link function} and $\dot{\psi} = g^{-1}$ is called the \emph{inverse link function} or \emph{mean function}. The link function gives the natural parameter $\eta$ in terms of the \emph{mean parameter} $\mu$. Since $g$ is a one-to-one correspondence we can parametrize the family \eqref{exp} in terms of either $\eta$ or $\mu$ and use $g$ to go between the two parametrizations. We will use $f_{\mu}$ to denote the mean parametrization.
+
+Now suppose that we have responses $Y_i$ and features $X_i \in \reals^p$ for $1\le i \le p$. A \emph{canonical generalized linear model} is a model of the form
+\begin{equation}\label{glm model}Y_i \stackrel{\mathrm{ind}}{\sim} f_{\mu_i}, \quad \eta_i=g(\mu_i)= X_i^\top \beta, \end{equation}
+where $\beta \in \reals^p$ are the model parameters. The above model defines a probability distribution on $Y = (Y_1,\ldots,Y_n)^\top$ which is given by
+\begin{align*}
+    p_\beta(Y) &= \prod_{i=1}^n f_{\eta_i}(Y_i)\\
+    &=\prod_{i=1}^n \exp\left(X_i^\top \beta Y_i - \psi\left(X_i^\top \beta\right)\right) f_0(y_i)\\
+    &=\exp\left(\beta^\top (X^\top Y) - \sum_{i=1}^n \psi\left(X_i^\top \beta\right)\right)\prod_{i=1}^n f_0(y_i),
+\end{align*}
+where $X \in \reals^{n \times p}$ has rows $X_i^\top$. This is a $p$-dimensional exponential family with natural parameter $\beta \in \reals^p$ and sufficient statistic $X^\top Y \in \reals^p$. 
+
+\subsection{Examples} 
+
+{\bf{Linear regression.}} Consider a normal linear regression model with known variance $\sigma^2$. After rescaling we may assume that $\sigma^2 = 1$. This is an exponential family with density,
+\[f_\mu(y) = \exp\left(\mu y -\frac{1}{2}\mu^2\right)\frac{1}{\sqrt{2\pi \sigma^2}}\exp\left(-\frac{1}{2}y^2\right), \quad \eta = \mu. \]
+In this case the mean parameter is equal to the natural parameter. That is, the link function is the identity $g(\mu) = \mu$. In this case \eqref{glm model} becomes
+\[
+    Y_i \stackrel{\mathrm{ind}}{\sim} \calN(\mu_i, 1), \quad \eta_i = \mu_i = X_i^\top \beta.    
+\]
+{\bf{Logistic regression.}} Suppose we have binary responses $Y_i \in \{0,1\}$. Then, it is appropriate to work with the Bernoulli distribution. This is an exponential family with density,
+\[f_\mu(y) = \exp\left(\log\left(\frac{\mu}{1-\mu}\right)y+\log(1-\mu)\right), \quad \eta = \log\left(\frac{\mu}{1-\mu}\right) = \logit(\mu).  \]
+In this case the mean parameter, $\mu$, is the probability of $\{Y_i=1\}$. The natural parameter, $\eta$ is the log-odds of $\{Y_i = 1\}$. The link function is the logit function $g(\mu) = \logit(\mu) = \log\left(\frac{\mu}{1-\mu}\right)$. The model \eqref{glm model} becomes,
+\[Y_i \simind \mathrm{Bern}(\mu_i), \quad \eta_i = \logit(\mu_i) = X_i^\top \beta. \]
+{\bf Poisson regression.} Suppose we have count responses $Y_i \in \{0,1,2,\ldots\}$. Then we can work with the Poisson family,
+\[f_\mu(y) = \exp\left(\log(\mu)y -\mu\right) \frac{1}{y!}, \quad \eta = \log(\mu). \]
+The link function is the logarithm, $g(\mu) = \log(\mu)$. The GLM is 
+\[Y_i \simind \mathrm{Pois}(\mu_i), \quad \eta_i = \log(\mu_i) = X_i^\top \beta. \]
+Poisson regression models are often called \emph{log-linear models}. 
+
+\subsection{Parameter estimation}
+
+Given data $(X_i,Y_i)$ and a model of the form \eqref{glm model} we can fit the parameters $\beta$ by maximum likelihood. As before $X \in \reals^{n \times p}$ is the design matrix with rows $X_i^\top \in \reals^p$ and $Y \in \reals^n$ is the response vector with entries $Y_i$. If we fit the model
+\[Y_i \simind f_{\eta_i}, \]
+with parameters $\eta \in \reals^n$, then\footnote{up to a constant that does not depend on $\eta$} the log-likelihood is
+\[\ell(\eta;Y) = \sum_{i=1}^n \eta_iY_i - \psi(\eta_i) = \eta^\top Y - \sum_{i=1}^n \psi(\eta_i). \]
+Plugging in $\eta = X\beta$ for parameters $\beta \in \reals^p$, we get the likelihood
+\begin{equation}\label{glm likelihood}\ell(\beta;Y) = \beta^\top(X^\top Y) - \sum_{i=1}^n \psi(X_i^\top \beta). \end{equation}
+This is a concave function of $\beta$. If we differentiate with respect to $\beta$ we get 
+\[\dot{\ell}(\beta;Y) = X^\top Y - \sum_{i=1}^n X_i\dot{\psi}(X_i^\top \beta) = X^\top Y - \sum_{i=1}^n X_i \mu_i = X^\top(Y-\mu_\beta), \]
+where $\mu_\beta = \bbE_\beta[Y]$. To maximize the log-likelihood, we want to set the above derivative equal to zero. We can conclude that $\hat{\beta}$ maximizes \eqref{glm likelihood} if and only if,
+\begin{equation}\label{glm first order}X^\top(Y-\mu_{\hat{\beta}}) = 0. \end{equation}
+In the special case of a linear model, $\mu_\beta$ is a linear function of $\beta$ and \eqref{glm first order} becomes the normal equation $X^\top(Y-X\hat{\beta})=0$ which has the familiar solution $\hat{\beta} = (X^\top X)^{-1}X^\top Y$. 
+
+For non-identity link functions, $\dot{\ell}(\beta;Y)$ is not linear in $\hat{\beta}$ and equation \eqref{glm first order} does not have a closed-form solution. Instead, the likelihood \eqref{glm likelihood} is maximized by an iterative algorithm. It can be shown that the function $\eta \mapsto \psi(\eta)$ is convex and hence \eqref{glm likelihood} is concave in $\beta$. This means that we can quickly and reliably find the MLE using the iterative method Newton---Raphson.
+
+\subsubsection*{Newton--Raphson}
+
+
+The Newton--Raphson algorithm iteratively makes a linear approximation to \eqref{glm first order} and then solves this linear approximation to produce a sequence of iterates $\hat{\beta}^{(0)}, \hat{\beta}^{(1)},\ldots$ which converge to the MLE. Specially, we start with some $\hat{\beta}^{(0)} \in \reals^p$. To go from $\hat{\beta}^{(t)}$ to $\hat{\beta}^{(t+1)}$, we use the approximation for $\hat{\beta} \approx \hat{\beta}^{(t)}$,
+\begin{align*}
+    \mu_{\hat{\beta}}&=\bbE_{\hat{\beta}}[Y] \\
+    &=\dot{\psi}(X\hat{\beta})\\
+    &\approx \dot{\psi}(X\hat{\beta}^{(t)}) +  \ddot{\psi}(X\hat{\beta}^{(t)})X(\hat{\beta}-\hat{\beta}^{(t)}) \\
+    &= \mu_{\hat{\beta}^{(t)}} + W^{(t)}X(\hat{\beta}-\hat{\beta}^{(t)}),
+\end{align*}
+where $\mu_{\hat{\beta}^{(t)}} = \bbE_{\hat{\beta}^{(t)}}[Y] \in \reals^n$  and $W^{(t)} \in \reals^{n \times n}$ is the diagonal matrix with entries $W(X_i^\top \hat{\beta}^{(t)}) = \var_{\hat{\beta}^{(t)}}(Y_i)$. Plugging this approximation into the first order condition \eqref{glm first order}, we get
+\begin{align*}
+    0=X^\top(Y-\mu_{\hat{\beta}})\approx X^\top(Y - \mu_{\hat{\beta}^{(t)}}) - X^\top W^{(t)}X(\hat{\beta}-\hat{\beta}^{(t)}). 
+\end{align*}
+Setting the above equal to zero and solving for $\hat{\beta}$ gives the iteration
+\begin{equation}\label{glm NR}
+    \hat{\beta}^{(t+1)} = \hat{\beta}^{(t)} + (X^\top W^{(t)}X)^{-1}X^\top(Y-\mu_{\hat{\beta}^{(t)}})
+\end{equation}
+This algorithm is sometimes called \emph{iteratively re-weighted least-squares} due to the following connection with least-squares.
+
+\subsubsection*{Iterative re-weighted least-squares}
+
+At iterate $t$ of Newton--Raphson, we have an estimate of the variance of $Y_i$, namely $W^{(t)}_{ii}$. We can use these estimates to create an approximate model of $Y$,
+\[Y = \mu_\beta + \varepsilon, \quad \varepsilon \sim \calN(0, W^{(t)}). \]
+As before, we can use
+ \[\mu_{\beta} \approx \mu_{\hat{\beta}^{(t)}} + W^{(t)}X(\beta - \hat{\beta}^{(t)}).\] 
+Combing these two approximations give a linear model approximation for $Y$
+\[Y = \mu_{\hat{\beta}^{(t)}} + W^{(t)}X(\beta - \hat{\beta}^{(t)}) + \varepsilon, \quad \varepsilon \sim \calN(0, W^{(t)}).\]
+This is almost a familiar linear model, but the mean is offset by $\mu_{\hat{\beta}^{(t)}}$ and the errors have different variances. We can make a location-scale translation to get a more familiar linear model,
+\begin{align*}
+    \left(W^{(t)}\right)^{-1/2}(Y- \mu_{\hat{\beta}^{(t)}}) &= \left(W^{(t)}\right)^{1/2}X(\beta - \hat{\beta}^{(t)}) + \left(W^{(t)}\right)^{-1/2}\varepsilon.
+\end{align*} 
+Note that $\left(W^{(t)}\right)^{-1/2}\varepsilon \sim \calN(0,I)$. Now define 
+\begin{align*}
+    Z_t &= \left(W^{(t)}\right)^{-1/2}(Y- \mu_{\hat{\beta}^{(t)}}),\\
+     \widetilde{X}_t& = \left(W^{(t)}\right)^{1/2}X,\\
+      \delta &= \beta - \hat{\beta}^{(t)} \text{ and }\\
+      \tilde{\varepsilon} &= \left(W^{(t)}\right)^{-1/2}\varepsilon.
+\end{align*} 
+These transformations give the model,
+\[Z_t = \widetilde{X}_t \delta + \tilde{\varepsilon}, \quad \tilde{\varepsilon} \sim \calN(0,I). \]
+We can then get the usual OLS estimate $\hat{\delta} = \left(\widetilde{X}_t^\top\widetilde{X}_t\right)^{-1}\widetilde{X}_t^\top Z_t$ and set $\hat{\beta}^{(t+1)}=\hat{\beta}^{(t)}+\hat{\delta}$. Unpacking all the definitions shows this is equivalent to \eqref{glm NR}.
+
+\subsection{Inference}
+
+Now that we can fit generalized linear models, we can move on to inference. The typical inference tasks are finding standard errors and confidence intervals for $\beta_j$,  testing $\beta_j = 0$ and performing model comparison.
+
+\subsubsection*{Confidence regions}
+
+Suppose the model \eqref{glm model} holds. That is,
+\[Y_i \stackrel{\mathrm{ind}}{\sim} f_{\mu_i}, \quad \eta_i=g(\mu_i)= X_i^\top \beta, \]
+for some $\beta \in \reals^p$. Then, the MLE $\hat{\beta}$ satisfies
+\[ \hat{\beta} \approx \calN(\beta, (X^\top W_\beta X)^{-1}), \]
+where $W_\beta = \var_\beta(Y) \in \reals^{n \times n}$. Since we do not know $\beta$, we use the plug in principle 
+\[\hat{\beta} \approx \calN(\beta, (X^\top W_{\hat{\beta}} X)^{-1}). \] 
+For this normal approximation we get the following, which are what R reports when you use \verb|glm|.
+\begin{itemize}
+    \item An estimate for the standard error of $\beta_j$: $\mathrm{SE}(\hat{\beta}_j) = \sqrt{\left[(X^\top W_{\hat{\beta}} X)^{-1}\right]_{jj}}$.
+    \item A confidence interval for $\beta_j$: $\hat{\beta}_j \pm z_{1-\alpha/2} \mathrm{SE}(\hat{\beta}_j)$.
+    \item A p-value for the hypothesis $\beta_j = 0$: $p = \mathbb{P}(|Z| > |\hat{\beta}_j|/\mathrm{SE}(\hat{\beta_j}))$.
+\end{itemize}
+The p-value above is based on the Wald test. You could also get p-values from the Rao-Score test or the log-likelihood test.
+
+
+\subsubsection*{Model comparison}
+
+In a linear model, we use the F-test to compare a sub-model to a larger model. This test is based on the residual sum of squares (RSS). In a generalized linear model, the \emph{deviance} takes the place of the RSS. Given a model $M$ and data $Y$, the deviance of $M$ is defined to be twice the increase in log-likelihood you get from switching from model $M$ to the \emph{saturated model}. The saturated model is $Y_i \simind f_{\eta_i}$ where we assume $Y_i$ are from the exponential family $f_\eta$, but now we have a parameter for each data point. In the saturated model, the MLE $\hat{\eta}$ solves $\mu_{\hat{\eta}} = Y$ and thus the deviance is
+\[D(M;Y) = 2(\ell(Y;Y) - \ell(g^{-1}(X\hat{\beta}_M);Y)),\]
+where $\hat{\beta}_M$ is the MLE under the model $M$, $g^{-1}$ is the inverse link function and $\ell(\eta;Y)$ is the exponential family log-likelihood.
+
+\begin{example}
+    In a normal linear model $Y \sim \calN(\mu,I)$, the log-likelihood is $\ell(Y,\mu) = C -\frac{1}{2}\Vert Y - \mu \Vert_2^2$ where $C$ is a constant. The likelihood in the saturated model is $C$ and the deviance in a linear model $\mu = X \beta$ is,
+    \[D(M;Y) = 2(\ell(Y;Y)-\ell(\hat{\beta}_M);Y) = 2C - 2C + \Vert Y - X\hat{\beta}_M \Vert_2^2 = \Vert Y - \hat{Y}_M \Vert_2^2, \]
+    which is exactly the residual sum of squares.
+\end{example}
+The deviance is one way of measuring model fit. If the model $M$ has $p$ features and $Y$ is generated according to $M$, then (in some settings)
+\[D(M;Y) \approx \chi^2_{n-p}. \]
+This asymptotic approximation can often fail. The problem is that the degrees of freedom grow with the number of samples $n$. It is still a good rule of thumb that values of $D(M;Y)$ much larger than $n-p$ give evidence against the model. More generally, given two models $M_1 \subseteq M_2$, you can use the difference of deviances $D(M_1;Y) - D(M_2;Y)$ to compare models $M_1$ and $M_2$. Asymptotically,
+\[
+    D(M_1;Y) - D(M_2;Y) = 2(\ell(Y;\hat{\beta}_{M_2}) - \ell(Y;\hat{\beta}_{M_1})) \sim \chi^2_{p_2-p_1}, 
+\]
+where $p_2$ is the dimension of $M_2$ and $p_1$ is the dimension of $M_1$. This approximation is more accurate.
+
+\subsubsection*{Other method of inference}
+
+The previous two methods relied on the model \eqref{glm model} being true for some $\beta^\star \in \reals^p$. If you doubt the model assumptions, then there are two common procedures. First, you can bootstrap to get standard errors for $\beta_j$ or you could use the \emph{sandwich estimator} 
+\[\widehat{\var}(\hat{\beta}) = (X^TW_{\hat{\beta}}X)^{-1} \hat{\Sigma} (X^TW_{\hat{\beta}}X)^{-1}, \]
+where
+\[\hat{\Sigma} = \sum_{i=1}^n x_ix_i^T(y_i - \mu^i_{\hat{\beta}})^2 \approx n\text{Var}(x_i(y_i - \mu_{\hat{\beta}})). \]
+This estimator is valid under the assumption $(x_i,y_i) \simiid P$ for some distribution $P$ ($P$ need not be a distribution in our model). 
+
+\subsubsection*{Interpretation of the coefficients}
+
+The coefficients in  GLM should be interpreted differently to the coefficients in a linear model. This is because the features $X_j$ have a linear affect of the natural parameters $\eta$ not the mean parameters $\mu$. You can use the link functions to translate from natural parameters to mean parameters. 
+
+\begin{itemize}
+    \item In logistic regression, an increase in one unit of $X_j$ leads to an expected increase by $\beta_j$ in the log-odds. Equivalently, the odds increase by a multiplicative factor of $\exp(\beta_j)$. If the log-odds are already very large or very small, then the additive increase by $\beta_j$ may have a small effect on the probability that $Y=1$.
+    \item In Poisson regression, an increase in one unit of $X_j$ lead to an expected increase by $\beta_j$ in the log-mean. Equivalently, the expectation of $Y$ will increase by a factor of $\exp(\beta_j)$.
+\end{itemize}
+Interpreting interaction affects in GLMs is even harder. See \cite{rohrer_arslan_interactions}.
+
+
+\subsection{R code}
+
+In \verb|R| you can fit a GLM with the call,
+\begin{minted}{R}
+    glm(Y ~ X, family = *, weights = *)
+\end{minted}
+where \verb|Y| is your response vector and \verb|X| is your feature matrix. For example,
+\begin{itemize}
+    \item {\bf Linear regression} Although you should use \verb|lm| for linear regression, you can use \verb|glm|,
+\begin{minted}{R} 
+    glm(Y ~ X, family = gaussian(link = "identity")) 
+\end{minted}
+    \item {\bf Logistic regression} If \verb|Y_i| is a binary vector, then function call is
+\begin{minted}{R} 
+    glm(Y ~ X, family = binomial(link = "logit")) 
+\end{minted}
+    You can also fit a logistic model to binomial data. Consider the model,
+    \[Y_i \sim \mathrm{Bin}(n_i, \mu_i); \quad \eta_i = \logit(\mu_i) = X_i^\top \beta, \]
+    where $n_i$ are known constants. This is equivalent to an ``unfolded'' logistic model where you turn each $Y_i$ into $n_i$ $0/1$ valued observations with the same features $X_i$. The function \verb|glm| can handle binomial data directly. If \verb|n| is a vector of the counts $n_i$, then you can use either of the following commands,
+\begin{minted}{R}
+    glm(Y/n ~ X, family = binomial(link = "logit"), weights = n)
+    glm(cbind(Y,n-Y) ~ X, family = binomial(link = "logit"))
+\end{minted}
+\item {\bf Poisson regression} Use the command,
+\begin{minted}{R}
+    glm(Y ~ X, family = poisson(link = "log"))
+\end{minted}
+\end{itemize}
+
+\subsection{Offsets}
+
+Sometimes you'd want to fit a model of the form,
+\[ 
+    Y_i \simind f_{\eta_i}; \quad \eta_i = g(\mu_i) = \alpha_i + X_i^\top\beta,    
+\]
+where $\beta \in \reals^p$ are unknown parameters but $\alpha \in \reals^n$ are known. This is a GLM with \emph{offsets} $\alpha$. This occurs in Lindsey's method which uses a Poisson GLM to do density estimation. For another example, $Y_i$ could be the number of tweets posted by a user in a time period of length $t_i$. If we have user features $X_i$, then we could use a Poisson regression model $Y_i \sim \mathrm{Pois}(\mu_i);$ $\log(\mu_i) = X_i^\top \beta$. But this ignores the fact that we observed some users for longer periods than others. A better model would be $Y_i \sim \mathrm{Pois}(t_i\mu_i);$ $\log(\mu_i) = X_i^\top \beta$. Now we can interpret $\mu_i$ as the expected number of tweets per unit time-period which is standardized across users. This is a GLM with offsets $\alpha_i = \log(t_i)$. 
+\[Y_i \simind \mathrm{Pois}(\mu_i); \quad \eta_i = \log(\mu_i) = \log(t_i) + X_i^\top\beta. \]
+The \verb|R| code for such a model takes the form,
+\begin{minted}{R}
+    glm(Y ~ X, family = *, offset = a)
+\end{minted}
+A similar but more serious example is in the analysis of RNA-sequencing datasets~\citet{love2014moderated}. In such datasets, one can model the expected number of counts of gene $i$ in sample $j$ by $\mu_{ij} = s_j \cdot \exp(X_j^\top \beta)$, where $X_{j}$ are features of that samples and $s_j$ is a normalization constant, which accounts for differences in sequencing depth between samples. The value $s_j$ is assumed to be known (estimated outside the GLM framework) and then $\log(s_j)$ is used as an offset (in a GLM with a $\log$ link function).
+
+
+
+\subsection{Non-canonical link functions}
+
+More generally, a GLM is model of the form
+\[Y_i \simind f_{\mu_i}; \quad g(\mu_i) = X_i^\top \beta,\]
+where $f_{\mu}$ is the mean parametrization of an exponential family and $g$ is a strictly increasing function. The canonical model above had $g = \dot{\psi}^{-1}$, but other choices are possible.
+
+\subsubsection*{Binary models} Any continuous CDF $F$ can be used to make a GLM for binary data. Such a model has the form
+\[Y_i \simind \mathrm{Bern}(\pi_i); \quad F^{-1}(\mu_i) = X_i^\top \beta. \]
+These models can be interpreted as latent variable models as follows:
+\[Y_i = \mathbf{1}[Z_i \le X_i^\top \beta]; \quad Z_i \simiid F, \]
+where $\mathbf{1}[E]$ is an indicator function and $Z_i$ are unobserved latent variables. This latent variable model can be helpful for interpretation and Bayesian model fitting. The logistic model from before is a special case of this model where $F(z) = \exp(z)/(1+\exp(z))$ is the CDF for the logistic distribution. Another common choice is the \emph{probit model}, $F(z) = \Phi(z)$ where $\Phi$ is the standard normal CDF. For the probit model, the log-likelihood is still convex in $\beta$ but this might not be the case for other choices of $F$.
+
+\subsubsection*{Over dispersion} In a GLM, the variance of $Y$ is a function of the model parameters, specifically $\var_\beta(Y) = W(X_i^\top \beta)$. This means that when we fit $\beta$ we automatically get an estimate of the variance in $Y$. Sometimes the variability in $Y$ is larger than what is predicted by the fitted GLM. This increased variance is a sign that our model may not be accurate and can lead to confidence intervals that do not correctly cover $\beta$. One way to correct this is by introducing a new parameter $\phi >0$ and modelling the variance $\var_\beta(Y) = \phi W(X_i^\top \beta)$. In this new model we get the same  point estimate $\hat{\beta}$ for $\beta$ but now we also get the estimate
+\[\hat{\phi} = \frac{1}{n-p} \sum_{i=1}^n \frac{(Y-\hat{\mu}_i)^2}{W(X_i^\top \hat{\beta})}. \]
+We then scale the estimated covariance matrix for $\hat{\beta}$ by $\hat{\phi}$. In R, you can fit this type of model with the command `quasi'.
+
+\begin{minted}{R}
+    glm(Y ~ X, family = quasibinomial(link = "logit"))
+    glm(Y ~ X, family = quasipoisson(link = "log"))
+\end{minted}
+
+While these quasi-models are an option, I think that the sandwich estimator or the bootstrap give a better, more systematic approach to handle departures from the model. 

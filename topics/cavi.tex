@@ -1,0 +1,217 @@
+\section{CAVI}
+
+\subsection{Variational inference}
+
+Variational inference is another approach to Bayesian inference. Like MCMC, variational inference approximates the posterior $p(\theta|X)$. Variational inference uses optimization instead of sampling. Methods like MCMC that are based on sampling asymptotically unbiased. That is, given long enough runs of the chain we will draw samples from the exact posterior distribution $p(\theta | X)$. However, the MCMC estimate \eqref{eq:MCMC-est} will always have variance which can dominate the error in estimating posterior expectations. At a high level, variational inference is another way of estimating $p(\theta | X)$ which trades off some of this variance for bias. 
+
+The idea is that we will approximate the distribution $p(\theta| X)$ with a family of more tractable distributions $\{q(\theta) : q \in \mathcal{Q}\}$. We want to find $q^* \in \mathcal{Q}$ that is ``closest'' to $p(\theta |  X)$. A classical variational method is the ``Laplace approximation'' where $\mathcal{Q}$ is the set of multivariate Gaussian. And $q^*$ is found by a Taylor's approximation at the MAP. 
+
+A more modern approach is coordinated ascent variational inference (CAVI). Here $\mathcal{Q}$ is a set of probability distributions that factor into independent components. The distance is KL divergence, 
+\[\KLD{q(\theta)}{p(\theta | X)} = \bbE_q[\log q(\theta) ] - \bbE_q[\log p(\theta | X)].\]
+Today we will focus derive the CAVI updates and go through an example.
+
+\subsection{CAVI updates}
+
+
+The CAVI optimization problem is to find $q^*$ where,
+\[q^* = \argmin_{q \in \mathcal{Q}}\KLD{q(\theta)}{p(\theta | X)}.  \]
+As written, this is intractable since evaluating $\KLD{q(\theta)}{p(\theta | X)}$ seems to require knowing $p(\theta | X)$. Fortunately, we can use the factorization $p(\theta | X) = \frac{p(\theta,X)}{p(X)}$ to rewrite $\KLD{q(\theta)}{p(\theta | X)}$ in the following way,
+\begin{align}
+    \KLD{q(\theta)}{p(\theta | X)}&=\bbE_q\left[\log q(\theta)\right] - \bbE_q\left[\log p(\theta | X) \right]\nonumber \\
+    &=\bbE_q\left[\log q(\theta)\right]-\left(\bbE_q\left[\log p(\theta,X)\right] - \bbE_q\left[\log p(X)\right]\right)\nonumber \\
+    &=-\underbrace{\left(\bbE_q\left[\log p(\theta,X)\right] - \bbE_q \left[\log q(\theta)\right]\right)}_{\text{ELBO}} + \underbrace{\log p(X)}_{\text{evidence}}.\label{eq:KLD}
+\end{align}
+We will call $\log p(X) = \log \left(\int_\Theta p(\theta,X)d\theta'\right)$ the \emph{evidence} and 
+$$
+\mathcal{L}[q] = \bbE_q\left[p(\theta,X)\right] - \bbE_q\left[\log q(\theta)\right]
+$$ 
+the \emph{evidence lower bound} or \emph{ELBO}. The takeaway of equation \eqref{eq:KLD} is
+\begin{align*}
+    q^* &=\argmin_{q \in \calQ} \KLD{q(\theta)}{p(\theta | X)}\\
+    &=\argmin_{q \in \calQ} -\left(\bbE_q\left[\log p(\theta,X)\right] - \bbE_q \left[\log q(\theta)\right]\right)\\
+    &=\argmax_{q \in \calQ} \mathcal{L}[q].
+\end{align*}
+So minimizing $\KLD{q(\theta)}{p(\theta |  X)}$ is the same as maximizing $\mathcal{L}[q]$. Since $\KLD{q(\theta)}{p(\theta | X)} \ge 0$ for all $q(\theta)$,  equation \eqref{eq:KLD} also implies that, 
+\[\log p(X) = \KLD{q(\theta)}{p(\theta | X)} + \mathcal{L}[q] \ge \mathcal{L}[q], \]
+so the ELBO is indeed a lower bound for the evidence.
+
+We will now assume that we have a decomposition of $\theta$ into $J$ groups,
+\[\theta = (\theta_1,\theta_2,\ldots,\theta_J). \]
+We will also take $\calQ$ to be the set of distributions which factor into independent components over $(\theta_1,\theta_2,\ldots,\theta_J)$. That is $q \in \calQ$ if and only if we have
+\[q(\theta) = \prod_{j=1}^J q_j(\theta_j), \]
+for some distributions $q_j(\theta_j)$\footnote{The individual components $\theta_j$ need not be single scalar parameters. One $\theta_j$ could be a covariance matrix, another $\theta_j$ could be a vector of probabilities. You have a lot of flexibility in choosing the decomposition.}. We will write $\theta_{-j}$ for $\theta$ without the $j^{th}$ component and define $q_{-j}(\theta_{-j})$ by,
+\[q_{-j}(\theta_{-j}) = \prod_{k \neq j}q_k(\theta_k). \]
+We will now consider maximizing $\mathcal{L}[q]$ as a function of $q_{j}$ keeping $q_{-j}$ fixed. Recall that we have the factorizations,
+\begin{align*}
+    q(\theta)&=q_{-j}(\theta_{-j})q_j(\theta)\\
+    p(\theta,X)&=p(X)p(\theta_{-j}|X)p(\theta_j |  \theta_{-j},X).
+\end{align*}
+Thus, writing $C_i$ for constants that do not depend on $q_{j}$, we have
+\begin{align*}
+    \mathcal{L}[q]&=\bbE_{q}[\log p(\theta,X)] - \bbE_{q}[\log q(\theta)]\\
+    &=\bbE_q[\log p(X)] + \bbE_q[\log p(\theta_j  |  X)] + \bbE_{q}[\log p(\theta_j  |  \theta_{-j},X)]\\
+    & - \bbE_{q}[\log q_{-j}(\theta_{-j})] - \bbE_{q}[\log q_j(\theta_j)]\\
+    &=C_0 + \bbE_q[\log p(\theta_j |  \theta_{-j},X)] - \bbE_{q}[\log q_j(\theta_j)]\\
+    &=C_0 - \left(\bbE_{q_{j}}[\log q_j(\theta_j)]-\bbE_{q_j}\left[\bbE_{q_{-j}}[p(\theta_j |  \theta_{-j},X)]\right]  \right)
+\end{align*}
+The term in the brackets is almost the KL-divergence between $q_{j}(\theta_{j})$ and another distribution on $\theta_{j}$. The only issue is that $\bbE_{q_{-j}}[p(\theta_j  |  \theta_{-j},X)]$ is not a normalized log-likelihood. Therefore, we define a distribution $\tilde{p}_j(\theta_j)$ by
+\[\tilde{p}_j(\theta_j) \propto \exp\left(\bbE_{q_{-j}}[\log p(\theta_j  |  \theta_{-j},X)]\right). \]
+Thus,
+\[\mathcal{L}[q] = C_0 - \left(\bbE_{q_{-j}}[\log q_j(\theta_j)]-\bbE_{q_j}\left[\bbE_{q_{-j}}[p(\theta_j |  \theta_{-j},X)]\right]  \right) = C_1 - \KLD{q(\theta_j)}{\tilde{p}(\theta_j)}.  \]
+Thus, to maximize $\mathcal{L}[q]$ as a function of $q_j$ we need to set $q(\theta_j)=\tilde{p}(\theta_j)$. Doing this iteratively for different values of $j$ gives the CAVI algorithm:
+\begin{enumerate}
+    \item Initialize $q$ at some distribution $q^0(\theta) = \prod_{j=1}^J q^0_j(\theta_j)$. 
+    \item Set $s=0$
+    \item Until $\mathcal{L}[q]$ converges:
+    \begin{enumerate}
+        \item Let $j \in \{1,\ldots, J\}$ be such that $j=s+1 \bmod J$.
+        \item Define $\tilde{p}_j(\theta_j)$ by 
+        \[\tilde{p}_j(\theta_j) \propto \exp\left(\bbE_{q_{-j}^s}[p(\theta_j |  \theta_{-j},X)]\right). \]
+        \item Set,
+        \begin{align*}
+            q_j^{s+1}(\theta_j)&=\tilde{p}_j(\theta_j),\\
+            q_{-j}^{s+1}(\theta_j)&=q_{-j}^s(\theta_{-j}).
+        \end{align*}
+        \item Set $s=s+1$.
+    \end{enumerate}
+\end{enumerate}
+
+\subsection{CAVI for a qual question}
+
+If you are asked to outline the steps of the CAVI algorithm for a particular model $p(\theta,X)$, this is what might be required.
+
+\begin{enumerate}
+    \item Calculate the conditionals $p(\theta_j  |  \theta_{-j},X)$. Hopefully you will be able to recognize them as a common family of distributions. If $p(\theta_j  |  \theta_{-j},X)$ is from a common family, then take $q(\theta_j)$ to be from that same family. 
+    \item Calculate the expectation $\bbE_{q_{-j}^{\text{old}}}[\log p(\theta_j  |  \theta_{-j},X)]$. These tips can help,
+    \begin{enumerate}
+        \item The expectation is with respect to $\theta_{-j}$ so $X$ and $\theta_j$ are constants.
+        \item You can drop additive terms that do not depend on $\theta_j$. These will cancel out when we normalize to define $\tilde{p}_j$.
+        \item The term $\bbE_{q_{-j}^{\text{old}}}[\log p(\theta_j  |  \theta_{-j})]$ will often include terms which are the expectation of sufficient statistics in an exponential family. You can use Wikipedia tables to look these up or differentiate the CGF to calculate them.
+    \end{enumerate}
+    \item Define $q_j^\text{new}(\theta_j) \propto \exp\left(\bbE_{q_{-j}^{\text{old}}}\left[\log (\theta_j  |  \theta_{-j},X)\right]\right)$. Hopefully, $q_j^\text{new}$ will be from the same common family of distributions as $p_j(\theta_j  |  \theta_{-j},X)$.
+    \item Calculate the ELBO $\mathcal{L}[q]$. Typically, $\mathcal{L}[q]$ can be written as a sum over the $J$ components from your decomposition of $\theta$. You can leave these terms as integrals or as KL-divergences between known distributions.
+\end{enumerate}
+
+\subsection{Example}
+
+We will consider a simple Gaussian mixture similar to \ref{sec:MT}. Specifically, consider the following Bayesian model,
+\begin{align*}
+    \pi & \sim \mathrm{Beta}(\alpha,\beta)\\
+    \mu & \sim \calN(\eta_1, \sigma_1^2)\\
+    Z_n  |  \pi & \sim \mathrm{Bern}(\pi) \text{ for } n =1,\ldots,N\\
+    X_n  |  Z_n=1, \mu & \sim \calN(\mu, 1) \text{ for } n = 1,\ldots,N\\
+    X_n  |  Z_n=0, \mu & \sim \calN(0, 1) \text{ for } n = 1,\ldots,N.
+\end{align*}
+Our observed data are $X=(X_n)_{n=1}^N \in \reals^N$. The parameters $\mu$ and $\pi$ and the latent variables $Z=(Z_n)_{n=1}^N \in \{0,1\}^N$ are unobserved. We will treat $\alpha,\beta, \eta_1$ and $\sigma_1^2$ as fixed hyperparameters. We want to use CAVI to approximate the posterior, $p(\pi,\mu,Z  |  X).$ Let $\theta = (\pi,\mu,Z_1,\ldots,Z_N)$ be our decomposition (so that $J=N+2$). We'll begin by calculating the complete conditionals. We'll begin with $\pi$. By Bayes's rule and beta--Bernoulli conjugacy, we have
+\begin{align*}
+    p(\pi  |  \mu,Z,X)&\propto p(\pi)p(Z |  \pi,\mu, X)\\
+    &\propto p(\pi)p(Z |  \pi)\\
+    &= \mathrm{Beta}(\pi ; \alpha,\beta) \prod_{n=1}^N \pi^{z_n}(1-\pi)^{1-z_n}\\
+    &\propto \mathrm{Beta}(\pi; \alpha + N_1, \beta + (N-N_1)),
+\end{align*}
+where $N_1 = \sum_{n=1}^N z_n$. Next for $\mu$,
+\begin{align*}
+    p(\mu  |  \pi,Z,X)&\propto p(\mu)p(X  |  \mu,\pi,Z)\\
+    &= \calN(\mu;\eta_1,\sigma_1^2)\prod_{n=1}^N \calN(x_n;\mu,1)^{z_n}
+\end{align*}
+We see that $p(\mu  |  \pi,Z,X)$ is again going to be a normal distribution. Let $N_1 = \sum_{n=1}^N z_n$ as before and define $\bar{X}_1 = \frac{1}{N_1}\sum_{n=1}^N z_nx_n$. By normal-normal conjugacy, we have
+\[p(\mu  |  \pi,Z,X) =\calN(\mu;\tilde{\eta}_1,\tilde{\sigma}_1^2), \]
+where,
+\[\tilde{\sigma}_1^2 = \left(\frac{1}{\sigma_1^2}+N_1\right)^{-1} \text{ and } \tilde{\eta}_1 = \tilde{\sigma}_1^2\left(\frac{\eta_1}{\sigma_1^2}+N_1\bar{X}_1\right). \]
+Finally, let's work out $p(z_n  |  \pi,\mu,Z_{-n},X)$,
+\begin{align*}
+    &p(z_n=1 |  \pi,\mu,Z_{-n},X)\\
+    &= \frac{p(z_n=1 |  \pi)p(x_n  |  \pi,\mu,z_n=1)}{p(z_n=1 |  \pi)p(x_n  |  \pi,\mu,z_n=1)+p(z_n=0 |  \pi)p(x_n  |  \pi,\mu,z_n=0)}\\
+    &=\frac{\pi \calN(x_n;\mu,1)}{\pi\calN(x_n;\mu,1)+(1-\pi)\calN(x_n;0,1)}\\
+    &=: \omega_{n}
+\end{align*}
+In summary,
+\begin{align}\label{eq:conditionals}
+    p(\pi|\mu,Z,X)&=\mathrm{Beta}(\pi;\alpha+N_1,\beta+(N-N_1))\nonumber \\
+    p(\mu|\pi,Z,X)&=\calN(\mu; \tilde{\eta}_1,\tilde{\sigma}_1^2)\nonumber \\
+    p(z_n|\pi,\mu,Z_{-n},X)&=\mathrm{Bern}(\omega_{n}) \quad \text{for } n=1,\ldots,N.
+\end{align}
+We will now calculate each of the distributions $\tilde{p}_j(\theta_{-j})$. Let's begin with $\pi$,
+\begin{align*}
+    \log \tilde{p}(\pi)&=C_0 + \bbE_{q_Z,q_\mu}[\log p(\pi|\mu,Z,X)]\\
+    &=C_0 + \bbE_{q_Z,q_\mu}[\log \mathrm{Beta}(\pi; \alpha+N_1,\beta+(N-N_1))]\\
+    &=C_1 + \bbE_{q_Z,q_\mu}[(\alpha+N_1-1)\log(\pi)+(\beta + N-N_1 -1)\log(1-\pi)]\\
+    &=C_1 + \left(\alpha + \sum_{n=1}^N q(Z_n=1) - 1\right)\log(\pi) + \left(\beta+\left(\sum_{n=1}^Nq_{Z_n}(Z_n=0)\right) -1\right)\log(1-\pi)\\
+    &=C_2 + \log \mathrm{Beta}\left(\alpha+\sum_{n=1}^Nq(Z_n=1), \beta + N-\sum_{n=1}^N q(Z_n=1)\right).
+\end{align*}
+Thus, in the CAVI algorithm, the update for $q_\pi(\pi)$ is
+\[q_\pi^{\text{new}}(\pi) = \mathrm{Beta}\left(\pi ; \alpha+\sum_{n=1}^Nq^{\text{old}}(Z_n=1), \beta + \sum_{n=1}^Nq^{\text{old}}(Z_n=0)\right). \]
+Next is the $\mu$ update. We have,
+\begin{align*}
+    \log \tilde{p}(\mu)&=C_0 + \bbE_{q_Z,q_\pi}[\log \calN(\mu; \tilde{\eta}_1,\tilde{\sigma_1})]\\
+    &=C_1-\bbE_{q_Z,q_\pi}\left[\frac{1}{2\tilde{\sigma}_1^2}(\mu-\tilde{\eta})^2\right]\\
+    &=C_2 -\frac{1}{2}\mu^2\bbE_{q_Z,q_\pi}\left[\frac{1}{\tilde{\sigma}_1^2}\right]+\mu\bbE_{q_Z,q_\pi}\left[\frac{\tilde{\eta}_1}{\tilde{\sigma}_1^2}\right]\\
+    &=C_2 - \frac{1}{2}\mu^2\bbE_{q_Z,q_\pi}\left[\frac{1}{\sigma_1^2}+N_1\right]+\mu \bbE_{q_Z,q_\pi}\left[\frac{\eta_1}{\sigma_1^2}+N_1\bar{X}_1\right]\\
+    &=C_2 - \frac{\mu^2}{2}\left(\frac{1}{\sigma_1^2} + \sum_{n=1}^N q_Z(z_n=1)\right) + \mu\bbE_{q_Z,q_\pi}\left[\frac{\eta_1}{\sigma_1^2}+\sum_{n=1}^Nz_nx_n\right]\\
+    &=C_2 - \frac{\mu^2}{2}\left(\frac{1}{\sigma_1^2} + \sum_{n=1}^N q_Z(z_n=1)\right) + \mu\left(frac{\eta_1}{\sigma_1^2}+\sum_{n=1}^Nq_Z(z_n=1)x_n\right).
+\end{align*}
+The above log-likelihood is quadratic in $\mu$ and hence a normal distribution. Thus, the CAVI update for $\mu$ is
+\begin{align*}
+    q^{\text{new}}(\mu) &=\cal{N}(\mu; \lambda, \tau^2),\\
+    \tau^2 &=\left(\frac{1}{\sigma_1^2}+\sum_{n=1}^N q^{\text{old}}(z_n=1)\right)^{-1}\\
+    \lambda &= \tau^2\left(\frac{\eta_1}{\sigma_1^2}+\sum_{n=1}^N q_Z(z_n=1)x_n\right)
+\end{align*}
+We'll next derive the update for $q(Z_n=1)$. We know that,
+\begin{align*}
+    \log \tilde{p}(z_n=1)&=C_0 + \bbE_{q_\pi,q_\mu}[\log \omega_n]\\
+    &=C_1 +\bbE_{q_\pi,q_\mu}[\log \pi + \log \mathcal{N}(x_n;\mu,1)]\\
+    &=C_2 +\bbE_{q_\pi}[\log \pi] - \frac{1}{2}\bbE_{q_\mu}[(x_n-\mu)^2]\\
+    &=C_2 + \bbE_{q_\pi}[\log \pi] -  \frac{1}{2}\left[(x_n-\bbE_{q_\mu}[\mu])^2 + \var_{q_\mu}(\mu)\right].
+\end{align*}
+And likewise,
+\begin{align*}
+    \log \tilde{p}(z_n=0)&=C_2 + \bbE_{q_\pi}[\log (1-\pi)] - \frac{1}{2}x_n^2
+\end{align*}
+From the update rule for $\tilde{p}(\pi)$, we know that $q_\pi$ is a beta distribution. Since $\log(\pi)$ and $\log(1-\pi)$ are the sufficient statistics for the beta distribution, we have closed form expressions for $\bbE_{q_\pi}[\log \pi]$ and $\bbE_{q_\pi}[\log (1-\pi)]$ in terms of the digamma function. To summarize, the variational families are
+\begin{align*}
+    q_\pi(\pi)&=\mathrm{Beta}(\pi;a,b)\\
+    q_\mu(\mu)&=\calN(\mu;\lambda,\tau^2)\\
+    q_{Z_n}(z_n)&=\mathrm{Bern}(\rho_n).
+\end{align*}
+Note that $q_\pi,q_\mu,q_Z$ are all in the same family as the complete conditionals \eqref{eq:conditionals}. This will happen whenever the complete conditionals are from an exponential family. Note that $q_\pi,q_\mu,q_Z$ have variational parameters that are separate to the parameters in the complete conditionals. The update rules for the variational parameters are,
+\begin{enumerate}
+    \item For $\pi$,
+    \begin{align*}
+        a^\text{new} &=\alpha + \sum_{n=1}^N \rho_n^{\text{old}}\\
+        b^\text{new} &=\beta + \sum_{n=1}^N 1-\rho_n^{\text{old}}\\
+    \end{align*}
+    \item For $\mu$,
+    \begin{align*}
+        \tau^2_{\text{new}} &=\left(\frac{1}{\sigma_1^2}+\sum_{n=1}^N \rho_n^{\text{old}}\right)^{-1}\\
+    \lambda_{\text{new}} &= \tau^2_{\text{new}}\left(\frac{\eta_1}{\sigma_1^2}+\sum_{n=1}^N q_Z(z_n=1)x_n\right)
+    \end{align*}
+    \item For $\rho_n$,
+    \begin{align*}
+        \rho_n^{\text{new}} &=\frac{\exp\left(\psi(a^{\text{old}})-\frac{1}{2}(x_n-\lambda_{\text{old}})+\tau^2_{\text{old}}\right)}{\exp\left(\psi(a^{\text{old}})-\frac{1}{2}(x_n-\lambda_{\text{old}})+\tau^2_{\text{old}}\right) + \exp\left(\psi(b^\text{old})-\frac{1}{2}x_n^2\right)},
+    \end{align*}
+    where $\psi$ is the digamma function.
+\end{enumerate}
+These updates can then go into the general CAVI algorithm given above. Remember that these updates happen in series not in parallel. For example, after calculating $a^{\text{new}},b^{\text{new}}$, these become $a^{\text{old}}$ and $b^{\text{old}}$ when calculating $\rho_n^{\text{new}}$. 
+
+The last thing we might have to do for this example is calculate the ELBO to assess convergence of our CAVI algorithm. Let's try to do this, first let's write out the joint distribution of $\theta=(\pi,\mu,Z)$ and $X$,
+\begin{align*}
+    p(\theta,X)&=\mathrm{Beta}(\pi;\alpha,\beta)\calN(\mu;\eta_1,\sigma_1^2)\prod_{n=1}^N \left(\pi\mathcal{N}(x_n;\mu,1)\right)^{Z_n}\left((1-\pi)\mathcal{N}(x_n;0,1)\right)^{1-Z_n}
+\end{align*}
+And by assumption,
+\begin{align*}
+    q(\theta)&=\mathrm{Beta}(\pi;a,b)\calN(\mu;\lambda,\tau^2)\prod_{n=1}^N\rho_n^{Z_n}(1-\rho_n)^{1-Z_n}.
+\end{align*}
+Thus,
+\begin{align*}
+    \mathcal{L}[q] &=\mathcal{L}[a,b,\lambda,\tau^2,\rho]\\
+    &=\bbE_{q}\left[\log p(\theta,X)\right] - \bbE_q\left[q(\theta)\right]\\
+    &=\bbE_{\pi \sim \mathrm{Beta}(a,b)}[\log \mathrm{Beta}(\pi;\alpha,\beta)-\log \mathrm{Beta}(\pi;a,b)] \\
+    &+ \bbE_{\mu \sim \calN(\lambda,\tau^2 )}[\log \calN(\mu;\eta_1,\sigma^2_1)-\log \calN(\mu;\lambda,\tau^2)]\\
+    &+\sum_{n=1}^N \rho_n\left(\bbE_{\pi \sim \mathrm{Beta}(a,b)}\left[\log(\pi)\right]+\bbE_{\mu \sim \calN(\lambda,\tau^2)}\left[\log \calN(x_n;\mu,1)\right]-\log \rho_n\right) \\
+    &+\sum_{n=1}^N (1-\rho_n)\left(\bbE_{\pi \sim \mathrm{Beta}(a,b)}[\log(1-\pi)]+\bbE_{\mu \sim \calN(\lambda,\tau^2)}[\log \calN(x_n;0,1)] - \log(1-\rho_n)\right)\\
+    &=C_0-\KLD{\mathrm{Beta}(a,b)}{\mathrm{Beta}(\alpha,\beta)}-\KLD{\calN(\lambda,\tau^2)}{\calN(\eta_1,\sigma_1^2)}\\
+    &+\sum_{n=1}^N \rho_n\left(\psi(a)-\psi(a+b)-\frac{1}{2}\left((x_n-\lambda)^2 + \tau^2\right)-\log\rho_n\right)\\
+    &+\sum_{n=1}^N (1-\rho_n)\left(\psi(b)-\psi(a+b) - \frac{1}{2}x_n^2-\log(1-\rho_n)\right),
+\end{align*}
+where $C_0 = \sum_{n=1}^N -\frac{1}{2}\log(2\cdot 3.142\ldots)$ is a constant that does not depend on $q$. 
+

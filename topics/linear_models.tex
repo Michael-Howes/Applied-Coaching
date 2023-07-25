@@ -1,0 +1,136 @@
+\section{Linear models\footnote{Stephen Bates, Dan Kluger and M.H.}}
+
+For a ``Type C'' linear models question, there aren't too many things you need to know. You'll get far using properties of residuals, the distribution of the estimates and matrix calculations. ``Type J'' problems are broader and can include questioning the assumptions of the linear model, comparing two different models and correctly interpreting the coefficients/p-values from fitting a linear model.
+
+
+\subsection{Setting}
+
+Suppose we have a vector $Y \in \mathbb{R}^n$ of response variables a feature matrix $X \in \mathbb{R}^{n \times p}$ and that we assume $Y$ follows a \textbf{normal linear model} $$Y= X \beta +\varepsilon, \quad \varepsilon \sim \mathcal{N}(0,\sigma^2 I_n).$$ We suppose that $\sigma^2$ and $\beta \in \mathbb{R}^p$ are unknown and to be estimated. It can be shown that the maximum likelihood estimator for the normal linear model is 
+\begin{equation}\label{eq:normalLM_MLE}
+\hat{\beta} = (X^\top X)^{-1} X^\top Y \quad \text{and} \quad \hat{\sigma}^2 = \frac{1}{n} \vert \vert Y - X \hat{\beta} \vert \vert_2^2.
+\end{equation}
+
+We will discuss properties of estimators and residuals in such models as well as hypothesis testing. The derivations will rely heavily on \textbf{ (i) projection matrices and (ii) the rotational symmetry of the multivariate Gaussian}.
+
+\subsection{The Hat (projection) matrix}
+
+An important matrix for studying linear models is called the hat matrix, given by $H= X (X^\top X)^{-1} X^\top \in \bbR^{n \times n}$. The hat matrix has a number of notable properties:
+
+\begin{enumerate}
+\item $H$ is the orthogonal projection matrix onto the column space of $X$. This means
+\begin{enumerate}
+	\item $H^\top = H$,
+	\item $H^2 = H$,
+	\item $\range(X) = \range(H)$.
+\end{enumerate}
+\item The matrix $I_n - H$ is the orthogonal projection matrix onto $\range(X)^\perp = \ker(X^\top)$. This means
+\begin{enumerate}
+	\item $(I_n-H)^\top = I_n - H$.
+	\item $(I_n-H)^2 = I_n - H$.
+	\item $\range(I_n-H) = \range(X)^\perp = \range(H)^\perp = \ker(X^\top) = \ker(H)$.
+\end{enumerate}
+\item $H$ and $I_n-H$ are orthogonal. That is $H(I_n-H) = (I_n-H)H=0$.
+\item $X$ and $I_n-H$ are orthogonal. That is $X^\top(I_n-H)=(I_n-H)X = 0$.
+\item The linear model predictions $\hat{Y} = X \hat{\beta}$ are the projection of $Y$ onto the column space of $X$. That is $\hat{Y} = HY$.
+\item The linear model residuals are given by $\hat{\varepsilon} = Y-\hat{Y} = (I_n -H) Y$.
+\end{enumerate}
+
+\subsection{Properties of the residuals}
+
+In this section everything is done assuming $X$ is fixed and that $X$ has full rank.
+
+\begin{enumerate}
+\item The predictions are orthogonal to the residuals. In particular \[\hat{Y}^\top ( Y - \hat{Y} ) = (HY)^\top (I_n -H) Y = Y^\top H (I_n -H) Y =0.\]
+\item Each covariate (represented by a column of $X$) is orthogonal to the residuals. In particular, $$X^\top (Y- \hat{Y}) = X^\top (I_n -H) Y =0.$$
+\item If there is an intercept in the model (i.e. one of the columns of $X$ is equal to $\bm{1}$), then as a corollary to the previous point $\bm{1}^\top (Y-\hat{Y})$, meaning that the residuals sum to $0$.
+\item Under the normal linear model, the joint distribution of $\hat{\beta}$ and $Y- \hat{Y}$ can be found by noting:
+\begin{align}\label{eq:est_resid_decomp}
+\begin{bmatrix} \hat{\beta} \\ Y - \hat{Y} \end{bmatrix} &= \begin{bmatrix} (X^\top  X)^{-1} X^\top  \\ I_n - H \end{bmatrix} Y\nonumber\\
+& =\begin{bmatrix} (X^\top X)^{-1} X^\top \\ I_n - H \end{bmatrix} (X \beta + \varepsilon)\nonumber\\
+& = \begin{bmatrix} \beta \\ 0 \end{bmatrix} +  \begin{bmatrix} (X^\top X)^{-1} X^\top \\ I_n - H \end{bmatrix} \varepsilon.
+\end{align} 
+Hence, under the normal linear model where we assume $\varepsilon \sim \mathcal{N} (0, \sigma^2 I_n)$, $$\begin{bmatrix} \hat{\beta} \\ Y - \hat{Y} \end{bmatrix}  \sim \mathcal{N} \Bigg( \begin{bmatrix} \beta \\ 0 \end{bmatrix} , \begin{bmatrix} \sigma^2 (X^\top  X)^{-1} & 0 \\ 0 & \sigma^2 (I_n - H) \end{bmatrix} \Bigg)$$
+\item Under the normal linear model, the fitted coefficients $\hat{\beta}$ and the residuals $Y- \hat{Y}$ are statistically independent. As a corollary, $\hat{\sigma}^2$ and $\hat{\beta}$ are also statistically independent.
+\end{enumerate}
+
+
+Note that the first three properties are geometric and hold whether or not the assumptions of the normal linear model hold ($\varepsilon$ need not follow any particular distribution and need not have independent entries). However, the last two properties depends on the assumptions of the normal linear model. That being said even if the normal linear model does not hold \eqref{eq:est_resid_decomp} still holds. This, if $\varepsilon$ has expectation $0$, then $\hat{\beta}$ will be unbiased for $\beta$, and the residuals will have expectation $0$. Further, if the covariance matrix of $\varepsilon$ is equal to $\sigma^2 I_n$, then the covariance matrix of $(\hat{\beta},Y- \hat{Y} )$ will still be 
+\[
+	\begin{bmatrix} \sigma^2 (X^\top X)^{-1} & 0 \\ 0 & \sigma^2 (I_n - H) \end{bmatrix}.
+\]
+
+
+\subsection{Distribution of $\hat{\beta}$ and $\hat{\sigma}^2$}
+
+%Under the normal linear model we have already shown that 
+%\begin{equation}\label{eq:betahat_dist}
+%\hat{\beta} \sim \mathcal{N} \big(\beta, \sigma^2 (X^\top  X)^{-1} \big).
+%\end{equation}
+
+Now we derive the distribution of $\hat{\sigma}^2$. To do this recall 
+\[
+	\hat{\sigma}^2 =  \frac{1}{n} \norm{Y-\hat{Y}}_2^2 \quad \text{and} \quad Y - \hat{Y}= (I_n - H) \varepsilon  \sim \mathcal{N} \big(0,\sigma^2 (I_n -H) \big).
+\]
+We will show that $\vert \vert Y - \hat{Y} \vert \vert_2^2 = \vert \vert (I_n - H) \varepsilon \vert \vert_2^2 \sim \sigma^2 \chi_{n-p}^2$. The intuitive argument for why this is that $I_n - H$ is a projection matrix onto a linear subspace of dimension $n-p$. Since $\varepsilon \sim \mathcal{N} (0,\sigma^2 I_n)$ by symmetry of the spherical Gaussian, it will also have this distribution in a rotated coordinate system. So if we change the coordinate system so that the orthogonal basis vectors $(v_i)_{i=1}^n$ either satisfy $(I_n - H) v_i=v_i$ or $(I_n -H) v_i =0$, we can see that $\vert \vert (I_n - H) \varepsilon \vert \vert_2^2$ ends up being the sum of $n-p$ independent Gaussians in the rotated coordinate system.
+ Hence, under the normal linear model, the MLE $\beta$ and $\sigma^2$ satisfy
+\begin{equation}\label{eq:MLE_dist}
+\hat{\beta} \sim \mathcal{N} \big(\beta, \sigma^2 (X^\top  X)^{-1} \big) \quad \text{and independently} \quad \hat{\sigma}^2 \sim \frac{\sigma^2}{n} \chi_{n-p}^2.
+\end{equation}
+
+
+
+\subsection{Testing coefficients (t-tests)}
+
+Suppose that for some $j \in \{1,\dots,p \}$ we wish to test $\mathcal{H}_0: \beta_j =0$ against the alternative $\mathcal{H}_1: \beta_j \neq 0$.  We can conduct a t-test since under the null, by \eqref{eq:MLE_dist},
+ $$\frac{\hat{\beta}_j/ \sqrt{[(X^\top  X)^{-1}]_{jj}} }{\sqrt{n \hat{\sigma}^2/(n-p)}} \stackrel{Dist}{=} \frac{\sigma Z }{\sigma \sqrt{\chi_{n-p}^2/(n-p)}} \sim t_{n-p},$$ where above $Z \sim \mathcal{N}(0,1)$ and $\chi_{n-p}^2$ denotes chi-squared random variable with $n-p$ degrees of freedom that is independent of $Z$. $t_{n-p}$ denotes a t-distribution with $n-p$ degrees of freedom.
+
+More generally, for any $v \in \mathbb{R}^p$ one can similarly test the hypothesis $\mathcal{H}_0 : v^\top \beta =0$ against $\mathcal{H}_1: v^\top \beta \neq 0$, as by \eqref{eq:MLE_dist} it also follows that under the null $$\frac{v^\top \hat{\beta} /\sqrt{v^\top (X^\top X)^{-1} v} }{\sqrt{n \hat{\sigma}^2/(n-p)}} \sim t_{n-p}.$$
+Indeed, setting $v$ equal to a standard basis vector $e_j$ gives the test of $\beta_j = 0$.
+
+
+\subsection{Testing sub-models (F-test)}\label{sec:F-test}
+
+A common goal is to test whether a collection of coefficients are null and do not help in explaining $Y$. Under the normal linear model, this can be tested using an F-test. Suppose $X_1 \in \mathbb{R}^{n \times p_1}$ is the design matrix for the null model and that we wish to test it against a full model with design matrix $X_f = \begin{bmatrix} X_1 & X_2 \end{bmatrix} \in \mathbb{R}^{n \times (p_1+p_2)}$. Now assume the normal linear model that $$Y= X_f \begin{bmatrix} \beta_1 \\ \beta_2 \end{bmatrix} +\varepsilon =X_1 \beta_1 +X_2 \beta_2 + \varepsilon, \quad \varepsilon \sim \mathcal{N}(0,\sigma^2 I_n).$$ We wish to test the hypothesis $$\mathcal{H}_0: \beta_2 =0 \quad \text {against}  \quad \mathcal{H}_1:  \beta_2 \neq 0.$$ 
+
+To test this hypothesis let $H_1$ and $H_f$ be the hat matrices for the smaller and full regression models respectively. That is, $H_1$ is the projection onto $\range(X_1) \subseteq \reals^n$ and $H_f$ is the projection onto $\range(X_f) \subseteq \reals^n$. 
+Let $\hat{Y}_1 = H_1 Y$ denote the predictions in the small model and $\hat{Y}_f =H_f Y$ denote the predictions in the full model. Under the normal linear model, we have
+\begin{align*}
+	 \begin{bmatrix} Y - \hat{Y}_f \\ \hat{Y}_f - \hat{Y}_1 \end{bmatrix} &= \begin{bmatrix} I_n -H_f \\ H_f - H_1 \end{bmatrix} Y\\
+	 & =\begin{bmatrix} I_n -H_f \\ H_f - H_1 \end{bmatrix} (X_1 \beta_1 +X_2\beta_2+ \varepsilon) \\
+	 &= \begin{bmatrix} 0 \\
+	H_1X_2\beta_2 \end{bmatrix}+\begin{bmatrix} I_n -H_f \\ H_f - H_1 \end{bmatrix} \varepsilon\\ 
+	 & \sim \mathcal{N} \Big(\begin{bmatrix} 0 \\
+		(I-H_1)X_2\beta_2 \end{bmatrix},  \sigma^2 \begin{bmatrix} I_n - H_f & 0 \\ 0 & H_f - H_1 \end{bmatrix} \Big).
+\end{align*}
+The simplifications above happen because $H_fX_f=X_f$, $H_1X_1 = H_fX_1=X_1$ and $\range(X_1) \subseteq \range(X_f)$ which implies $H_f H_1=H_1$. Thus, $\vert \vert Y - \hat{Y}_f  \vert \vert_2^2$ and $\vert \vert \hat{Y}_f - \hat{Y}_1 \vert \vert_2^2$ are statistically independent. Now under the null $\mathcal{H}_0$, $\beta_2=0$ and so $$\vert \vert Y - \hat{Y}_f  \vert \vert_2^2 \sim \sigma^2 \chi_{n-p_2-p_1}^2.$$ and independently $$\vert \vert  \hat{Y}_f -\hat{Y}_1  \vert \vert_2^2 \sim \sigma^2 \chi_{p_2}^2.$$
+
+Combining these results it follows that under the null, $$T= \frac{\vert \vert  \hat{Y}_f -\hat{Y}_1  \vert \vert_2^2/p_2}{\vert \vert Y - \hat{Y}_f  \vert \vert_2^2/(n-p_1-p_2)} \sim F_{p_2,n-p_1-p_2}.$$
+Thus to test whether smaller model describes the dataset or whether the full model is necessary, we simply need to compute the predictions $\hat{Y}_f$ for the full linear model and the predictions $\hat{Y}_1$ for the smaller linear model, and then use those to compute the above test statistic $T$. If $T$ is much larger than the $1-\alpha$ quantile of a $F$-distribution with $p_2$ and $n-p_1-p_2$ degrees of freedom we can conclude that the full model is necessary to explain the variability in $Y$.
+
+Under the alternative, the power of the F-test depends on the norm of $(I-H_1)X_2\beta_2$. This is the projection of $X_2\beta_2$ onto the space $\range(X_1)^\perp$. If there is a lot of correlation between $X_1$ and $X_2$, then $(I-H_1)X_2$ will be small and the F-test will have low power even if $\beta_2$ is large. This makes sense as the correlations mean the smaller model can explain a lot of the variation due to $X_2$ even if we don't directly include the covariates $X_2$. 
+
+
+\subsection{Type J questions}
+
+
+
+\subsubsection*{Assumptions of the linear model}
+The above derivations relied on the error assumption $\varepsilon_i \simiid \mathcal{N}(0,\sigma^2)$. It is common for quals questions to involve situations where this assumption is violated and you are asked to give suggestions. If you can assume that the errors are i.i.d. but not necessarily Guassian, then you can do a permutation test or bootstrap. You typically don't need to give too many details.
+
+If you have a time-series or spacial data, then the i.i.d. assumption will often not hold. In these cases vanilla perutation tests will not be valid and you will instead need to permute temporal or spacial blocks of data. This also applies to the bootstrap and cross validation. To use these, you need to make adjustments based on the spacial/temporal dependence.
+
+Finally, the i.i.d. assumption may be broken if you repeated measurements on the same subject. If you have before and after measurements, you can calculate the difference and argue that these will be i.i.d or you can propose a mixed effects model (more on this later).   
+
+\subsubsection*{Model comparison}
+
+Some questions ask you to choose/compare two or more models. If these models are nested, then you could perform an F-test. In other cases, you'll have to make a more subjective judgement. You might need to pay attention to the research question being described or notice that one of the model breaks the assumptions of the linear model.
+
+\subsubsection*{Interpretation of coefficients/p-values}
+
+In the linear model, the coefficient $\beta_j$ is the expected change in $Y$ if the covariate $X_j$ is increased by one unit, holding all other covariates constant. Sometime ``a scientist'' will have fit a model and written an incorrect interpretation. They might incorretly treat a coefficient as an interaction or forget that $\beta_j$ is the conditional effect of $X_j$ on $Y$. 
+
+
+\subsubsection*{Mutliple testing}
+
+Some modelling questions involve either an implicit or explicit multiple testing problem.  For these questions, you typically don't need to get technical. You'll just need to explain whether or not a multiple testing correction needs to be applied and then suggest one or two solutions. This is often a good comment to add if you have time to return to a question.
+

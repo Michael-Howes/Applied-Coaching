@@ -1,0 +1,89 @@
+\section{Cross-Validation}
+
+Cross-Validation is a topic that arises frequently in the applied qualifying exam. Occasionally complete questions are dedicated to cross validation, other times it is a subpart.
+
+Typically, cross validation is used to achieve one or both of the following,
+\begin{enumerate}
+\item \textbf{Model selection:} This can be to choose between a few different model choices or to pick the values of tuning parameters, with the goal of selecting the model that will have the highest prediction accuracy.
+\item \textbf{Accuracy assessment:} Estimating the accuracy of the prediction model that is trained.
+\end{enumerate}
+
+We will describe what cross-validation is and to what extent it meets the above two goals. Next, we will then describe a few issues with using cross-validation that have come up in previous quals and some suggested workarounds.
+
+\subsection{Cross-validation for model selection or parameter tuning}\label{sec:CVmodelSelection}
+
+The most straightforward quals questions about cross-validation, simply ask you how you would pick certain tuning parameters in the model or how would you pick the best model among a collection of models (see Question 5d on the 2012 Qual as well as Question 5c on the 2015 Qual). If there is a prediction task of interest a good way to pick the best model is cross-validation. In particular suppose you have $n$ data points $\big( (X_i,Y_i )  \big)_{i=1}^n$ where $X_i$ are the features and $Y_i$ are the outcomes you'd like to predict.
+
+To perform $K$-fold cross validation, randomly split the data into $K$ folds of size roughly $n/K$ (often $K$ is chosen to be 5 or 10). Let $\kappa: \{1,2,\dots, n \} \to \{1,\dots,K \}$ be the function such that takes a sample $i$ to its fold $\kappa(i)$. Now let $\theta$ be parameter vector that embeds all the tuning parameters (model class choices can be considered categorical tuning parameters). Also for $k \in \{1,\dots,K \}$ let $\hat{f}_{-k}( \cdot; \theta)$ denote the model for predicting for $Y$ that is trained on all folds except the $k$th fold when the tuning parameters are set to $\theta$. Finally, let $\ell$ is some loss function for the prediction error (often it is chosen to be squared error loss when $Y$ is a continuous variable, and 0-1 loss when $Y$ is categorical). The cross-validation error is given by $$\widehat{\text{Err}}^{\text{(CV)}}(\theta) = \frac{1}{n} \sum_{i=1}^n \ell \Big( Y_i, \hat{f}_{-\kappa(i)}( X_i; \theta) \Big).$$ 
+Then to pick optimal tuning parameters you could simply select the $\theta$ that minimizes  $\widehat{\text{Err}}^{\text{(CV)}}(\theta)$. (Another common choice is to select the $\theta$ corresponding to lowest model complexity among $\theta$ values for which  $\widehat{\text{Err}}^{\text{(CV)}}(\theta)$ is within one standard error of $\inf_{\theta'} \widehat{\text{Err}}^{\text{(CV)}}(\theta')$). 
+
+Given $\theta^* = \argmin \widehat{\text{Err}}^{\text{(CV)}}(\theta)$, we fit our model on the full data set $\{(X_i,Y_i)\}_{i=1}^n$, giving a model $\hat{f}(\cdot;\theta^*)$ that we can deploy.
+
+\subsection{Cross-validation for accuracy assessment}
+
+Suppose we want to assess how accurate a prediction method is, but we need not select any tuning parameters or conduct model selection. We can also assess the accuracy of the model using $K$-fold cross validation. This simply involves running the procedure described in the previous subsection for the prespecified choice of $\theta$ and computing $$\widehat{\text{Err}}^{\text{(CV)}} = \frac{1}{n} \sum_{i=1}^n \ell \Big( Y_i, \hat{f}_{-\kappa(i)}( X_i;\theta) \Big),$$ where $\kappa(i)$ and $\hat{f}_{-k}(\cdot;\theta)$ are as above. 
+
+While $\widehat{\text{Err}}^{\text{(CV)}}$ seems like a reasonable way to measure the error associated with the prediction method, it is not immediately obvious what quantity $\widehat{\text{Err}}^{\text{(CV)}}$ estimates. Let's look at two reasonable guesses.
+
+Suppose that $ \{(X_i,Y_i) \}_{i=1}^{n+1}$ are IID and let $\mathcal{T} =  \{(X_i,Y_i )\}_{i=1}^{n}$ denote the training data and let $\hat{f}_{\mathcal{T}}(\cdot)$ denote the prediction model trained on the training data $\mathcal{T}$. Two reasonable guesses for what $\widehat{\text{Err}}^{\text{(CV)}}$ estimates are 
+
+\begin{align*}\text{Err}_{\mathcal{T}}& = \mathbb{E} \Big[ \ell \Big( Y_{n+1} , \hat{f}_{\mathcal{T}}(X_{n+1}) \Big) \mid \mathcal{T} \Big], \ \text{and}\\
+     \text{Err}_n &= \mathbb{E}[\text{Err}_{\mathcal{T}}] = \mathbb{E} \Big[ \ell \Big( Y_{n+1} , \hat{f}_{\mathcal{T}}(X_{n+1}) \Big)\Big].
+\end{align*}
+
+The quantity $\text{Err}_{\mathcal{T}}$ is the expected loss on a new test point, conditional on the training data (the expectation is only over $X_{n+1}$ and $Y_{n+1}$). On the other hand $\text{Err}_n$ is the expected loss of predicting on a new point when training on $n$ randomly sampled points (the expectation is taken over $X_{n+1},Y_{n+1}$ and $\mathcal{T}$). It turns out that $\widehat{\text{Err}}^{\text{(CV)}}$ is a good estimator for $\text{Err}_n$, but unfortunately is a poor estimator of $\text{Err}_{\mathcal{T}}$ (See Chapter 7.12 in \cite{hastie2009elements} and \cite{Bates2022CrossVal} for simulation-based and theoretical arguments supporting this claim).
+
+Now that we've established that $\text{Err}$ is the estimand for cross-validation, we can discuss Quals questions which ask whether Cross-Validation is downward biased or upward biased. In Question 2 of the 2015 Qual, it asks whether cross-validation is upward or downward biased for estimating prediction error (in a setting with IID data and no tuning parameters). The answer is that it is upward biased because 
+
+\begin{align*}
+    \mathbb{E} \big[ \widehat{\text{Err}}^{\text{(CV)}}  \big] &= \frac{1}{n} \sum_{i=1}^n \mathbb{E} \Big[ \ell \Big( Y_i, \hat{f}_{-\kappa(i)}( X_i) \Big) \Big] \\
+    &= \frac{1}{n} \sum_{i=1}^n \text{Err}_{\#\{j : \kappa(j) \neq \kappa(i)\}}\\
+    & >  \frac{1}{n} \sum_{i=1}^n  \text{Err}_n\\
+    & =  \text{Err}_n,
+\end{align*}    
+The inequality holds because for any reasonable prediction algorithm the expected error strictly decreases as the sample size grows. Thus, $\widehat{\text{Err}}^{\text{(CV)}}$ is upward biased for the expected error when training on a dataset the size of the full dataset. 
+
+\subsubsection*{The number of folds}
+
+Suppose that each fold has exactly $m = n/K$ data points. The bias in $\widehat{\text{Err}}^{(\text{CV})}$ is then equal to $\text{Err}_{n-m} - \text{Err}_{n} > 0$. This bias would decrease as $m$ goes to $0$. If we want to make this bias as small as possible, then we should take $K=n$ folds. This is called \emph{leave one out (LOO)} cross validation. For many models, leave one out cross validation is not tractable because we have to perform $n$ model fits. However, for simple models like linear models fit with OLS there are computational tricks which make it possible to calculate the leave one out cross validation error without fitting $n$ models. 
+
+Another consideration is the variance of $\widehat{\text{Err}}^{\text{(CV)}}$. If we have $K \approx n$, then we would expect the fitted model $\hat{f}_{-k}(\cdot)$ to be highly correlated since they were all trained on essentially the same data. Thus, picking the number of folds involves a bias-variance trade-off. The values $K=5$ or $K=10$ are usually taken as defaults, see Section 7.10 of \citep{hastie2009elements} for more details.
+
+
+\subsection{Nested Cross-validation}
+
+There are some quals questions, where you have to \textit{both} conduct model selection (or parameter tuning) and conduct accuracy assessment for the entire procedure, including model selection (see Question 5 on the 2013 exam and Question 2 on the 2018 exam). In these questions you have to be careful to make sure that the data used for accuracy assessment was not used in the model selection process. If you use select the $\theta^*$ minimizing $\widehat{\text{Err}}^{\text{(CV)}}(\theta)$, then $\widehat{\text{Err}}^{\text{(CV)}}(\theta^*)$ could grossly underestimate the prediction error on new data of the full training procedure (which includes model selection/parameter tuning).
+
+
+Ideally if you want to use cross-validation to tune parameters or perform model selection, you should not use the same training data to assess accuracy, and instead you should use a held out test set to assess accuracy. In particular, you should do model selection on the training set using cross-validation (see Section \ref{sec:CVmodelSelection}), train the selected model on the full training set, and assess accuracy on some held out test set. Unfortunately, sometimes your data set is so small that it would be overly wasteful to hold out a separate test set (e.g. in Question 2 on the 2018 exam). Luckily one can use nested cross-validation if they want to use all the data for both model selection and accuracy assessment without grossly underestimating the prediction error.
+
+The nested cross-validation procedure can be described by the following steps:
+\begin{enumerate}
+\item Conduct model selection on the full dataset using cross validation (as in Section \ref{sec:CVmodelSelection})
+\item Let $\theta^*$ be the model selected in the previous step. Train a prediction $\hat{f}(\cdot ; \theta^*)$ on your entire dataset. Return $\hat{f}(\cdot ; \theta^*)$ as your final prediction function.
+\item Randomly split the data into $K$-folds, let $\kappa: \{1,2,\dots, n \} \to \{1,\dots,K \}$ be such that $\kappa(i)$ gives the fold that sample $i$ is assigned to. 
+\item For each $k=1,\dots,K$, remove the data from the $k$th fold and on this smaller dataset (of size $n(K-1)/K$ samples) run the cross-validation procedure (as described in Section \ref{sec:CVmodelSelection}) to select the best $\theta$. Let $\theta_{-k}^*$ denote the parameters for the best model selected on the dataset when the $k$th fold was removed.
+\item For each $k=1,\dots,K$,  train a prediction function $\hat{f}_{-k}(\cdot ; \theta_{-k}^*)$ on all of your data except the $k$th fold. Store the prediction function $\hat{f}_{-k}(\cdot ; \theta_{-k}^*)$.
+\item Calculate and return the following estimate for the prediction error $$\widehat{\text{Err}}^{\text{(Nested CV)}} =  \frac{1}{n} \sum_{i=1}^n \ell \Big( Y_i, \hat{f}_{-\kappa(i)}( X_i; \theta_{-\kappa(i)}^*) \Big).$$
+
+\end{enumerate}
+
+
+
+Note that the first two steps conduct model selection and train the final prediction model which is what will be deployed. Steps 3-6 are for assessing accuracy of the \textit{full} procedure.
+
+\subsection{Cross-validation with dependent samples}
+
+Cross-validation can give an overoptimistic accuracy assessment when there are strong temporal or spatial correlations between the samples. It can also lead to selecting models that don't generalize well to new spatial locations or time periods. One extreme example that illustrates this phenomena, is to consider the $1$-nearest neighbors prediction algorithm in setting where both the features $X$ and the outcome $Y$ have high spatial (or temporal) correlations. If we use naive cross-validation to assess the accuracy, it is likely that many points in each held out fold have a point in the non-held-out training folds that is nearby in space (or time). Because such a nearby point in space (or time) is likely to have similar $X$ and $Y$ values due to strong spatial (or temporal) correlations, taking the $Y$ value of the nearest neighbor feature space would give a very accurate prediction. However, we are interested to estimate the accuracy of $1$-nearest neighbors on new data, that is not near the training data in space, so naive cross-validation will be overly optimistic. If the goal is model selection rather than accuracy assessment, having pairs of points in separate folds with high correlations can incentivize the model being selected to rely too heavily on artifacts or features that are highly correlated in space (or time) but do not matter for predicting new independent samples.
+
+For settings in which there are strong temporal or spatial correlations between the samples, if we wish to ultimately assess the accuracy of predictions at new time periods or locations, we should instead run grouped cross-validation. In particular, we should assign points that are highly correlated with each other into the same group, and when running cross-validation, we should ensure that points within the same group are within the same fold. Ultimately, we would like to construct folds that have as little correlation between pairs of points in different groups as possible (having correlated points in the same fold is ok). 
+
+This has come up in a couple of Quals questions in the past. In Question 6 of the 2011 Qual, the points are likely to be spatially correlated, so to assess the accuracy of the classifier with cross-validation we should make sure that points which are geographically close to each other end up in the same fold. In Question 4 part 1 of the 2014 Qual, the points are likely to be temporally correlated, so to conduct model selection with cross-validation, we should make sure that the folds contain consecutive years to minimize the correlation between pairs of samples in different folds.
+
+One final note is that by the same reason, we should be careful about using cross-validation nested within a bootstrap procedure. Bootstrap involves sampling the data with replacement, so if cross-validation for model selection is conducted on the data sampled with replacement, it is possible that two different folds will have the same data point. This can be problematic.
+
+\subsection{Making sure model fit on training folds is well-defined}
+
+In some settings where you want to run cross-validation, it may not be a guarantee that the model can be properly fit on a subset of the data of size $n(K-1)/K$ samples. For example, in question 5b in the 2014 Qual, you have to use cross-validation to select the number of tiers to include in the model; however, the given model cannot be tested on each held out fold if any of the teams appear only in one fold. Thus, you should randomly regenerate the $K$-folds until the $K$-folds do not have this issue. 
+
+Another setting where this might come up is if you want to fit a Bradley--Terry model with a tuning parameter to predict the outcome of games. A Bradley--Terry model can only be fit when the graph with teams as nodes and games as edges is fully connected. It is possible that the (Teams, Games) graph will be fully connected for the full dataset with $n$ games, but on some subsets of the data with only $n(K-1)/K$ games, the  (Teams, Games) graph will not be fully connected. In such a setting you can try regenerating the folds until all training subsets under consideration have fully connected (Teams, Games) graphs. 

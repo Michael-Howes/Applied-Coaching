@@ -1,0 +1,287 @@
+\section{Applied 2018: Solution \footnote{Stephen Bates, Nikos Ignatiadis, D.K. }}
+
+
+
+% Problem 1
+\subsection*{Problem 1: A life table GLM with non-canonical link}
+Key ideas/tools:
+\begin{itemize}
+  \item GLMs with a custom link function
+\end{itemize}
+
+\begin{enumerate}[label=(\alph*)]
+\item
+  Recall that a GLM consists of the following three elements:
+  \begin{enumerate}[label=(\arabic*)]
+    \item An exponential family of distributions
+    \item A linear predictor $\eta = X \beta$
+    \item A link function $g$ such that $E(Y \mid X) = g^{-1}(\eta)$
+  \end{enumerate}
+
+  Our setting fits into this framework, taking the exponential family to be the binomial distribution and the link function $g$ to be the log function. We simply need to specify to \texttt{R} how to fit this model. We can fit it as follows:
+  \begin{minted}{R}
+   glm_fit <- glm( (X$Deaths / X$Clients) ~ 1 + X$Age, 
+                    family=binomial(link = "log"), 
+                    weights = X$Clients)
+  \end{minted}
+
+\item
+  We can form the estimate as 
+  \begin{equation*}
+    \prod_{a = 35}^{70}[\hat{P}(\text{survive year $a$})] = \prod_{a = 35}^{70}[1 - e^{\hat{\beta}_0 + \hat{\beta}_1 a}].
+  \end{equation*}
+  If any of the estimated probabilities are negative, which is possible with the functional form of our model, we should set them to 0. Note that we can extract the probabilities $e^{\hat{\beta}_0 + \hat{\beta}_1 a}$ manually, or by calling:
+
+\begin{minted}{R}
+preds <- predict(glm_fit, type="response")
+\end{minted}
+
+\end{enumerate}
+
+% Problem 2
+\subsection*{Problem 2: Finding consistent signals}
+Key ideas/tools:
+\begin{itemize}
+  \item Group-Lasso
+  \item Making sure to cross-validate the whole procedure
+\end{itemize}
+
+ We want a model that predicts well at time points $t < 11$. Since there are many features $p> n$ and the signal appears to be weak, we know that a LASSO approach using just $Y$ and $X^t$ does not work well, i.e., it is too difficult to do both feature selection and estimate the coefficients in a way that the final model has good predictive power. 
+
+One approach, based on the last bullet of the problem statement, is the following: \textbf{(i)} use time points $t \geq 11$ to learn a small ``active'' set $\mathcal{A} \subset \cb{1,\dotsc,p}$ and then \textbf{(ii)} construct models for $t<11$ by using only the selected features. Let us elaborate on (one approach) of implementing these steps:
+
+\paragraph{Feature selection:} We fit a model $Y \sim X^{11:15}$ where $X^{11:15}=[X^{11},\dotsc, X^{15}]$. Let us index the coefficient corresponding to $X_j^t$ (protein $j$ at time $t$) as $\beta_j^t$. Note that the $j$-th column of these matrices corresponds to the same protein. Since we only want to pick a few proteins, we would like to enforce that $\beta_j^{11:15} =0$ for many $j$. A method that is great at achieving this is the Group-LASSO, which for a tuning parameter $\lambda >0$ solves:
+$$ \hat{\beta} = \argmin_{\beta}\cb{ \Norm{ Y - X\beta}_2^2 + \lambda \sum_{j=1}^{200} \Norm{\beta_j^{11:15}}_2}$$
+We could pick $\lambda$ using cross-validation and the 1 standard-error rule to get a more parsimonious model. The returned active sets consists of proteins $j$ such that $\Norm{\beta_j^{11:15}}_2>0$.
+
+\paragraph{Model at time $t<11$:} Fix a $t < 11$. If the feature set $\mathcal{A}$ selected in the first step is parsimonious enough, we could try to even fit a simple linear model, say by OLS of $Y \sim X^t_{\mathcal{A}}$. Then the prediction would be $X^t_{\mathcal{A}}\hat{w}$, where $\hat{w}$ is the $\abs{\mathcal{A}}$-dimensional coefficient vector estimated above.\\
+
+An alternative scheme for tuning $\lambda$ is to run cross-validation, but with objective function equal to the prediction error of the linear model fit using just the predictors from times $t<11$. This second approach may be more desirable since it is more directly aligns with our goal of fitting a good predictive model for times $t<11$.
+
+
+\paragraph{Cross-validation:} The last part of the question pertains to cross-validation. Here we need to be careful that there is no information leakage and that we cross-validate the whole procedure [read Chapter 7.10.2 in \citep*{hastie2009elements}]. For example, we could split the data into 5 folds of 20 observations each. Then, fixing the first fold, we could apply the procedure above based on the remaining 80 observations in the other 4 folds. To tune the Group Lasso we might apply a nested layer of cross-validation (based only on the 80 observations, which we could split into another 5 folds). We then would check how well the whole procedure performs in predicting the first (held-out) fold. We could then repeat the procedure for all $5$ folds and average the error.
+
+% Problem 3
+\subsection*{Problem 3: Hypothesis testing on the genome}
+Key ideas/tools:
+\begin{itemize}
+  \item testing correlations with the t-test
+  \item correcting for multiple comparisons with Bonferroni
+  \item accounting for dependent tests
+\end{itemize}
+
+\begin{enumerate}[label=(\alph*)]
+\item
+  A simple first idea is to fit a linear regression between the response variable $Y$ and SNP $j$ given by $$Y_i = \beta_{0j}+\beta_{1j} X_{ij} +\varepsilon_i.$$ We can use the resulting t-statistic for testing whether or not $\beta_{1j} =0$ to check whether $Y$ is associated with SNP $j$. An important thing to note here is that this linear model treats the effect of having multiple copies of the same SNP as additive. This may or may not be biologically plausible (e.g. genes can show dominant/recessive expression where the SNP only matters if you have both copies). An alternative is to model the number of copies of a SNP as a categorical variable with 3-levels and then use an F-test to test if a given SNP is significant. This can equivalently be expressed as a linear model $$Y_i = \mu_{j} + \beta_{1j} I \{X_{ij} =1 \} + \beta_{2j} I \{X_{ij} =2 \} +\varepsilon_i$$ where we test the null hypothesis that $ \beta_{1j}=\beta_{2j}=0$ using the F-test for nested linear models.
+  
+ An even more sophisticated idea to part a) would be to run a multivariate linear regression, including all SNPs in the model (or just some of the SNPs that are thought to be important in the likely scenario that $n<M$). If we used an additive model for the SNPs then we could once again use a t-test to asses the significance of SNP $j$. In this case, we are testing whether $Y$ is uncorrelated with SNP $j$, after correcting for the other SNPs. Note that the t-test will not have high power when the variables are highly correlated, like they are in this case. Similar considerations would also apply to F-tests.
+
+\item
+  If we carry out the one-by-one tests from the previous part across all $M$ SNPS, then we will still need to adjust the p-values to correct for multiple testing. We can use Bonferroni, multiplying each p-value by $10^6$ and considering a SNP significant only if the corrected p-value is below our desired significance threshold $\alpha$.
+
+  We cannot run the full linear model, because the number of variables is larger than the number of observations. Instead, we will have to resort to the one-at-a-time tests that we outlined in the previous part. As a compromise in-between, we could choose try to reduce the number of SNPs in each regression: For example, we could cluster the SNPs into a manageable number of groups and then run a multivariate linear model with one SNP from each cluster. If we select a SNP, then we can interpret this as evidence that some SNP in the cluster is important.
+
+\item 
+ The smallest p-value of the $M_g$ SNPs that belong to gene $g$ is not a good measure of gene importance, since it gives an unfair advantage to larger genes that will have more SNPs measured: just by chance, one of these SNPs may have a lower p-value. Of course, this is the same problem as the global null testing problem, so we could avoid it by multiplying the smallest p-value by $M_g$ (i.e., we apply a Bonferroni correction for each gene).
+
+ Unfortunately, this is also not optimal: This is ``unfair'' for the larger genes, since the p-values of nearby SNPs are extremely correlated. One approach used in GWAS is to consider an ``effective sample'' size that corrects for multiplicity as in Bonferroni but accounting for dependence.
+
+
+Finally, note that if we want to select multiple genes based on e.g., the per-gene Bonferroni corrected smallest p-value, then we will have the same multiple testing problem described in the previous part. We would again need to correct the p-values, perhaps by another application of Bonferroni (this time with number of tests equal to the number of genes). Since we are scanning across a large number of genes, we will need to see a very low p-value before we can conclude that the effect is real, and so the power may be low. 
+
+
+\end{enumerate}
+
+% Problem 4
+\subsection*{Problem 4: Covariance estimation with missing data}
+Key ideas/tools:
+\begin{itemize}
+  \item covariance estimation with low-rank data
+  \item factor models
+  \item using the blockwise matrix inversion formula
+\end{itemize}
+
+\begin{enumerate}[label=(\alph*)]
+\item First of all, we note that it is important to clarify here what the missing data mechanism is. In particular, we assume that the indices of the missing entries should be independent of $X$.
+
+  \begin{enumerate}
+  \item[1.] One option is to impute all of the missing entries with the mean or median of that feature, and then compute the empirical covariance matrix. 
+  \item[2.] A second option is to model the features as a multivariate Gaussian, and consider the missing values to be a set of unobserved variables. We can then run the EM algorithm to iteratively updated our guess for the missing values, and then fit the covariance matrix. This will also be positive semi-definite, but the reason why is somewhat subtle. Let $Z \in \mmr^{n \times p}$ denote the full augmented dataset with no missing entries. Then, in the M-step we are maximizing
+  \begin{align*}
+  & \mme_{\hat{\mu}^t,\hat{\Sigma}^t}[\frac{1}{n}\sum_{i=1}^n (Z_i - \mu)^T \Sigma^{-1} (Z_i - \mu) - \log(|\Sigma|)|X] \\
+  & = \text{Tr}(\Sigma^{-1} \mme_{\hat{\mu}^t,\hat{\Sigma}^t}[\frac{1}{n}\sum_{i=1}^n (Z_i - \mu)(Z_i-\mu)^T|X] ) - \log(|\Sigma|).
+  \end{align*}
+  Now, consider optimizing this last expression over $\Sigma$ with $\mu$ fixed. Since $\mme_{\hat{\mu}^t,\hat{\Sigma}^t}[\frac{1}{n}\sum_{i=1}^n (Z_i - \mu)(Z_i-\mu)^T|X]$ is a PSD matrix we may decompose it as $\mme_{\hat{\mu}^t,\hat{\Sigma}^t}[\frac{1}{n}\sum_{i=1}^n (Z_i - \mu)(Z_i-\mu)^T|X] = \frac{1}{p} V^TV$ for $V \in \mmr^{p \times p}$. Then, our objective is 
+  \[
+   \text{Tr}(\Sigma^{-1} \frac{1}{p} V^TV ) - \log(|\Sigma|) = \frac{1}{p} \sum_{i=1}^p V_i^T \Sigma^{-1} V_i -  \log(|\Sigma|).
+  \] 
+  We recognize this last expression (up to additive constants) as the log-likelihood of $N(0,\Sigma)$ with observed data matrix $V$. We know that this expression is maximized when $\Sigma$ is the empirical covariance matrix, $\Sigma = \frac{1}{p} V^TV$, which is PSD. Thus, the M-Step will always produce a PSD estimate of the covariance matrix.
+  
+  
+  \item[3.] A third option is to estimate the covariances of $X_i$ and $X_j$ for each pair by taking the empirical covariance after removing any observation that is missing either entry $i$ or entry $j$. This need not be PSD, although it is symmetric.
+
+ \item[4.] Let us note that another typical assumption for such problems with large matrices with missing data is to posit that there are indicators $\Xi_{ij} \simiid \text{Bernoulli}(\delta)$ for a fixed $\delta \in [0,1]$. We then only observe $X_{ij}$ if $\Xi_{ij}=1$. In other words, we could write our observations as:
+ $$ \tilde{X}_{ij} = \Xi_{ij} \cdot X_{ij}$$
+Note that this missing-data mechanism makes a stronger assumption than what we assumed for the 3 options above. Let $\tilde{\Sigma}$ be the empirical covariance based on the $\tilde{X}_{ij}$, then an unbiased estimator of $\Sigma$ is given by:
+$$(\delta^{-1} - \delta^{-2}) \text{diag}(\tilde{\Sigma} ) + \delta^{-2} \tilde{\Sigma}.$$
+This matrix does not need to be PSD. If we don't know $\delta$, then we can estimate it by the proportion of non-missing entries in $X$. See~\citet{lounici2014high} for this approach.
+\end{enumerate}
+
+
+\item
+
+If we use any of the approaches (especially options 1 or 3 from part a), then we already have an estimate $\widehat{\Sigma}$ of the covariance matrix, that however is not low-rank. We could then compute the projection of $\widehat{\Sigma}$ onto PSD matrices of rank $K$, i.e., let $\widehat{\Sigma}_{LR}$ be
+
+$$\widehat{\Sigma}_{LR} \; \in \; \argmin \cb{ \Norm{S-\widehat{\Sigma}}_F^2 \; \cond \; S \in S^p_+,\;\; \text{rank}(S) = 300} $$
+
+This can be computed as follows: Let $\widehat{\Sigma} = \sum \lambda_i v_i v_i^\top$ be the eigenvalue decomposition of $\widehat{\Sigma}$. Then let $\mathcal{J}$ be the index set of the 300 largest positive eigenvalues $\lambda_i$ (if there are less than 300, then $\mathcal{J}$ would contain only the positive eigenvalues).  Then:
+$$\widehat{\Sigma}_{LR} = \sum_{j \in \mathcal{J}} \lambda_i v_i v_i^\top.$$
+
+
+%A second idea (by Stephen)  is to use the SoftImpute algorithm to complete the matri $X$, which is using a low-rank approximation of the matrix to fill in the missing values. Since we are looking for a low-rank covariance matrix, it makes sense to use a low-rank approximation of the matrix during the imputation steps. Once we have the imputed matrix, we can form the empirical covariance matrix and keep only the top 300 eigenvalues, setting the others to zero.
+
+\item
+  The factor analysis model is $\Sigma = LL^\top + \Psi = W + \Psi$ where $L$ is the matrix of latent factors and $\Psi$ is a diagonal matrix with entries $\geq 0$. Given our pilot estimate $\widehat{\Sigma}$, we could then let:
+  $$ \widehat{\Sigma}_{LRF} \; \in \; \argmin \cb{ \Norm{S-\widehat{\Sigma}}_F^2 \; \cond \; S = W + \Psi,\; W \in S^p_+,\;\; \text{rank}(W) = 300,\; \Psi \geq 0 \text{ diagonal}}$$
+It is not clear that we can optimize this to global optimality. However, a heuristic could proceed by alternating minimization. Say we start with $\Psi^0 = 0$ and $W^0 = \widehat{\Sigma}_{LR}$ from the previous step. Then we could update $\Psi^1 = \text{diag}(\widehat{\Sigma} - W^0)_+$, then reoptimize to get $W^1$ etc. An alternative, to get a convex formulation, would be to use a nuclear norm constraint instead of the (non-convex) rank constraint. 
+
+  A further alternative would be to modify the EM algorithm for factor analysis to also account for missing data (as in part a, Option 2).
+
+\item
+  We approximate the distribution of the data from a time point as
+  \begin{equation*}
+    X \sim \mathcal{N}(\hat{\mu}, \hat{\Sigma})
+  \end{equation*}
+  where $\hat{\Sigma}$ is the estimate from the previous step, and $\hat{\mu}$ estimated by taking the empirical average of the non-missing entries of each column. Now, at any given time point, about $7\%$ of the data $X$ is unobserved, and so we will reorder the vector so that $X^{(1)} = (X_1,\dots,X_k)$ are the unobserved entries and $X^{(2)} = (X_{k+1},\dots,X_{475})$ are the observed entries. A good way to impute the missing entries is with the mean of $X^{(1)}$conditional on the observed entries $X^{(2)}$. Recall that the regression formula (i.e. the formulae for the conditional mean and variance of a multivariate Gaussian) tells us the conditional mean is:
+  \begin{equation*}
+    \hat{\mu}_{1\dot2} := \hat{\mu}^{(1)} + \hat{\Sigma}_{12} \hat{\Sigma}_{22}^{-1} (x^{(2)} - \hat{\mu}^{(2)}).
+  \end{equation*}
+  Thus, in order to evaluate the conditional mean efficiently, we will need to compute $\hat{\Sigma}_{12} \hat{\Sigma}_{22}^{-1} (x^{(2)} - \hat{\mu}^{(2)})$ quickly. Note that we cannot just precompute $\hat{\Sigma}_{22}^{-1}$, because the pattern of missingness will be changing with each observation, and hence the matrix $\hat{\Sigma}_{22}^{-1}$ will change. Furthermore, this matrix will have dimension about $440 \times 440$, so it would be slightly costly to invert this matrix each time, although this would certainly take less than a second on a modern computer. In general, if we have $d$ features with $7\%$ missingness, this will take about $C \cdot 0.93^3 \cdot d^3 \approx  C \cdot 0.7 \cdot d^3$ operations, where $C$ is some fixed constant.
+
+  We can evaluate this even faster than inverting this matrix every time by taking advantage of the blockwise matrix formula, however. First, we compute $\hat{\Sigma}^{-1}$ once explicitly. Then, recall the \textbf{blockwise matrix inversion/ Schur complement formula }. In particular
+
+$$\hat{\Sigma}_{22} = ((\hat{\Sigma}^{-1})_{22} - (\hat{\Sigma}^{-1})_{21} (\hat{\Sigma}^{-1})_{11}^{-1} (\hat{\Sigma}^{-1})_{12} )^{-1},$$
+which implies that,
+  \begin{equation*}
+    \hat{\Sigma}_{22}^{-1} = (\hat{\Sigma}^{-1})_{22} - (\hat{\Sigma}^{-1})_{21} (\hat{\Sigma}^{-1})_{11}^{-1} (\hat{\Sigma}^{-1})_{12}.
+  \end{equation*}
+  Since $(\hat{\Sigma}^{-1})$ is precomputed, we only need to invert the $k \times k$ matrix $(\hat{\Sigma}^{-1})_{11}$ and then do 2 matrix multiplications to do the computation in this way.  Since $k \approx 0.07 d$, this arrangement of the computation is much faster, requiring approximately $C \cdot k^3 + k^2 d \approx C \cdot 0.07^3 \cdot d^3 + 0.07^2 \cdot 0.93 \cdot d^3 \approx C \cdot 0.001 \cdot d^3 + .005 \cdot d^3$ operations ($C$ can be thought of as being larger than $1$).
+
+  Finally, we note that if the low-rank component from part c) would be of relatively low rank (say much smaller than the dimension), then we could use the Woodbury matrix inversion identity to improve computational efficiency. 
+
+%\begin{equation*}
+%\Sigma =
+%\left[
+%\begin{array}{cc}
+%\Sigma_{11} & \Sigma_{12} \\
+%\Sigma_{21} & \Sigma_{22}
+%\end{array}
+%\right],
+%\end{equation*}
+%then the inverse can be written as
+%\begin{equation*}
+%\Sigma^{-1} =
+%%\left[
+%\begin{array}{cc}
+%(\Sigma_{11} - \Sigma_{12} \Sigma_{22}^{-1} \Sigma_{21})^{-1} & -(\Sigma_{11} - \Sigma_{12} \Sigma_{22}^{-1} \Sigma_{21})^{-1} \Sigma_{12} \Sigma_{22}^{-1} \\
+%-(\Sigma_{22} - \Sigma_{21} \Sigma_{11}^{-1} \Sigma_{12})^{-1}  \Sigma_{21} \Sigma_{11}^{-1} & (\Sigma_{22} - \Sigma_{21} \Sigma_{11}^{-1} \Sigma_{12})^{-1} 
+%\end{array}
+%\right].
+%\end{equation*}
+
+%We have the following:
+ % \begin{equation*}
+   % \hat{\Sigma}_{22} = ((\hat{\Sigma}^{-1})_{22} - (\hat{\Sigma}^{-1})_{21} (\hat{\Sigma}^{-1})_{11}^{-1} (\hat{\Sigma}^{-1})_{12} )^{-1},
+  %\end{equation*}
+  %and so 
+
+\end{enumerate}
+
+% Problem 5
+\subsection*{Problem 5: Analyzing Gene Expression Data}
+Key tools/ideas:
+\begin{itemize}
+  \item batch effects
+  \item Gaussian mixture model
+  \item the EM algorithm
+  \item non-negative matrix factorization
+\end{itemize}
+
+\begin{enumerate}[label=(\alph*)]
+\item
+  We can do PCA and then plot the first two principal components, together with the batch label. If we can see a difference in the distribution of the two classes along the first two PCs, this indicates that we should worry about a batch effect. Depending on what fraction of the variance is explained by the first two PCs we may also want to look at plots of the other components. We could also make histograms of the empirical means or variances across genes for each of the two batches, and if the histograms differ noticeably, this might indicate that there is a batch effect.
+
+\item See~\citet*{gao2016estimation, hao2017simultaneous} for worked out solutions to this problem. We now sketch one approach.
+
+  If there are $K$ discrete cell types, we would want to use a {\bf Gaussian mixture model} to describe the data. The model is the following: let $Z_j \sim \text{multinomial}(\pi) \in \{1,\dots,K\}$ be the latent cell type for cell $j$, and then $X_{\cdot j} \mid Z_j = k \sim \mathcal{N}(\mu_k, \Sigma_k)$. Note that as an alternative, we could force the cell types to have the same covariance matrix $\Sigma_k = \Sigma$, to reduce the number of parameters in the model, but based on the question it sounds like this is not as biologically plausible, so we will allow each class to have its own covariance matrix.
+
+  This model can be estimated using the EM algorithm. However, since the dimension is so large with $m > n$, we may want to consider using some sort of penalized covariance estimation within each ``M'' step. For example we could enforce sparsity of the precision matrices $\Sigma_k^{-1}$, as in the Graphical Lasso. The complete-data, penalized log-likelihood, would then take the following form with $\theta = (\pi,\Sigma_1^{-1},\dotsc,\Sigma_K^{-1}, \mu_1,\dotsc,\mu_k)$. 
+  $$\ell(\theta; X; Z) = \sum_{j=1}^n \sum_{k=1}^K \ind(Z_j = k) \cdot \log(\pi_k \cdot \phi(X_{\cdot j}; \mu_k, \Sigma_k))    - \lambda \sum_{k=1}^K  \Norm{\Sigma_k^{-1}}_1,$$
+  where $\phi(x; \mu, \Sigma)$ is the pdf of $\nn(\mu, \Sigma)$ evaluated at $x$.\\
+  
+  Now we could iterate the steps of the EM algorithm. The \textbf{E}-step is the usual one for mixture models. The \textbf{M}-step decomposes into optimization of the proportions $\pi$ (just average the imputed $\hat{Z}_j^t$ from the E-step), optimization for the $\mu_k$s  (weighted averages of the $X$s) and finally $K$ optimizations for the $\Sigma_k^{-1}$, each of which is a weighted Gaussian Graphical Lasso problem.  
+
+
+  To choose $K$ and $\lambda$, we could use $BIC$ or a cross-validation scheme where we predict the gene expression levels of a subset of genes base on the remaining genes on a hold-out set of observations.
+
+
+  To decide whether or not to transform the data, we could try to find a sample of cells where we are confident that the have the same cell type. We can then check the marginal distribution to see if they are approximately Gaussian (by testing skewness and kurtosis), and if not, we can use the appropriate transformation. Since the features are counts, one plausible generating distributions (within each cluster) is a Poisson distribution, in which case the data might be skewed. The {\bf Anscombe transform}, $2 \sqrt{x + 3/8}$, transforms Poisson variables with large mean $\lambda$ into variables with distribution approximately $\mathcal{N}(2 \sqrt{\lambda + 3/8}, 1)$, so this would be a natural transformation to consider in this setting. A negative Binomial model would perhaps fit even better; in which case one could use a variance stabilizing transformation for the negative binomial model (which would require a preliminary estimate of the dispersion, cf.~\citet{anders2010differential}).
+
+\textbf{Alternative solution:} If the genes are highly correlated, a sparse precision matrix may be an unpalatable assumption. If the genes are highly correlated, a simple approach would be to fit a standard Gaussian mixture model on the first $n_p$ (say 50) principle component scores. $K$ and $n_p$ could be chosen by AIC or BIC in this case. One potential issue with this approach is ``double dipping". Fitting PCA and the Gaussian on the same dataset may not be appropriate. You can use sample splitting to assure you avoid this issue. In particular you could fit PCA on the random selection of $n/5=2000$ of the samples. This will tell you the principal component directions (or the weights for linear combinations of the data that explain the most variance). Then on the remaining $4/5$ths of the data, you can apply the linear combinations describing the leading $n_p$ principal component directions to the raw data to produce $n_p$ features on the remaining data. These $n_p$ features will also follow a Gaussian mixture model, because a linear map applied to a multivariate Gaussian is a multivariate Gaussian and because we assume the raw data follows a Gaussian mixture model.
+
+\item
+  The matrix $A$ can be interpreted as $k$ different prototype gene expression profiles. Then, the matrix $AB$ represents each cell as a positive mixture of the $k$ prototypes, with the non-negative weights for each cell given in the $B$ matrix.
+
+\end{enumerate}
+
+% Problem 6
+\subsection*{Problem 6: Privacy-preserving data releases}
+Key ideas/tools:
+\begin{itemize}
+  \item Differential privacy
+  \item interpreting total variation distance and likelihood ratio bounds
+\end{itemize}
+
+Note in the question there is a comment that $\epsilon$ must satisfy $0< \epsilon < 1$ to rule out trivial cases. This is only true of $\epsilon$-TV-privacy. For $\epsilon$-LR-privacy, all $\epsilon > 0$ can be considered. 
+
+\begin{enumerate}[label=(\alph*)]
+\item
+  Suppose we wish to test that an individuals data is $x$. Then any test with type-I error bounded by $\alpha$ can have power at most $\alpha + \epsilon$. An equivalent interpretation is that for any hypothesis test of $H_0 : X=x$ versus $H_1: X=x'$, the type I error plus the type II error must be at least $1-\epsilon$. To see this let $A$ be the event that the hypothesis test rejects the null, then under $\epsilon$-TV privacy 
+  \[\epsilon \geq \vert P_0(A)- P_1(A) \vert = \vert \text{Type-I-error} + (1- \text{Type-II-error} ), \vert\] 
+  and therefore,
+  \[  \text{Type-I-error}+ \text{Type-II-error} \geq 1-\epsilon.\]
+\item 
+  The second definition is stronger, at least for small $\epsilon$. It implies that 
+  \[
+    Q(Z \in A | X = x) - Q(Z \in A | X = x') \le e^\epsilon - 1,
+  \] 
+  and so exchanging $x$ and $x'$, we arrive at 
+  \[
+    |Q(Z \in A | X = x) - Q(Z \in A | X = x')| < e^{\epsilon} - 1,
+  \] 
+  for any $A$. Therefore, $\epsilon$-LR-privacy implies $\epsilon'$-TV-privacy for some $\epsilon'>0$, namely $\epsilon'=e^{\epsilon} - 1$. 
+  
+  However, $\epsilon$-TV-privacy does not necessarily imply any level of $\epsilon'$-LR-privacy. As an example, suppose $K = 1$ and let $Q(\cdot \mid X=x)$ be given by,
+  \begin{align*}
+    Q(Z=1|X=0)&=1, \\
+    Q(Z=1|X=1)&=1-\epsilon,\\
+    Q(Z=\perp|X=1)=\epsilon.
+  \end{align*} 
+  That is, when $X=0$, we always return $Z=1$ but when $X=1$ we return $Z=1$ with probability $1-\epsilon$ and return $\perp$ otherwise.  Note that the TV between $Q(\cdot |X=0)$ and $Q(\cdot | X=1)$ is exactly $\epsilon$. However, the likelihood ratio $Q(Z = \perp | X = 1) / Q(Z = \perp | X = 0)$ is infinite and cannot be bounded by $e^{\epsilon'}$ for any $\epsilon'>0$. In this example, if $\perp$ is observed, we know for sure $X=1$, which could be a privacy concern.
+\item
+  We can return $Z = \perp$ with probability $1 - \epsilon$, and the value of $X$ otherwise. Then, we can take the empirical mean of values of $Z$ that are not $\perp$. This satisfies the TV definition of privacy, since the responses agree with probability $1 - \epsilon$, no matter what the value of $X$ is. 
+
+  Let $N$ be the number of observations that are not $\perp$. Conditional on $N > 1$, the estimator is unbiased, with variance $\frac{\theta(1 - \theta)}{N}$. Since $\frac{N}{n} \to \epsilon$ almost surely as $n \to \infty$, asymptotically we have that the MSE is $\frac{\theta(1 - \theta)}{n \epsilon}$. This estimator is clearly $\sqrt{n}$ consistent, and has MSE that goes to 0 as $\theta \to 0$ or $\theta \to 1$, provided $N \ge 1$.
+
+\item
+  With probability $\beta$, we return 0 or 1 uniformly at random, otherwise we return the value of $X$. With this scheme, we have 
+  \[\beta/2 \le Q(Z = z | X = x) \le 1-\beta / 2,\] 
+  for all $z$ and $x$. The likelihood ratio thus satisfies,
+  \[\frac{Q(Z=z|X=x)}{Q(Z=z|X=x')} \le \frac{1-\beta/2}{\beta/2} = \frac{2-\beta}{\beta} = e^\epsilon, \]
+  where $\epsilon = \log(2-\beta) - \log(\beta)$. The procedure $Q(\cdot |X=x)$ is thus $e^\epsilon$-LR-private. We then take the estimator 
+  \[ \hat\theta = \frac{1}{1-\beta} (\bar{Z}-\beta/2).\] 
+  Note this is unbiased with variance \[\frac{1}{(1-\beta)^2 n} ((1-\beta)\theta + \beta/2)(1 - (1- \beta) \theta - \beta/2),\] so this is the MSE which show $\sqrt{n}$ consistency.
+
+
+\end{enumerate}
+
