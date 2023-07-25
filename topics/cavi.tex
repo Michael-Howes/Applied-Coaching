@@ -183,11 +183,11 @@ Note that $q_\pi,q_\mu,q_Z$ are all in the same family as the complete condition
     \item For $\mu$,
     \begin{align*}
         \tau^2_{\text{new}} &=\left(\frac{1}{\sigma_1^2}+\sum_{n=1}^N \rho_n^{\text{old}}\right)^{-1}\\
-    \lambda_{\text{new}} &= \tau^2_{\text{new}}\left(\frac{\eta_1}{\sigma_1^2}+\sum_{n=1}^N q_Z(z_n=1)x_n\right)
+    \lambda_{\text{new}} &= \tau^2_{\text{new}}\left(\frac{\eta_1}{\sigma_1^2}+\sum_{n=1}^N \rho_n^{\text{old}}x_n\right)
     \end{align*}
     \item For $\rho_n$,
     \begin{align*}
-        \rho_n^{\text{new}} &=\frac{\exp\left(\psi(a^{\text{old}})-\frac{1}{2}(x_n-\lambda_{\text{old}})+\tau^2_{\text{old}}\right)}{\exp\left(\psi(a^{\text{old}})-\frac{1}{2}(x_n-\lambda_{\text{old}})+\tau^2_{\text{old}}\right) + \exp\left(\psi(b^\text{old})-\frac{1}{2}x_n^2\right)},
+        \rho_n^{\text{new}} &=\frac{\exp\left(\psi(a^{\text{old}})-\frac{1}{2}(x_n-\lambda_{\text{old}})^2-\frac{1}{2}\tau^2_{\text{old}}\right)}{\exp\left(\psi(a^{\text{old}})-\frac{1}{2}(x_n-\lambda_{\text{old}})^2-\frac{1}{2}\tau^2_{\text{old}}\right) + \exp\left(\psi(b^\text{old})-\frac{1}{2}x_n^2\right)},
     \end{align*}
     where $\psi$ is the digamma function.
 \end{enumerate}
