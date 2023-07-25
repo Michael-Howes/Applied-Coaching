@@ -606,5 +606,7 @@ TSWLatexianTemp*
 R_documents/
 correlation test_files
 
-.gitignore
+
 Questions_by_topic
+.gitignore
+.gitignore
