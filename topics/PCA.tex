@@ -106,7 +106,7 @@ The above calculation is an example of the ``trace trick'' and can be very handy
 
 The \textbf{proportion of variance explained} by the first $k$ principal components is 
 \[\rho_k = \frac{\sum_{j=1}^k \gamma_j}{\sum_{j=1}^p \gamma_j}. \]
-The values $\rho_k$ increase to $1$. In applications, you can look at a plot of $\rho_kk$ against $\rho_k$ and choose the number of principal components $k^*$ based on where this plot ``levels off''. Proportion of variance explained comes up on Question 5 on the 2010 exam.
+The values $(\rho_k)_{k=1}^p$ are also called the cumulative percent variance explained. As $k$ goes from $1$ to $p$, $\rho_k$ increase from $0$ to $1$. The rate of increase is proportional to $\gamma_k$ and hence decreasing in $k$. In applications, you can look at a plot of $\rho_kk$ against $\rho_k$ and choose the number of principal components $k^*$ based on where this plot ``levels off''. Proportion of variance explained comes up on Question 5 on the 2010 exam.
 
 \subsection{Removing assumptions}
 
