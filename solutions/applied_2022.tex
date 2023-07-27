@@ -10,7 +10,7 @@ Key ideas:
 
 \begin{enumerate}[label=(\alph*)]
     \item We are given that $\bm{X} \in \reals^{n \times p}$  is standardized so that the columns have mean zero and variance one. We are also given that $\bm{X} = \bm{UDV}^\top$ is the SVD of $\bm{X}$. Let $d_1 \ge d_2 \ge \cdots \ge d_p \ge 0$ be the diagonal entries of $\bm{D}$. The columns of $\bm{V}$ are thus the principal component directions and $\frac{1}{n} d_j^2 = \frac{1}{n}\Vert Xv_j \Vert_2^2$ is the variance of $X$ in the $j$th principal component direction. The cumulative percent variance explained sequence is thus,
-    \[\rho_k = \frac{\sum_{s=1}^k \frac{1}{n}d_s^2}{\sum_{s=1}^p \frac{1}{n}d_s^2}\times 100  = \frac{\sum_{s=1}^k d_s^2}{\sum_{s=1}^p d_s^2}\times 100 ,\]
+    \[\rho_k = 100 \times \frac{\sum_{s=1}^k \frac{1}{n}d_s^2}{\sum_{s=1}^p \frac{1}{n}d_s^2}  =100 \times \frac{\sum_{s=1}^k d_s^2}{\sum_{s=1}^p d_s^2} ,\]
     for $k=1,\ldots,p$.
     \item We are given a response $\bm{y} \in \reals^n$ with mean zero and variance one. The fitted values are $\hat{\bm{y}}=\bm{X}\hat{\beta} \in \reals^n$. We know that the fitted values $\hat{\bm{y}}$ are orthogonal to the residuals $\bm{y}-\hat{\bm{y}}$. Thus,
     \[\Vert \bm{y} \Vert_2^2 = \Vert \bm{y}-\hat{\bm{y}} + \hat{\bm{y}} \Vert_2^2 =\Vert \bm{y}-\hat{\bm{y}}\Vert_2^2 + \Vert \hat{\bm{y}} \Vert_2^2.  \]
@@ -28,7 +28,7 @@ Key ideas:
         &=\frac{1}{n} \bm{x}_j^\top \bm{U}_k\bm{U}_k^\top \bm{U}_k \bm{U}_k^\top \bm{x}_j\\
         &=\frac{1}{n}\bm{x}_j^\top \bm{U}_k\bm{U}_k^\top \bm{x}_j.
     \end{align*}
-    Since $\bm{x}_j$ is the $j$th column of $\bm{X}$ we have,
+    Since $\bm{x}_j$ is the $j$th column of $\bm{X}$ we $\bm{x}_j = \bm{X}\bm{e}_j$ where $\bm{e}_j \in \reals^p$ is the $j$th standard basis vector.
     \begin{align*}
         \bm{U}_k^\top \bm{x}_j &= \bm{U}_k\bm{X}\bm{e}_j\\
         &= \bm{U}_k^\top \bm{UDV}^\top \bm{e}_j.
@@ -41,24 +41,27 @@ Key ideas:
     where $\bm{D}_k = \mathrm{diag}(d_1,\ldots, d_k) \in \reals^{k \times k}$ and $\bm{V}_k \in \reals^{p \times k}$ is equal to the first $k$ rows of $\bm{V}$. Thus,
     \begin{align*}
         \bm{U}_k^\top \hat{\bm{x}}_j&=  \bm{D}_k \bm{V}_k^\top \bm{e}_j\\
-        &=\sum_{s=1}^k d_s \left(\bm{v}_s^\top \bm{e}_j\right)\bm{e}_s.
+        &=\sum_{s=1}^k d_s \left(\bm{v}_s^\top \bm{e}_j\right)\bm{e}_s\\
+        &=\sum_{s=1}^k d_s v_{sj}\bm{e}_s
     \end{align*}
-    Since the vector $\bm{e}_1,\ldots,\bm{e}_k$ are orthonormal, we thus have
+    where $v_{sj}$ is the entry of $\bm{V}$ in row $s$ and column $j$. We thus have
     \begin{align*}
         \mathrm{MSS}_j&=\frac{1}{n} \Vert \bm{U}_k^\top \hat{\bm{x}}_j \Vert_2^2\\
-        &=\frac{1}{n} \sum_{s=1}^k d_s^2 \left(\bm{v}_s^\top \bm{e}_j\right)^2.
+        &=
+        &=\frac{1}{n} \Vert \sum_{s=1}^k d_s v_{sj}\bm{e}_s \Vert_2^2\\
+        &=\frac{1}{n}\sum_{s=1}^k d_s^2 v_{sj}^2.
     \end{align*}
-    Since $\bm{x}_j$ has mean zero, we are in the setting of part (b) and hence
-    \[R^2_j = \mathrm{MSS}_j = \frac{1}{n} \sum_{s=1}^k d_s^2 \left(\bm{v}_s^\top \bm{e}_j\right)^2. \]
+    Since $\bm{x}_j$ has mean zero and variance one, we are in the setting of part (b) and hence
+    \[R^2_j = \mathrm{MSS}_j = \frac{1}{n} \sum_{s=1}^k d_s^2 v_{sj}^2. \]
     \item Note that
     \begin{align*}
-        \sum_{j=1}^p \mathrm{MSS}_j &=\sum_{j=1}^p \frac{1}{n} \sum_{s=1}^k d_s^2 \left(\bm{v}_s^\top \bm{e}_j\right)^2\\
-        &=\sum_{s=1}^k \sum_{j=1}^p \frac{1}{n} d_s^2 \bm{v}_s^\top \bm{e}_j \bm{v}_s^\top \bm{e}_j\\
-        &=\sum_{s=1}^k \frac{1}{n} d_s^2 \bm{v}_s^\top\sum_{j=1}^p  \bm{e}_j \bm{v}_s^\top \bm{e}_j\\
-        &=\sum_{s=1}^k \frac{1}{n}d_s^2 \bm{v}_s^\top I_p \bm{v}_s \\
+        \sum_{j=1}^p \mathrm{MSS}_j &=\sum_{j=1}^p \frac{1}{n} \sum_{s=1}^k d_s^2 v_{sj}^2\
+        &=\sum_{s=1}^k \sum_{j=1}^p \frac{1}{n} d_s^2 v_{sj}^2\\
+        &=\sum_{s=1}^k \frac{1}{n} d_s^2 \sum_{j=1}^p v_{sj}^2\\
+        &=\sum_{s=1}^k \frac{1}{n}d_s^2 \Vert \bm{v}_s \Vert_2^2 \\
         &=\frac{1}{n}\sum_{s=1}^k d_s^2,
     \end{align*}
-    Since $\bm{v}_s$ has norm one. We know that each column of $\bm{X}$ has variance one and mean zero. Thus,
+    since all rows of $\bm{V}$ have norm one. We know that each column of $\bm{X}$ has variance one and mean zero. Thus,
     \begin{align*}
         p&=\sum_{j=1}^p \frac{1}{n} \bm{x}_j^\top \bm{x}_j\\
         &=\frac{1}{n}\sum_{j=1}^p \tr\left(\bm{x}_j^\top \bm{x}_j\right)\\
@@ -72,7 +75,19 @@ Key ideas:
     Thus,
     \begin{align*}
         \frac{100}{p}\sum_{j=1}^p \mathrm{MSS}_j &=\frac{100}{np} \sum_{s=1}^k d_s^2\\
-        &=100 \times \frac{\sum_{s=1}^k d_s^2}{\sum_{s=1}^p d_s^2}.
+        &=100 \times \frac{\sum_{s=1}^k d_s^2}{\sum_{s=1}^p d_s^2}.\\
+        &=\rho_k.
     \end{align*}
     So $\frac{100}{p}\sum_{j=1}^p \mathrm{MSS}_j$ is exactly the cumulative percent variance explained sequence.
 \end{enumerate}
+
+\subsection*{Problem 2: LOO CV, PCA and 1NN}
+
+Key ideas:
+\begin{itemize}
+    \item ``Eyeballing'' principal component directions.
+    \item Working out nearest neighbor classifiers.
+\end{itemize}
+
+First we recreate the plot from the question for reference.
+
