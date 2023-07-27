@@ -143,7 +143,7 @@ This has the effect of regularizing $\hat{\beta}_{OLS}$ in the directions which 
     \hat{\beta}_\lambda&=\argmin_\beta \left(\Vert X \beta - Y \Vert_2^2 + \lambda \Vert \beta\Vert_2^2 \right)\\
     &=(X^\top X + \lambda)^{-1}X^\top Y\\
     &=(V^\top D^2 V + \lambda)^{-1}VDU^\top Y\\
-    &=V^\top (D^2+\lambda I_p)^{-1}DU^\top Y\\
+    &=V(D^2+\lambda I_p)^{-1}DU^\top Y\\
     &=\sum_{j=1}^p \frac{d_j^2}{d_j^2+\lambda} \frac{u_j^\top Y}{d_j}v_j.
 \end{align*}
 Thus, $\hat{\beta}_\lambda$ is again a linear combination of $v_j$. Compared to $\hat{\beta}_{OLS}$ the coefficient for $v_j$ has been reduced by a factor of $\frac{d_j^2}{d_j^2+\lambda}$. This factor is increasing in $d_j$, so the lower principal directions get shrunk more. As $\lambda$ goes from zero to infinity, $\frac{d_j^2}{d_j^2+\lambda}$ goes from one down to zero. The fitted values in ridge regression are
