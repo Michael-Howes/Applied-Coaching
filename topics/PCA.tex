@@ -1,0 +1,177 @@
+\section{Principal component analysis\footnote{Kenneth Tay, Stephen Bates, Isaac Gibbs, Dan Kluger, M.H.}}
+
+Principal component analysis is a dimension reduction technique and the topic of many qualifying exam questions. We'll talk about four interpretations of PCA.
+
+\subsection{Overview and notation}
+
+
+Let $X \in \reals^{n \times p}$ be our data matrix with rows $X_i^\top \in \reals^p$. We will assume that $p \le n$ (so our matrix is tall) and that the columns of $X$ are centered. This means that $\bar{X}_n = \frac{1}{n}X_i = 0$. We will later relax these assumptions but for now they make the main ideas clearer.
+
+Running PCA on $X$ involves computing three things:
+\begin{enumerate}
+    \item Orthonormal vectors $v_1,v_2,\ldots,v_p \in \reals^p$ called the \textbf{principal component directions} of $X$.
+    \item Orthogonal features $z_j = Xv_j \in \reals^n$ called the \textbf{principal components} or \textbf{principal component scores} of $X$.
+    \item Scalar quantities $\gamma_j = \frac{1}{n}\Vert z_j \Vert^2_2$ called the \textbf{variance in the} $j$\textbf{th principal component direction}. 
+\end{enumerate}
+The principal component directions can be thought of as a family of matrices $V_k = [v_1,\ldots,v_k] \in \reals^{p \times k}$. Since $V_k V_k^\top = I_k$, the product $V_k^\top V_k  \in \reals^{p \times p}$ is the projection from $\reals^p$ onto the $k$-dimensional subspace $\text{span}\{v_1,\ldots,v_k\}$. The principal components are defined by an optimality property of these projection matrices. 
+
+\subsection{Maximal variance projection}
+
+A projection onto a $k$-dimensional subspace of $\reals^p$ can be represented as $W^\top W$ where $W \in \reals^{p \times k}$ is a matrix satisfying $W^\top W = I_k$. The image of each row $X_i \in \reals^p$ under this projection is $WW^\top X_i \in \reals^p$. Since the vectors $\{X_i\}_{i=1}^n$ have mean zero, $\{WW^\top X_i\}_{i=1}^n$ also have mean zero. The variance of $\{WW^\top X_i\}_{i=1}^n$ is therefore,
+\begin{align}
+    \frac{1}{n}\sum_{i=1}^n \Vert WW^\top X_i \Vert_2^2 &= \frac{1}{n}\sum_{i=1}^N X_i^\top WW^\top WW^\top X_i \nonumber \\
+    &=\frac{1}{n}\sum_{i=1}^N X_i^\top WW^\top X_i\nonumber \\
+    &=\frac{1}{n}\sum_{i=1}^n \Vert W^\top X_i\Vert_2^2\label{eq:variance},
+\end{align} 
+since $W^\top W = I_k$. The principal component directions $v_1,\ldots,v_p$ give the projections that maximize the above variance. Specifically, $V_k = [v_1,\ldots,v_k]$ solves
+\[\begin{array}{ll}
+    \underset{W \in \reals^{p \times k}}{\mbox{maximize }} &\frac{1}{n}\sum_{i=1}^n \Vert W^\top X_i \Vert_2^2\\
+    \mbox{subject to }& W^\top W = I_k.
+\end{array} \]
+Once $V=V_p$ has been calculated, the principal component scores and variances can be calculated from,
+\begin{align*}
+    z_j &=Xv_j \in \reals^n,\\
+    \gamma_j &=\Vert z_j\Vert_2^2.
+\end{align*}
+The variance of the projections $W^\top X$ can also be expressed in terms of the empirical covariance matrix,
+\[\widehat{\Sigma} = \frac{1}{n}\sum_{i=1}^n X_iX_i^\top = \frac{1}{n}XX^\top. \]
+This is because,
+\begin{align*}
+    \frac{1}{n}\sum_{i=1}^n \Vert W^\top X_i\Vert_2^2&=\frac{1}{n}\sum_{i=1}^n \tr(X_i^\top iW W^\top X_i)\\
+    &=\frac{1}{n}\sum_{i=1}^n \tr(W^\top X_iX_i^\top W)\\
+    &=\tr\left(W^\top \left(\frac{1}{n}\sum_{i=1}^n X_iX_i^\top\right)W\right)\\
+    &=\tr\left(W^\top \widehat{\Sigma}W\right).
+\end{align*}
+This perspective of PCA as the subspaces that maximize variance comes in Question 5 on the 2011 Qualifying exam. 
+
+\subsection{Minimum distance projection}
+
+The projection $X_i \mapsto WW^\top X_i$ is a $k$-dimensional approximation to $X_i$. We can measure the quality of this projection by looking at the mean squared error. That is,
+\begin{equation}\label{eq:distance}\frac{1}{n}\sum_{i=1}^n \Vert X_i - WW^\top X_i \Vert_2^2. \end{equation}
+The best projection would be the one that minimizes the above quantity. Since $WW^\top \in \reals^{p \times p}$ is orthogonal projection, $WW^\top X_i$ and $X_i-WW^\top X_i$ are orthogonal, and so we have
+\[\Vert X_i\Vert_2^2 = \Vert WW^\top X_i \Vert_2^2 + \Vert X_i-WW^\top X_i \Vert_2^2, \]
+thus minimizing \eqref{eq:distance} is the same as maximizing the variance as in \eqref{eq:variance}. Thus, the principal component directions $v_1,\ldots,v_p$ also give the solutions $V_k = [v_1,\ldots,v_k]$ to the following optimization problem
+\[\begin{array}{ll}
+    \underset{W \in \reals^{p \times k}}{\mbox{mniimize }} &\frac{1}{n}\sum_{i=1}^n \Vert X_i - WW^\top X_i \Vert_2^2\\
+    \mbox{subject to }& W^\top W = I_k.
+\end{array} \]
+This perspective of PCA gives part of the answer to Problem 1 on the 2013 exam.
+
+
+\subsection{Singular value decomposition}
+
+The last two sections defined the principal component directions as the solutions to certain optimization problems. They are thus implicit descriptions of the principal component directions. The singular value decomposition of $X$ gives an explicit description. The singular value decomposition of $X$ gives,
+\[X = UDV^\top, \]
+where $U \in \reals^{n \times p}$ and $V \in \reals^{p \times p}$ satisfy
+\[U^\top U = V^\top V = VV^\top = I_p, \]
+and $D \in \reals^{p \times p}$ with diagonal entries $d_1 \ge d_2 \ge \cdots \ge 0$. The columns of $V =[v_1,v_2,\ldots,v_p]$ are exactly the principal components of $X$. The equality $XV = UD$ implies that
+\begin{enumerate}
+    \item $z_j = Xv_j = d_ju_j$. That is the principal component scores are scaled versions of the columns of $u_j$.
+    \item $\gamma_j = \frac{1}{n}\Vert z_j \Vert_2^2 = \frac{1}{n}d_j^2$ are the principal component variances.
+\end{enumerate}
+
+\subsection{Eigenvalue decomposition}
+
+As above, let 
+\[
+    \widehat{\Sigma}=\frac{1}{n}\sum_{i=1}^n X_iX_i^\top = \frac{1}{n}X^\top X 
+\] 
+be the $p \times p$ empirical covariance matrix of our data set $X$. Using the singular value decomposition of $X$ we have
+\begin{align*}
+    \widehat{\Sigma}&=\frac{1}{n} VDU^\top U DV^\top \\
+    &=\frac{1}{n} V D^2 V^\top\\
+    &=V\Gamma V^\top,
+\end{align*}
+where $\Gamma = \frac{1}{n}D^2$. Since $\Gamma$ is a diagonal matrix and $V^\top = V^{-1}$, the equation $\widehat{\Sigma} = V\Gamma V^\top$ is an eigenvalue decomposition of $\widehat{\Sigma}$. The principal component directions are thus the eigenvector of $\widehat{\Sigma}$ sorted by their eigenvalues $\gamma_j = \frac{1}{n}d_j^2$. The eigenvalue $\gamma_j$ is the variance in the $j$th principal component direction.
+
+\subsection{Variance explained and the trace trick}
+
+The variance of $X \in \reals^{n \times p}$ is 
+\[\frac{1}{n}\sum_{i=1}^n \Vert X_i \Vert_2^2. \]
+We can rewrite this in terms of the principal components variances $\gamma_1,\ldots, \gamma_p$. Note that,
+\begin{align*}
+    \frac{1}{n}\sum_{i=1}^n \Vert X_i \Vert_2^2&=\frac{1}{n}\sum_{i=1}^n X_i^\top X_i \\
+    &=\frac{1}{n} \sum_{i=1}^n \tr(X_i^\top X_i)\\
+    &=\frac{1}{n}\sum_{i=1}^n \tr(X_iX_i^\top)\\
+    &=\tr\left(\frac{1}{n}\sum_{i=1}^n X_iX_i^\top \right)\\
+    &=\tr(\widehat{\Sigma})\\
+    &=\tr(V\Gamma V^\top)\\
+    &=\tr(\Gamma V^\top V)\\
+    &=\tr(\Gamma)\\
+    &=\sum_{j=1}^p \gamma_j.
+\end{align*}
+Thus, the variance of $X$ is the sum of the principal component variances,
+\[\frac{1}{n}\sum_{i=1}^n \Vert X_i \Vert_2^2 = \sum_{j=1}^p \gamma_j. \]
+The above calculation is an example of the ``trace trick'' and can be very handy on questions that involve PCA. Most calculations can be done by turning inner products into traces and using the orthogonality properties of $U$ and $V$.
+
+The \textbf{proportion of variance explained} by the first $k$ principal components is 
+\[\rho_k = \frac{\sum_{j=1}^k \gamma_j}{\sum_{j=1}^p \gamma_j}. \]
+The values $\rho_k$ increase to $1$. In applications, you can look at a plot of $\rho_kk$ against $\rho_k$ and choose the number of principal components $k^*$ based on where this plot ``levels off''. Proportion of variance explained comes up on Question 5 on the 2010 exam.
+
+\subsection{Removing assumptions}
+
+If the data matrix $X$ is non-centered, then you should center it by defining $\widetilde{X}=X- \ones_n \bar{X}_n^\top$. You can then run PCA on $\widetilde{X}$. The linear projection of $\widetilde{X}$ correspond to affine projections of $X$. 
+
+If $p > n$, then you can still do PCA, but now you will have $n$ components instead of $p$. If $p \gg n$, then you should get the eigenvalue decomposition of $\frac{1}{n}XX^\top \in \reals^{n \times n}$ instead of $\widehat{\Sigma} = \frac{1}{n}X^\top X \in \reals^{p \times p}$. 
+
+\subsection{Principal component regression and ridge regression}
+
+Consider now a regression problem where we have a response $Y \in \reals^n$ that we want to model as a linear function of features $X \in \reals^{n \times p}$. Suppose that $Y$ and all columns of $X$ are mean zero. As above suppose that $X$ has singular value decomposition $X=UDV^\top$ and that $X$ has rank $p$. The OLS estimate $\hat{\beta}_{OLS}$ can be expressed in terms of $U,D$ and $V^\top$,
+\begin{align*}
+    \hat{\beta}_{OLS}&=\argmin_{\beta} \Vert X\beta - Y \Vert_2^2 \\
+    &=(X^\top X)^{-1}X^\top Y\\
+    &=(VDU^\top U D V^\top)^{-1}V DU^\top Y\\
+    &=(VD^2 V^\top)^{-1} VDU^\top Y\\
+    &=VD^{-2}V^\top VU^\top Y\\
+    &=VD^{-1}U^\top Y.
+\end{align*}
+In coordinates, we have
+\[\hat{\beta}_{OLS} = \sum_{j=1}^p \frac{u_j^\top Y}{d_j}v_j. \]
+Thus, $\hat{\beta}_{OLS}$ is a linear combination of the principal component direction $v_j$. The coefficient of $v_j$ is $\frac{u_j^\top Y}{d_j}$ the scaled covariance of $Y$ in the direction $u_j$. Likewise, the fitted values are,
+\[\widehat{Y}_{OLS} = X\hat{\beta}_{OLS} = UU^\top Y =  \sum_{j=1}^p u_ju_j^\top Y. \]
+In \textbf{principal components regression}, we replace $X$ with $X^{(k)} \in \reals^p$ given by $X^{(k)}= U_k D_k V^\top$ where $U_k \in \reals^{n \times k}$ and $D_k \in \reals^{k \times p}$ are the first $k$ columns of $U$ and $D$. This amounts to ``chopping off'' the $k+1,\ldots,p$ principal components. The coefficients and fitted values are 
+\[\hat{\beta}_{(k)} = \sum_{j=1}^k \frac{u_j^\top Y}{d_j} v_j \text{ and } \hat{Y}_{(k)} = \sum_{j=1}^k u_ju_j^\top Y. \]
+This has the effect of regularizing $\hat{\beta}_{OLS}$ in the directions which $X$ varies the least. A more common form of regularization is ridge regularization. The coefficients in ridge regularization with penalty $\lambda$ are
+\begin{align*}
+    \hat{\beta}_\lambda&=\argmin_\beta \left(\Vert X \beta - Y \Vert_2^2 + \lambda \Vert \beta_2^2 \right)\\
+    &=(X^\top X + \lambda)^{-1}X^\top Y\\
+    &=(V^\top D^2 V + \lambda)^{-1}VDU^\top Y\\
+    &=V^\top (D^2+\lambda I_p)^{-1}DU^\top Y\\
+    &=\sum_{j=1}^p \frac{d_j^2}{d_j^2+\lambda} \frac{u_j^\top Y}{d_j}v_j.
+\end{align*}
+Thus, $\hat{\beta}_\lambda$ is again a linear combination of $v_j$. Compared to $\hat{\beta}_{OLS}$ the coefficient for $v_j$ has been reduced by a factor of $\frac{d_j^2}{d_j^2+\lambda}$. This factor is increasing in $d_j$, so the lower principal directions get shrunk more. As $\lambda$ goes from $0$ to $+\infty$, $\frac{d_j^2}{d_j^2+\lambda}$ goes from $1$ down to $0$. The fitted values in ridge regression are
+\[X\hat{\beta}_\lambda = UD^2(D^2+\lambda I_p)^{-1}U^\top Y = \sum_{j=1}^p \frac{d_j^2}{d_j^2+\lambda} u_ju_j^\top  Y. \]
+The fitted values are thus also shrunk by factor of $\frac{d_j^2}{d_j^2+\lambda}$. This shows that ridge regression can be thought of as a smoothed version of PCA regression.
+
+
+\subsection{Probabilistic PCA}
+
+PCA can also be interpreted as the maximum likelihood estimate in a latent variable model. Specifically, consider the model
+\begin{align*}
+    Z_i &\simiid \calN(0,I_k) \text{ for } i = 1,\ldots, n,\\
+    X_i \mid Z_i & \simind \calN(Wz_i+\mu, \sigma^2I_n) \text{ for } i =1,\ldots n,
+\end{align*}
+where $k \le p$. The variables $Z_i$ are unobserved, and we observe $X_i$, Our parameters are the matrix $W \in \reals^{p \times k}$, the vector $\mu \in \reals^p$ and the scalar $\sigma^2$. Let $X - \ones_n\bar{X}_n = UDV^\top$ be the singular value decomposition of the centered data matrix. The MLE for this model is
+\begin{align*}
+    \hat{\mu}&=\bar{X}_n,\\
+    \hat{\sigma^2}&=\frac{1}{p-k} \sum_{j=k+1}^p \frac{d_j^2}{n},\\
+    \hat{W}&=V_k(D^2_k-\sigma^2)^{1/2}R,
+\end{align*}
+where $R\in \reals^{k \times k}$ is arbitrary matrix with $R^\top R=I_k$. The parameters $W$ are thus unidentifiable, but we can still estimate the span of $W$ with the first $k$ principal component directions. For more details including a Bayesian approach to probabilistic PCA, see Scott's lecture notes \url{https://github.com/slinderman/stats305c/blob/spring2023/slides/lecture05-continuous_lvms.pdf}.
+
+
+\subsection{Sparse principal component analysis}
+
+These notes are from the previous iterations of coaching. Sparse PCA is on a number of past qualifying exams, but I think it would be out of scope for you year.
+
+Note that the first PC $z_1 = X_c v_1$ is a linear combination of the centered observation's. In general $v_1$ is not sparse, meaning that we need all $p$ features in order to compute the first PC. Sometimes, it is desirable for $v_1$ to be sparse so that our principal components depend on only a handful of features. There have been a few attempts to define sparse principal components in different ways. The first attempt was due to \cite{Jolliffe2003}, which uses the “maximal variance” property of the first PC but penalizes the vector $v_1$:
+$$\text{maximize}_{v_1} v_1^T X_c^T X_c v_1 \quad \text{subject to} \vert \vert v_1 \vert \vert_2^2 =1, \vert \vert v_1 \vert \vert_1 \leq t $$
+This optimization problem is difficult to solve, especially when you have to tune $t$ to attain the desired sparsity. The most popular definition for sparse
+PCA is probably due to \cite{Zou2006SparsePCA}, where $v_1$ is the solution to
+$$\text{minimize}_{v_1,\alpha} \vert \vert X_c - X_cv_1 \alpha^T \vert \vert_F^2 +\lambda \vert \vert v_1 \vert \vert_2^2+\mu \vert \vert v_1 \vert \vert_1 \quad \text{subject to } \vert \vert \alpha \vert \vert_2^2 =1.$$
+This can be solved by an alternating method (fix $v_1$ and solve the convex optimization problem w.r.t to $\alpha$, then fix $\alpha$ and solve the convex optimization problem with respect to $v_1$ and repeat). Finally, we must normalize $v_1$ to be a unit vector. To obtain subsequent sparse principal component directions we repeat with the additional constraint that $v_2^T v_1=0$.  More formally, to compute the first $k$ sparse principal components  \cite{Zou2006SparsePCA} propose (after centering the data $x_1,\dots, x_n$) solving $$\text{minimize}_{A,B}  \sum_{i=1}^n \vert \vert x_i - AB^T x_i \vert \vert_2^2 + \lambda \sum_{j=1}^k  \vert \vert B_j \vert \vert_F^2+\sum_{j=1}^k \lambda_{1,j} \vert \vert B_j \vert \vert_1 \quad \text{subject to } A^T A =I_{k \times k}.$$
+
+The above optimization problem can be solved with an alternating algorithm. Given $\hat{B}_t$, we can find the optimal $A$ by computing the SVD  of $(X_c^T X_c)\hat{B}_t$ (with $(X_c^T X_c)\hat{B}_t =UDV^T$ and set $\hat{A}_{t+1} =U V^T$ ). Given $\hat{A}_{t+1}$, we can set $\hat{B}_{t+1} = [\hat{\beta}_1 \dots \hat{\beta}_k]$ where each $\hat{\beta}_j$ is the solution to an elastic net optimization problem $$\hat{\beta}_j = \argmin\limits_{\beta_j} \vert \vert Y_j^* - X_c \beta_j \vert \vert_2^2 + \lambda \vert \vert \beta_j \vert \vert_2^2 + \lambda_{1,j} \vert \vert \beta_j \vert \vert_1,$$ where $Y_j^* =X_c (\hat{A}_{t+1} \bm{e}_j)$ and $\bm{e}_j$ is the $j$th standard basis vector. Once we have the solution $(\hat{A},\hat{B})$ to the above optimization problem, the columns of $\hat{B}$ give the first $k$ sparse principal component directions. Note that the $\lambda$'s may have to be tuned to attain the desired level of sparsity. 
+
+
+

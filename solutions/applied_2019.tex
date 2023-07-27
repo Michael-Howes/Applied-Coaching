@@ -6,7 +6,7 @@
 
 Key ideas/tools:
 \begin{itemize}
-  \item log-rank (Mantel-Haenszel) test
+  \item log-rank (Mantel--Haenszel) test
   \item Cox proportional hazards model
 \end{itemize}
 
@@ -104,7 +104,7 @@ $$ \frac{1}{n \cdot B_t}  \sum_{i=1}^n  \sum_{b=1}^{B_t}X_i^b (X_i^b)^\top$$
 Note that the estimated covariance matrix $\widehat{\Sigma}$ will be PSD  as long as $\widehat{S}^t$ is PSD throughout all steps, which it should be.
 %$ \EE{X_j^* } 
 
-\item The EM algorithm above will produce an estimate $\widehat{\Sigma}$ of the population covariance matrix $\Sigma$. To perform PCA, we could form the eigendecomposition $\widehat{\Sigma} = V D^2 V^\top$. The columns of $V$ then would define the principal component directions. Furthermore, the variance along the $j$-th eigenvalue direction is $\Var{X_i^\top V_j} = D_{jj}^2$. (Computing the principal components on the original dataset, $\boldX $, however is not directly feasible when $\boldX$ is not fully observed, although at least the principal component scores for observations $X_i^*$ with no errors can be computed with $(X_i^*)^T V$. One approach to obtain principal component scores for all $n$ samples would be to impute $\boldX$ based on the last step of the EM algorithm above and then compute the principal components with $\bold{X}_{\text{imputed}}V$.)
+\item The EM algorithm above will produce an estimate $\widehat{\Sigma}$ of the population covariance matrix $\Sigma$. To perform PCA, we could form the eigendecomposition $\widehat{\Sigma} = V \Gamma V^\top$. The columns of $V$ then would define the principal component directions. Furthermore, the variance along the $j$-th eigenvalue direction is $\Var{X_i^\top V_j} = \Gamma_{jj}$. (Computing the principal components on the original dataset, $\boldX $, however is not directly feasible when $\boldX$ is not fully observed, although at least the principal component scores for observations $X_i^*$ with no errors can be computed with $(X_i^*)^T V$. One approach to obtain principal component scores for all $n$ samples would be to impute $\boldX$ based on the last step of the EM algorithm above and then compute the principal components with $\bold{X}_{\text{imputed}}V$.)
 
 \item In the factor model, we model the covariance matrix as
 $$ \Sigma = L L^\top + \Psi,$$
