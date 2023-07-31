@@ -74,9 +74,7 @@ Key ideas:
     \end{align*}
     Thus,
     \begin{align*}
-        \frac{100}{p}\sum_{j=1}^p \mathrm{MSS}_j &=\frac{100}{np} \sum_{s=1}^k d_s^2\\
-        &=100 \times \frac{\sum_{s=1}^k d_s^2}{\sum_{s=1}^p d_s^2}.\\
-        &=\rho_k.
+        \frac{100}{p}\sum_{j=1}^p \mathrm{MSS}_j =\frac{100}{np} \sum_{s=1}^k d_s^2=100 \times \frac{\sum_{s=1}^k d_s^2}{\sum_{s=1}^p d_s^2} =\rho_k.
     \end{align*}
     So $\frac{100}{p}\sum_{j=1}^p \mathrm{MSS}_j$ is exactly the cumulative percent variance explained sequence.
 \end{enumerate}
@@ -88,6 +86,27 @@ Key ideas:
     \item ``Eyeballing'' principal component directions.
     \item Working out nearest neighbor classifiers.
 \end{itemize}
+\begin{enumerate}
+    \item We are asked to draw a line corresponding to the first principal component. This does not have to be exact, but we can see that a roughly 45 degree line gives the direction with the most variance. Here the principal component direction is represented as a red solid line. In both plots I have also included dashed lines showing the projection onto the first principal direction.
+    \begin{figure}[h]
+        \begin{center}
+            \includegraphics*[width = 0.8\textwidth]{2022-Q2-fig2.png}
+        \end{center}
+    \end{figure}
+    \item Looking at the previous figure we can make two observations. 
+    \begin{itemize}
+        \item Using the 2D data, the nearest neighbor of a point is one of the adjacent points on the line of points parallel to the PCA direction. For example, for the point at roughly $(-,1,-2)$, the nearest neighbor is the point at roughly $(0,-1.25)$.
+        \item Using the projected 1D data from PCA, the nearest neighbor of a point is the point across the PCA direction. This because these points get projected onto the same value when we perform PCA. For example, for the point at roughly $(-1,-2)$, the 1D projected nearest neighbor is the point at roughly $(-2,-1)$.
+    \end{itemize}
+    To have 100\% error on the 2D data we want an alternating sequence of ``$+$'''s and ``$-$'''s along the two lines of points parallel to the PCA direction. If we use the same sequence of ``$+$'''s and ``$-$'''s on both lines of points, then we will also have 0\% error when using the 1D data. This is because the 1D-nearest neighbor points will have the same labels. 
 
-First we recreate the plot from the question for reference.
-
+    To have 0\% error on the 2D data we want adjacent points on the two lines to all have the same label. If we label only line of points with ``$+$'''s and the other with ``$-$'''s, then the 1D data will also have 100\% error. This is because the 1D nearest neighbors will have the opposite labels. 
+    
+    In summary, the labelling below has the specified error rates.
+    \begin{figure}
+        [h]
+        \begin{center}
+            \includegraphics*[width = 0.8\textwidth]{2022-Q2-fig3.png}
+        \end{center}
+    \end{figure}
+\end{enumerate}
