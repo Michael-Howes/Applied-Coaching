@@ -22,10 +22,10 @@ The distribution of $T$ can also be described by $T$'s \emph{hazard rate} $h_T(t
 \end{align}
 Note that in the discrete case, $h_T(t)=0$ for all $t \notin \supp T$. For both discrete and continuous distributions, the survival function $S_T(t)$ can be recovered from the hazard rate $h_T(t)$. In particular,
 \begin{align}
-    S_T(t)&=\prod_{u < t}(1-h_T(u)) \quad \text{when $T$ is discrete},\label{eq:surv-haz-discrete}\\
+    S_T(t)&=\prod_{0 \le u < t}(1-h_T(u)) \quad \text{when $T$ is discrete},\label{eq:surv-haz-discrete}\\
     S_T(t)&=\exp\left(-\int_0^t h_T(u)du\right) \quad \text{when $T$ is continuous}.\label{eq:surv-haz-continuous}.
 \end{align}
-The distribution of $T$ is therefore determined by the hazard rate $h_T(t)$. Our modeling and inference can thus be bases on the hazard rates $h_T(t)$. Equations \eqref{eq:surv-haz-discrete} and \eqref{eq:surv-haz-continuous} show that $S_T(t)$ is a \emph{decreasing} function of $h_T(t)$. Higher hazard rates correspond to earlier event times.
+The distribution of $T$ is therefore determined by the hazard rate $h_T(t)$. Our modeling and inference can will be based on the hazard rates $h_T(t)$. Equations \eqref{eq:surv-haz-discrete} and \eqref{eq:surv-haz-continuous} show that $S_T(t)$ is a \emph{decreasing} function of $h_T(t)$. Higher hazard rates correspond to earlier event times (on average).
 
 \subsection{Censoring}
 
@@ -42,20 +42,20 @@ Consider data as \eqref{eq:surv-model1} but with the additional assumption that 
 
 \subsection*{The Kaplan--Meier estimate}
 
-Let $E = \{T_i : 1 \le i \le N, \delta_i = 1\}$ be the set of observed event times. For each $t \in E$ defined the following,
+Let $E = \{O_i : 1 \le i \le N, \delta_i = 1\}$ be the set of observed event times. For each $t \in E$ defined the following,
 \begin{itemize}
     \item The risk set at time $t$, $R(t) = \{i:O_i \ge t\}$.
     \item The number of at risk subjects at time $t$, $n(t) = |R(t)|$.
-    \item The number of uncensored times equal to $t$, $y(t) = |\{i : O_i =t, \delta_i=1\}|$. 
+    \item The number of uncensored event times equal to $t$, $y(t) = |\{i : O_i =t, \delta_i=1\}|$. 
 \end{itemize}
 Under our i.i.d. assumptions, the conditional distribution of $y(t)$ given $n(t)$ is
-\[y(t) \mid n(t) \simind \mathrm{Binom}(n(t),h_T(t)) \text{ for } t \in E. \]
+\[y(t) \mid n(t) \sim \mathrm{Binom}(n(t),h_T(t)) \text{ for } t \in E. \]
 For $t \in E$, we can estimate $h_T(t)$ with the MLE,
 \[\hat{h}(t) = \frac{y(t)}{n(t)}. \]
 From \eqref{eq:surv-haz-discrete}, we get an estimate of the survival function for $T$,
 \[\hat{S}(t) = \prod_{u \in E, u < t}(1-\hat{h}_T(u)). \]
 This is called the \emph{Kaplan--Meier estimate} of $S_T$. We can estimate the variance of  $\hat{S}_T$ by \emph{Green-wood's formula}
-\[\var{\hat{S}(t)} \approx \hat{S}(t)^2 \sum_{u \in E, u \le t} \frac{y(u)}{n(u)(n(u)-y(u))}.\]
+\[\var\left(\hat{S}(t)\right) \approx \hat{S}(t)^2 \sum_{u \in E, u \le t} \frac{y(u)}{n(u)(n(u)-y(u))}.\]
 
 \subsection*{Parametric modelling}
 
@@ -78,7 +78,7 @@ Standard GLM theory gives the limiting distribution of $\hat{\theta}$. You can t
     glm(Y/n ~ Phi, family = binomial(link = "logit"), weights = n) 
 \end{minted}
 
-Both the Kaplan--Meier estimate and the parametric GLM estimate come up in Question 6 on the 2015 qualifying exam.
+Both the Kaplan--Meier estimate and the parametric GLM estimate come up in Question 6 on the 2015 qualifying exam. A parametric modelling question also comes up in Question 1 on the 2018 qualifying exam. There a log link is used instead of a logistic link.
 
 \subsection{Comparing different populations}
 
@@ -87,18 +87,25 @@ In the previous section, we considered the problem of estimating $h_T(t)$ for on
     &\{(O_i^0,\delta_i^0):1 \le i \le N_0\},\\
     &\{(O_i^1,\delta_i^1) : 1 \le i \le N_1\}.
 \end{align*}
-We assume that each sample is the form \eqref{eq:surv-model1} with the same independence assumptions as before. We wish to test if $T^0 \stackrel{\text{dist}} T^1$. This can be done by fitting separate hazard rates to each sample as above. You can then use the estimated standard errors to see the two hazard rates are substantially different.
+We assume that each sample is the form \eqref{eq:surv-model1} with the same independence assumptions as before. Specifically, we assume that $C_i^j,T_i^j$ are all independent of each other and for $j=0,1$ and $1 \le i \le N_j$,
+\begin{align*}
+    T_i^j& \simiid T^j,\\
+    O_i^j &= \min\{C_i^j,O_i^j\},\\
+    \delta_i^j &= I_{\{O_i^j = T_i^j\}}.
+\end{align*}
+We wish to test if $T^0 \stackrel{\text{dist}}{=} T^1$. This can be done by fitting separate hazard rates to each sample as above. You can then use the estimated standard errors to see the two hazard rates are substantially different. 
 
 \subsubsection*{The Log-rank test}
 
-The log-rank test is a non-parametric test of the null $T^0 \stackrel{\text{dist}}{=} T^1$. As before, define the following quantities 
+The log-rank test is a non-parametric test of the null $T^0 \stackrel{\text{dist}}{=}  T^1$. As before, define the following quantities 
 
 \begin{itemize}
     \item The set of all uncensored event times across the two groups \[
         E = \{O_i^0 : 1 \le i \le N_0, \delta_i^0=1\} \cup \{O_i^1 : 1 \le i \le n_1, \delta_i^1=1\}.
         \]
-    \item The number of at risk subjects in each sample at time $t$, $n_j(t) = |\{1 \le i \le N_j : O_i^j \ge t\}|$, $j=0,1$.
-    \item The number of uncensored times in each sample equal to $t$, $y_j(t) = |\{1 \le i \le N_j : O_i^j =t, \delta_i^j=1\}|$. 
+    \item The number of at risk subjects in each sample at time $t$, 
+    \[n_j(t) = |\{1 \le i \le N_j : O_i^j \ge t\}|.\]
+    \item The number of uncensored times in each sample equal to $t$, \[y_j(t) = |\{1 \le i \le N_j : O_i^j =t, \delta_i^j=1\}|. \]
 \end{itemize}
 Under the null hypothesis $T^0  \stackrel{\text{dist}}{=} T^1$, we have for all $t \in E$, 
 \[y_j(t) \mid n_j(t) \sim \mathrm{Binom}(n_j(t), h(t)). \]
@@ -115,7 +122,7 @@ where
 \end{align*} 
 by the hypergeometric result above. 
 
-The method of combining $|E|$ hypergeometric statistics as in \eqref{eq:log-rank} is called a ``Conchran--Mantel--Haenazel test.'' The log-rank test can also be extended to multiple groups using the Fisher--Yates or multivariate hypergeometric distribution.
+The method of combining $|E|$ hypergeometric statistics as in \eqref{eq:log-rank} is called a ``Conchran--Mantel--Haenazel test.'' The log-rank test can also be extended to multiple groups using the Fisher--Yates or multivariate hypergeometric distribution. 
 
 \subsection{Proportional hazard models}
 
@@ -129,14 +136,14 @@ Our inference will be conditional on the features $X_1,\ldots,X_N$. We will assu
 \begin{align}
     T_i\mid X_i \simind h(t;X_i) = h_0(t)\exp(X_i^\top \beta). \label{eq:prop-haz}
 \end{align}
-Larger values of $X_i^\top \beta$ thus correspond to larger higher hazard functions and thus earlier event times. The unknown function $h_0(t)$ is called the baseline hazard rate.
+Larger values of $X_i^\top \beta$ correspond to higher hazard functions and thus earlier event times. The unknown function $h_0(t)$ is called the baseline hazard rate.
 As before we assume that given the features $X_i$, $C_i$ and $T_i$ are independent. 
 
 \subsubsection*{Estimation}
 
-As before, we will conduct inference by conditioning on the risk sets $R(t)$. This will have the affect of eliminating the baseline hazard $h_0(t)$ which can be thought of as a nuisance parameter. For simplicity, we will assume that there are no ties in the set $E$.
+As before, we will conduct inference by conditioning on the risk sets $R(t)$. This will have the affect of eliminating the baseline hazard $h_0(t)$ which is a nuisance parameter. For simplicity, we will assume that there are no ties in the set $E$.
 
-An importance consequence of the proportional hazards model \eqref{eq:prop-haz} is the following. For an individual $i$ with $\delta_i=1$, the probability that they are the member of $R(t_i)$ that dies at time $t$ is 
+An important consequence of the proportional hazards model \eqref{eq:prop-haz} is the following. For an individual $i$ with $\delta_i=1$, the probability that they are the member of $R(t_i)$ that dies at time $t$ is 
 \[\pi_i(\beta\mid R(t_i)) = \frac{\exp(X_i^\top \beta)}{\sum_{k \in R(t_i)} \exp(X_k^\top \beta)}. \]
 We then define the \emph{partial likelihood} to be the product of the above factors 
 \[L(\beta) = \prod_{i:\delta_i=1} \pi_i(\beta \mid R(t_i)) = \prod_{i:\delta_i = 1}\frac{\exp(X_i^\top \beta)}{\sum_{k \in R(t_i)} \exp(X_k^\top \beta)}, \]

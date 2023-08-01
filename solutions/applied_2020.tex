@@ -4,7 +4,7 @@
 
 \begin{enumerate}
 \item[a)]
-Both t.test($Y$) and lm($Y \sim 1$) compute the mean and standard deviation $Y$. This is not possible without observing the full dataset. By default both of these functions will simply ignore the missing values. This will cause us to overestimate the mean of $Y$ and produce a confidence interval that is biased upwards.
+Both \verb|t.test(Y)| and \verb|lm(Y ~ 1)| compute the mean and standard deviation $Y$. This is not possible without observing the full dataset. By default, both of these functions will simply ignore the missing values. This will cause us to overestimate the mean of $Y$ and produce a confidence interval that is biased upwards.
 \item[b)]
 The methods in part a) give estimates that have a positive bias. To derive a likelihood based method let $Z_1,\dots,Z_n$ denote the latent values of the light emmisions. We are told that $Z_i \sim N(\mu,\sigma^2)$ for some unknown values $\mu$ and $\sigma^2$ and  we observe 
 \[
@@ -17,9 +17,16 @@ Let $\Phi$ and $\phi$ denote the cdf and pdf of $N(0,1)$, respectively. Let $\de
 \[
 p(Y;\mu,\sigma) = \prod_{i=1}^n \left( \frac{1}{\sigma} \phi\left( \frac{Y_i - \mu}{\sigma} \right) \right)^{\delta_i } \Phi\left( \frac{C - \mu}{\sigma} \right)^{1 - \delta_i} 
 \]
-We could try to maximize this likelihood (or its log) to get estimates for $\mu$ and $\sigma$. There are multiple challenges to this optimization problem. The largest one is that the likelihood and the log-likelihood are both non-convex. Since we have only two parameters a grid search for the optimal values of $(\mu,\sigma)$ could be reasonable. Alternatively, we could try running gradient ascent. A small barrier to gradient ascent is that $\Phi(\cdot)$ has no closed form. However, this is only a minor obstacle since the gradient of $\Phi(\cdot)$ is known and the values of $\Phi(\cdot)$ can be computed numerically by evaluating a one-dimensional integral. Since the problem is non-convex we may want to run gradient ascent with many different random initializations. One potentially good initialization is to use the empirical mean and standard deviation of the observed $Y_i$ with the missing values replaced by $C$. If $C$ is not too large these should be reasonable starting estimates.
+and, up  to a constant, the log-likelihood is
+\[\ell(\mu,\sigma) = \sum_{i=1}^n -\delta_i\left(\log(\sigma) -\frac{1}{2}\left(\frac{Y_i}{\sigma}-\frac{\mu}{\sigma}\right)^2\right) + (1-\delta_i)\log \Phi\left(\frac{C}{\sigma}-\frac{\mu}{\sigma}\right). \]
+This is not a concave function of $(\mu,\sigma)$, but it is concave in the transformed parameter $\lambda = \frac{1}{\sigma}$ and $\nu = \frac{\mu}{\sigma}$. In these parameters, we have
+\[\ell(\lambda,\nu) =\sum_{i=1}^n \delta_i\left(\log(\lambda) -\frac{1}{2}\left(\lambda Y_i-\nu\right)^2\right) + (1-\delta_i)\log \Phi\left(\lambda C-\nu\right). \]
+This function is concave because is non-negative combination of concave functions. We can thus use Newton's method to find $\hat{\lambda},\hat{\nu}$ which we can transform to get $\hat{\sigma} = \frac{1}{\hat{\lambda}}$ and $\hat{\mu} = \frac{\hat{\nu}}{\hat{\lambda}}$.
 
-Another alternative is to use EM. In the E-Step we would need to compute
+
+% We could try to maximize this likelihood (or its log) to get estimates for $\mu$ and $\sigma$. There are multiple challenges to this optimization problem. The largest one is that the likelihood and the log-likelihood are both non-convex. Since we have only two parameters a grid search for the optimal values of $(\mu,\sigma)$ could be reasonable. Alternatively, we could try running gradient ascent. A small barrier to gradient ascent is that $\Phi(\cdot)$ has no closed form. However, this is only a minor obstacle since the gradient of $\Phi(\cdot)$ is known and the values of $\Phi(\cdot)$ can be computed numerically by evaluating a one-dimensional integral. Since the problem is non-convex we may want to run gradient ascent with many different random initializations. One potentially good initialization is to use the empirical mean and standard deviation of the observed $Y_i$ with the missing values replaced by $C$. If $C$ is not too large these should be reasonable starting estimates.
+
+If you do not recognize the above transformation, a good alternative is to use EM. In the E-Step we would need to compute
 \[
 \mme_{\hat{\mu}^t,\hat{\sigma}^t}[\log(p(Z;\mu,\sigma) ) | Y].
 \]
@@ -35,9 +42,11 @@ Intuitively we should have that the observed data $Y_1,\dots,Y_n$ come from a tr
 \[
 p(Y;\mu,\sigma) = \prod_{i=1}^n \frac{1}{\sigma} \phi\left(\frac{Y_i - \mu}{\sigma}\right)\left( 1- \Phi\left(\frac{C - \mu}{\sigma}\right) \right)^{-1}.
 \]
-Once again optimizing this function is likely a non-convex problem. Running gradient ascent starting from  many random initializations or performing a two-dimensional grid search are both still reasonable methods that we could try. Without doing any rigorous calculations (assuming both devices take measurments for the same amount of time) we suspect that the device in b) should give a better estimate of $\mu$ and $\sigma$ than the device in c). This is due to the fact that in b) we observe strictly more data than in c).
+The log of this likelihood is again concave in $\lambda = \frac{1}{\sigma}$ and $\nu = \frac{\mu}{\sigma}$, and so we can find the global optimum easily.
 
-\textbf{Aside:} The question explicitly says that we do not need to do a rigorous calculation. However, I think that seeing a rigorous calculation could still be informative, thus I will give a rigorous derivation of the likelihood below. This calculation shows that the likelihood written out above is actually the conditional likelihood for the $Y_i$, conditional on the number of observations that we observe.
+Without doing any rigorous calculations (assuming both devices take measurements for the same amount of time) we suspect that the device in b) should give a better estimate of $\mu$ and $\sigma$ than the device in c). This is due to the fact that in b) we observe strictly more data than in c).
+
+\textbf{Aside:} The question explicitly says that we do not need to do a rigorous calculation. However, seeing a rigorous calculation could still be informative. This calculation shows that the likelihood written out above is actually the conditional likelihood for the $Y_i$, conditional on the number of observations that we observe.
 
 The calculation proceeds as follows. Let $Z_1,\dots,Z_m$ denote the latent non-truncated measurements of light brightness. Then, we observed $Z_{i_1},\dots,Z_{i_n}$ where $1 \leq i_1<i_2<\dots < i_n \leq m$ are the indices at which $Z_{i_j}  > C$. Note that $n$ is itself random here. Now, for any $x > C$ and $1 \leq i \leq n$ we have that  
 \begin{align*}
@@ -53,7 +62,7 @@ Given fixed values for the indices $i_1,\dots,i_k$ let $j^*$ be the index such t
 \end{align*}
 Differentiating this last expression gives the claimed formula for the likelihood.
 \item[d)]
-We are told to replace $\mu$ in the above likelihoods with $\mu_i = X_i^T\beta$. Since we are given a function for the gradient of the log-likelihoods we can use gradient ascent to maximize the objective. Assuming that $\sigma^2$ is fixed and known the updates would look like 
+We are told to replace $\mu$ in the above likelihoods with $\mu_i = X_i^\top\beta$. Since we are given a function for the gradient of the log-likelihoods we can use gradient ascent to maximize the objective. Assuming that $\sigma^2$ is fixed and known the updates would look like 
 \begin{equation}\label{2020Q1grad_desc}
 \beta_{t+1} = \beta_t + \eta \text{grad\_log}(Y,X\beta_t,\text{sigma\_sq},C)^TX,
 \end{equation}
