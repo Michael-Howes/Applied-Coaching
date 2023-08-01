@@ -72,7 +72,11 @@ We can fit a GLM to get the MLE $\hat{\theta}$ of $\theta$. This gives the follo
     \hat{h}(t)&=\logit^{-1}(\Phi(t)^\top \hat{\theta}),\\
     \hat{S}(t)&=\prod_{u \in E, u < t}(1-\hat{h}(u)).
 \end{align*}
-Standard GLM theory gives the limiting distribution of $\hat{\theta}$. You can then use the delta method to get asymptotic standard deviations for $\hat{h}(t)$ and $\hat{S}(t)$. 
+Standard GLM theory gives the limiting distribution of $\hat{\theta}$. You can then use the delta method to get asymptotic standard deviations for $\hat{h}(t)$ and $\hat{S}(t)$. Here is code to fit such a model in \verb|R|,
+
+\begin{minted}{R} 
+    glm(Y/n ~ Phi, family = binomial(link = "logit"), weights = n) 
+\end{minted}
 
 Both the Kaplan--Meier estimate and the parametric GLM estimate come up in Question 6 on the 2015 qualifying exam.
 
@@ -149,6 +153,18 @@ where
 \[m_i(\beta) = \sum_{k \in R(t_i)}\pi_k(\beta \mid R(T_i))X_k,\]
 and
 \[ V_i(\beta) = \sum_{k \in R(t_i)}\pi_k(\beta \mid R(T_i))(X_k - m_i(\beta))(X_k - m_i(\beta))^\top.\]
+The \verb|R| package \verb|survival| is a standard tool for fitting proportional hazards models. Here is code that use this package
+\begin{minted}{R}
+    S <- Surv(O, delta)
+    coxph(S ~ X)
+\end{minted}
+You can also use \verb|glm| style notation,
+\begin{minted}{R}
+    S <- Surv(O, delta)
+    coxph(S ~ X1 + X2 + X3)
+\end{minted}
+Intercepts are not fitted in proportional hazards models. The unknown baseline hazard makes intercepts unidentifiable.
+
 
 \subsubsection*{Inference}
 A lot of theoretical statistics gives the normal approximation:
