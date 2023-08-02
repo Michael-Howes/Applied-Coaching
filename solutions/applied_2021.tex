@@ -1,23 +1,30 @@
-\section{Applied 2021: Solution\footnote{D.K.}}
+\section{Applied 2021: Solution\footnote{Dan Kluger and M.H.}}
 
 \textbf{Key Ideas/ Main Tools:} Unmeasured confounders, GLMs, offsets
 
 \subsection*{Problem 1: Modeling association between vaccination and death rates for Covid-19}
 
-\begin{enumerate}
-\item[a)] It is essential to ask the researchers whether they know the population in each county because counties with higher populations will tend to have a higher death count irrespective of the vaccination rates. Also, if rural counties with low populations tend to have low vaccination rates, not accounting for county population can make vaccination seem less effective than it is. \newline Other questions worth asking the researchers are if there are any confounding variables that are likely to effect both vaccination rates and death rates, and if any of those confounding variables are measured. For example, the quality of the health care system in a county would effect both vaccination rates and deaths, so it would be worth asking if there are any measured variables that reflect the quality of the healthcare system in each county. Another example is the age demographics. The age demographics can influence both the death rate and the vaccination rate in a county, so it would be helpful to know if the researchers have any covariates that reflect age demographics (e.g. the percentage of the population above age 70 in each county). If the researchers mentions a large number of confounding that they have measurements for, I would ask the researchers to select the few most important ones based on their domain knowledge and would mention that they should choose much fewer than 20 variables to control for because there are only 20 samples.  \newline
+\begin{enumerate}[label=(\alph*)]
+\item It is essential to ask the researchers whether they know the population in each county because counties with higher populations will tend to have a higher death count irrespective of the vaccination rates. Also, if rural counties with low populations tend to have low vaccination rates, not accounting for county population can make vaccination seem less effective than it is.
 
-In addition to asking about county population levels and whether there are measured confounder variables not presented in the table, it would be worthwhile to double check with the researcher that the deaths were counted after the vaccines were distributed (otherwise any analysis would be unable to say anything about the effect of vaccination rates on death rates). 
+Other questions worth asking the researchers are if there are any confounding variables that are likely to affect both vaccination rates and death rates, and if any of those confounding variables are measured. For example, the quality of the health care system in a county would affect both vaccination rates and deaths, so it would be worth asking if there are any measured variables that reflect the quality of the healthcare system in each county. Another example is the age demographics. The age demographics can influence both the death rate and the vaccination rate in a county, so it would be helpful to know if the researchers have any covariates that reflect age demographics (e.g. the percentage of the population above age 70 in each county). If the researchers mention many confounding variables that they have measurements for, then I would ask them to select the few most important ones based on their domain knowledge. I would mention that they should choose much fewer than 20 variables to control for because there are only 20 samples.  
+
+In addition to asking about county population levels and whether there are measured confounder variables not presented in the table, it would be worthwhile to check with the researcher that the deaths were counted after the vaccines were distributed (otherwise any analysis would be unable to say anything about the effect of vaccination rates on death rates). 
 
 
-\item[b)] Suppose the researchers are able to provide you with the population counts $N_1,\dots,N_{20}$ of the 20 counties, and for each of the $20$ they can give you a vectors $z_1, \dots, z_{20}$ of the few most important measured confounder variables for each county (e.g. age demographics and health care system quality metrics). Also suppose that their death counts in each county, indeed only include deaths from a time period after most of the vaccinations were given.
+\item Suppose the researchers are able to provide you with the population counts $N_1,\dots,N_{20}$ of the 20 counties, and for each of the $20$ they can give you vectors $z_1, \dots, z_{20}$ of the few most important measured confounder variables for each county (e.g. age demographics and health care system quality metrics). Also suppose that their death counts in each county, indeed only include deaths from a time period after most of the vaccinations were given.
 
 Letting $d_i$ denote the number of deaths in county $i$, $v_i$ denote the vaccination rate, $x_i \equiv (v_i, z_i)$,  I would fit the following Poisson GLM with offsets $\alpha_i \equiv \log(N_i)$
 
-$$d_i \stackrel{\text{Ind}}{\sim} \text{Poisson} (\mu_i) \quad \log(\mu_i)=\alpha_i + x_i^T \beta \quad \text{for } i=1,...,20.$$
+$$d_i \simind \text{Poisson} (\mu_i) \quad \log(\mu_i)=\alpha_i + x_i^\top \beta \quad \text{for } i=1,...,20.$$
 
 After fitting the GLM (which can easily be done in R) using the glm function, I would look at the confidence interval for the first estimated coefficient $\hat{\beta}_1$. If the confidence interval only contains negative values, then we can conclude that the data suggests higher vaccination rates are associated with lower death rates when controlling for the confounders encoded in the $z_i$. 
 
+A binomial GLM could also be appropriate
+\[ 
+    d_i \simind \text{Binom}(N_i, p_i) \quad \logit(p_i) = \beta_0 + x_i^\top \beta \quad \text{for } i=1,\ldots,20.
+\]
+Again, the confidence interval around $\hat{\beta}_1$ will let us do inference on the affect of vaccination controlling for $z_i$.
 
 
 \end{enumerate}
@@ -28,9 +35,11 @@ After fitting the GLM (which can easily be done in R) using the glm function, I 
 
 \subsubsection*{Defining the optimal essential subset as a solution to an optimization problem}
 
-Observe that one way to obtain an essential subset is to find the matrix $B \in \mathbb{R}^{750 \times 750}$ that minimizes $\vert \vert R - R B \vert \vert_{F}^2$ subject to the constraint that only 25 of the rows of $B$ are allowed to have nonzero entries. More formally, letting $B[i,]$ denote the ith row of the matrix $B$ we could get an essential subset by solving the following optimization problem on $B$: $$\boxed{\text{minimize} \quad \vert \vert R - R B \vert \vert_{F}^2 \quad \text{ subject to } \quad \sum_{i=1}^{750} I \{ B[i,] \neq \mathbf{0} \} \leq 25 , B \in  \mathbb{R}^{750 \times 750} }.$$ Let $\tilde{B}$ be the solution to the above optimization problem and $\mathcal{S} = \{ i \in [750] \ : \ \tilde{B}[i,] \neq \mathbf{0} \}$, (that is let $\mathcal{S}$ be the indices of the nonzero rows of the solution $\tilde{B}$).   $\mathcal{S}$ will give an essential subset, as each portfolio (represented by a column in $R$) will be reasonably well approximated by a linear combination of the portfolios of at most . \footnote{Technically, to be an essential subset, we only desire that portfolios not in $\mathcal{S}$ are well approximated by linear combinations of portfolios in $\mathcal{S}$, but trivially, portfolios in $\mathcal{S}$ can be written as exact linear combinations of portfolios in $\mathcal{S}$ and do not contribute to the loss function $\vert \vert R - R B \vert \vert_{F}^2$.}  \newline
+Observe that one way to obtain an essential subset is to find the matrix $B \in \mathbb{R}^{750 \times 750}$ that minimizes $\vert \vert R - R B \vert \vert_{F}^2$ subject to the constraint that only 25 of the rows of $B$ are allowed to have nonzero entries. More formally, letting $B[i,]$ denote the ith row of the matrix $B$ we could get an essential subset by solving the following optimization problem on $B$: 
+$$\boxed{\text{minimize} \quad \vert \vert R - R B \vert \vert_{F}^2 \quad \text{ subject to } \quad \sum_{i=1}^{750} I \{ B[i,] \neq \mathbf{0} \} \leq 25 , B \in  \mathbb{R}^{750 \times 750} }.$$ 
+Let $\tilde{B}$ be the solution to the above optimization problem and define $\mathcal{S}$ to be the set  $\{ i \in [750] \ : \ \tilde{B}[i,] \neq \mathbf{0} \}$.  By definition, $\mathcal{S}$ will give an essential subset, as each portfolio (represented by a column in $R$) will be reasonably well approximated by a linear combination of the portfolios of at most. 
 
-Solving the boxed optimization problem and setting $\mathcal{S}$ to be the nonzero rows of the solution will recover an essential subset of size at most 25, but unfortunately the optimization problem is nonconvex (it has an $l_0$ type constraint).
+Solving the boxed optimization problem and setting $\mathcal{S}$ to be the nonzero rows of the solution will recover an essential subset of size at most 25, but unfortunately the optimization problem is non-convex (it has an $\ell_0$ type constraint).
 
 
 \subsubsection*{A tractable approach using the Group Lasso}
@@ -40,7 +49,7 @@ One way to induce a sparse number of nonzero rows of $B$ is to use the Group Las
 
 $$\boxed{\hat{B}_{\lambda} \in \argmin_{B \in \mathbb{R}^{750 \times 750}} \Big( \frac{1}{2}  \vert \vert R - R B \vert \vert_{F}^2 + \lambda \sum_{i=1}^{750} \vert \vert B[i,] \vert \vert_2 \Big).}$$
 
-We can solve this group Lasso problem for many different $\lambda$ values until we find a solution $\hat{B}_{\lambda}$ which has exactly 25 rows which have nonzero. In particular, letting $\hat{\mathcal{S}}_{\lambda}=  \{ i \in [750] \ : \ \hat{B}_{\lambda}[i,] \neq \mathbf{0} \}$, we can do a grid search on $\lambda$ until we find a $\lambda_*$ for which $\vert \hat{\mathcal{S}}_{\lambda_*} \vert =25$. Then we can report $\hat{\mathcal{S}}_{\lambda_*}$ to our boss as an essential subset. Note that this may not be the optimal essential subset in the sense of minimizing $\vert \vert R - R B \vert \vert_{F}^2$ subject to 25 nonzero rows of $B$; however, it will still be an essential subset according to your bosses definition (that any portfolio in not in $\hat{\mathcal{S}}_{\lambda_*}$ can be well approximated by a linear combination portfolios in $\hat{\mathcal{S}}_{\lambda_*}$).
+We can solve this group Lasso problem for many different $\lambda$ values until we find a solution $\hat{B}_{\lambda}$ which has exactly 25 rows which have nonzero. In particular, letting $\hat{\mathcal{S}}_{\lambda}=  \{ i \in [750] \ : \ \hat{B}_{\lambda}[i,] \neq \mathbf{0} \}$, we can do a bisection search on $\lambda$ until we find a $\lambda_*$ for which $\vert \hat{\mathcal{S}}_{\lambda_*} \vert =25$. Then we can report $\hat{\mathcal{S}}_{\lambda_*}$ to our boss as an essential subset. Note that this may not be the optimal essential subset in the sense of minimizing $\vert \vert R - R B \vert \vert_{F}^2$ subject to 25 nonzero rows of $B$; however, it will still be an essential subset according to your bosses definition (that any portfolio in not in $\hat{\mathcal{S}}_{\lambda_*}$ can be well approximated by a linear combination portfolios in $\hat{\mathcal{S}}_{\lambda_*}$).
 
 
 
@@ -52,12 +61,12 @@ We can solve this group Lasso problem for many different $\lambda$ values until 
 \textbf{Key Ideas/ Main Tools:} Prediction Intervals, Conformal Inference, Exchangeability
 
 
-\begin{enumerate}
-\item[a)] The defining property of the prediction interval is that $\mathbb{P} \big(Y_{n+1} \in [L,U]  \big) \geq 1-\alpha$, where $\mathbb{P}$ is the joint distribution of the $n+1$ data points $(X_1,Y_1),\dots, (X_{n},Y_n),(X_{n+1},Y_{n+1})$
+\begin{enumerate}[label=(\alph*)]
+\item The defining property of the prediction interval is that $\mathbb{P} \big(Y_{n+1} \in [L,U]  \big) \geq 1-\alpha$, where $\mathbb{P}$ is the joint distribution of the $n+1$ data points $(X_i,Y_i)_{i=1}^{n+1}$
 
-\item[b)] This procedure is not reasonable because the more you overfit the data, the smaller the predictions intervals will be. Ideally our prediction will not be overconfident about overfit predictions. In an extreme case suppose that $X_1, \dots, X_n$ are all distinct and that $\hat{\mu}$ is the best fit $n-1$ degree polynomial to the first $n$ datapoints. In this case, $\hat{\mu}(X_i)=y_i$ for all $i \in [n]$ implying that the residuals $r_1,\dots,r_n$ are all equal to zero, further implying that the proposed prediction interval will have width zero. Clearly, if we overfit the data, the true prediction interval shouldn't have width zero for a new point $X_{n+1}$.
+\item This procedure is not reasonable because the more you overfit the data, the smaller the predictions intervals will be. Ideally our prediction will not be overconfident about overfit predictions. In an extreme case suppose that $X_1, \dots, X_n$ are all distinct and that $\hat{\mu}$ is the best fit $n-1$ degree polynomial to the first $n$ datapoints. In this case, $\hat{\mu}(X_i)=y_i$ for all $i \in [n]$ implying that the residuals $r_1,\dots,r_n$ are all equal to zero, further implying that the proposed prediction interval will have width zero. Clearly, if we overfit the data, the true prediction interval shouldn't have width zero for a new point $X_{n+1}$.
 
-\item[c)] Let $\mathcal{S} = \{ y \in \mathbb{R} \ : \ \pi(y) \leq (1- \alpha)(n+1)/n \}$ and let $L = \inf S$ and $U = \sup S$. To show that this gives a valid prediction interval first note that
+\item Let $\mathcal{S} = \{ y \in \mathbb{R} \ : \ \pi(y) \leq (1- \alpha)(n+1)/n \}$ and let $L = \inf S$ and $U = \sup S$. To show that this gives a valid prediction interval first note that
 $$\begin{aligned}
 \mathbb{P} (Y_{n+1} \in [L,U] ) & \geq \mathbb{P} (Y_{n+1} \in \mathcal{S} )
 \\ & =  \mathbb{P} ( \pi(Y_{n+1}) \leq (1- \alpha)(n+1)/n )
@@ -65,7 +74,7 @@ $$\begin{aligned}
 \end{aligned}$$
 
 
-To simplify the above expression with an exchangeability argument, first define $\tilde{\mu}$ to to the curve fit to the $n+1$ data points $(X_1,Y_1), \dots,(X_n,Y_n), (X_{n+1},Y_{n+1})$.  Next, define for $i=1,\dots,n+1$,  $V_i \equiv  \vert Y_i - \tilde{\mu}(X_i) \vert$. Observe that since $(X_1,Y_1), \dots, (X_n,Y_n)$ , $(X_{n+1},Y_{n+1})$ are IID and  $\tilde{\mu}$ is function of the collection of these $n+1$ data points, $V_1,V_2,\dots,V_n,V_{n+1}$ is an exchangeable sequence of random variables. In addition, since $\tilde{\mu}(\cdot)=\hat{\mu}_{Y_{n+1}}(\cdot)$, $$ V_i \equiv  \vert Y_i - \tilde{\mu}(X_i) \vert = \vert Y_i -\hat{\mu}_{Y_{i+1}}(X_i) \vert =R_{Y_{n+1},i}.$$
+To simplify the above expression with an exchangeability argument, first define $\tilde{\mu}$ to to the curve fit to the $n+1$ data points $(X_i,Y_i)_{i=1}^{n+1}$.  Next, define for $i=1,\dots,n+1$,  $V_i \equiv  \vert Y_i - \tilde{\mu}(X_i) \vert$. Observe that since $(X_i,Y_i)_{i=1}^{n+1}$ are IID and  $\tilde{\mu}$ is symmetric function of the collection of these $n+1$ data points, $(V_i)_{i=1}^{n+1}$ is an exchangeable sequence of random variables. In addition, since $\tilde{\mu}(\cdot)=\hat{\mu}_{Y_{n+1}}(\cdot)$, $$ V_i \equiv  \vert Y_i - \tilde{\mu}(X_i) \vert = \vert Y_i -\hat{\mu}_{Y_{i+1}}(X_i) \vert =R_{Y_{n+1},i}.$$
 
 Combining this with a previous result and using the exchangeability of $(V_i)_{i=1}^{n+1}$ (and assuming that almost surely $V_i \neq V_j$ for $i \neq j$), 
 $$\begin{aligned}
@@ -81,7 +90,7 @@ $$\begin{aligned}
 Above the step where $\sum_{i=1}^n I \{ V_i \leq  V_{n+1} \sim  \text{Unif}\{0,1,\dots,n-1,n \} $ follows from exchangeability of $(V_i)_{i=1}^{n+1}$ (and the assumption almost surely $V_i \neq V_j$ for $i \neq j$).
 
 Note you can also cite Lemma's or Theorem's from Lecture 17 in Stats 300C to solve this problem.
-\item[d)] If $X_{n+1}$ is far outside the range of the training data, I would be concerned that the assumption that $(X_1,Y_1), \dots,(X_n,Y_n), (X_{n+1},Y_{n+1})$ are exchangeable from some distribution $P$ is violated and that the intervals from part (c) are no longer valid. Even if $X_{n+1}$ was technically a draw from $P$, the collaborator may have taken many draws from $P$ and selected $X_{n+1}$ as an outlier draw from $P$, in which case the exchangeability assumption would also be violated. \newline
+\item If $X_{n+1}$ is far outside the range of the training data, I would be concerned that the assumption that $(X_1,Y_1), \dots,(X_n,Y_n), (X_{n+1},Y_{n+1})$ are exchangeable from some distribution $P$ is violated and that the intervals from part (c) are no longer valid. Even if $X_{n+1}$ was technically a draw from $P$, the collaborator is confusing conditional coverage with marginal coverage. We do not have conditional coverage over all possible values of $X_{n+1}$. It is very believable that our conditional coverage decreases as $X_{n+1}$ goes to the tails of the distribution of $X$.
 
 Despite failure to meet the exchangeability assumption, if we went ahead and constructed the prediction intervals defined in (c), we would get prediction intervals with undesirable behavior. In particular, if the curve $\hat{\mu}$ is fit based on kernel smoothing or local linear regression (and only considers points with similar $X$ values), then it would follow that for all $y$, $\hat{\mu}_y(X_{n+1})= y$ implying that $R_{y,n+1}=0$ for all $y$, further implying that $\pi(y)=0$ for all $y$. Therefore, if $\hat{\mu}$ is fit based on kernel smoothing or local linear regression, the prediction interval would have infinite length. If on the other hand the curve $\hat{\mu}$ is fit based on a global polynomial regression, one would expect $R_{y,n+1}$ to be much larger than $R_{y,i}$  ($i <n$) for most $y$ values in which case the prediction interval would be very small. However, for a global model, since the global model is unlikely to hold for outliers we would want the prediction intervals to be very large. In summary, if we were to fit a curve with large extrapolation bias, the interval from part (c) would be very small and not reflect the extrapolation bias, but if we were to fit a local smooth model, the intervals from part (c) would be infinite length. The collaborator should therefore expect meaningless intervals if they went ahead and used prediction intervals for their outlier point. 
 
@@ -91,18 +100,20 @@ Despite failure to meet the exchangeability assumption, if we went ahead and con
 
 \subsection*{Problem 4: PCA versus k-means}
 
-\begin{enumerate}
+\begin{enumerate}[label=(\alph*)]
 
-\item[a)] 
-\textbf{Explanation for PCA:} Suppose that each of the features is centered such that columns of $X$ each have mean $0$. PCA can be thought of in terms of matrix factorizing $X$. In particular to implement PCA, you take the SVD of $X$, which is a matrix factorization given by $X=UDV^T$ where $U \in \mathbb{R}^{n \times n}$ and $V \in \mathbb{R}^{p \times p}$ are orthogonal matrices, and $D_{ij} = 0$ for all $i \neq j$ and $\vert D_{11} \vert \geq \vert D_{22} \vert \geq \dots \geq 0$. In PCA, the principal component directions are given by the columns of $V$, while the principal component scores are given by $UD$. Since $X=(UD) V^T$, principal component analysis can be thought of as factorizing $X$ into matrix of the principal component scores (given by $UD$) and a matrix whose rows are the principal component directions (given by $V^T$).
+\item
+\textbf{Explanation for PCA:} Suppose that each of the features is centered such that columns of $X$ each have mean $0$. PCA can be thought of in terms of matrix factorizing $X$. In particular to implement PCA, you take the SVD of $X$, which is a matrix factorization given by $X=UDV^\top  $ where $U \in \mathbb{R}^{n \times n}$ and $V \in \mathbb{R}^{p \times p}$ are orthogonal matrices, and $D_{ij} = 0$ for all $i \neq j$ and $\vert D_{11} \vert \geq \vert D_{22} \vert \geq \dots \geq 0$. In PCA, the principal component directions are given by the columns of $V$, while the principal component scores are given by $UD$. Since $X=(UD) V^\top  $, principal component analysis can be thought of as factorizing $X$ into matrix of the principal component scores (given by $UD$) and a matrix whose rows are the principal component directions (given by $V^\top  $).
 
-\textbf{Explanation for K-means:} K-means can be thought of as an approximate matrix factorization of $X \in \mathbb{R}^{n \times p}$. In particular let $$\mathcal{C}_K \equiv \Bigr\{ C \in \mathbb{R}^{n \times K} \ : \ C_{ij} \in \{0,1 \} \ \forall_{i \in [n],j \in [K]}, \sum_{j=1}^{K}C_{ij} =1 \ \forall_{i \in [n] } \Bigr\},$$
-
+\textbf{Explanation for K-means:} K-means can be thought of as an approximate matrix factorization of $X \in \mathbb{R}^{n \times p}$. In particular let 
+\[ 
+    \mathcal{C}_K \equiv \Bigr\{ C \in \{0,1\}^{n\times K} :  \sum_{j=1}^{K}C_{ij} =1 \text{ for } i=1,\ldots,n\Bigr\},
+\]
 be the collection of $n \times K$ matrices whose rows contain exactly $K-1$ zeros and $1$ one. We can then think of K-means as solving the following approximate matrix factorization problem $$(\hat{C}, \hat{Z} ) = \argmin\limits_{C \in \mathcal{C}_K , Z \in \mathbb{R}^{K \times p} } \vert \vert X - CZ \vert \vert_F^2.$$
 
 In particular, if you solve the above approximate matrix factorization problem, the $K$ rows of $\hat{Z}$ will give the $K$ cluster centroids for $K$-means, and the column index of the nonzero entry in each of the $n$ rows of $\hat{C}$ will give the cluster assignment for each of the $n$ points in the $K$-means algorithm (or put another way, $\hat{C}_{ij}$ is a indicator of whether the $i$th point is assigned to cluster $j$ in the K-means algorithm).
 
-\item[b)] For PCA, you can determine the matrix $V$, whose columns give the principal components dierections using $X_{\text{train}}$. Then, you can use the principal component scores on your test set given by $X_{\text{test}} V$ as features (or some subset of the principal component scores as features) for predicting $Y_{\text{test}}$. Note that if your prediction method is linear regression, and only the first $k$ principal component scores are used as features, this approach would be principal components regression.
+\item For PCA, you can determine the matrix $V$, whose columns give the principal components dierections using $X_{\text{train}}$. Then, you can use the principal component scores on your test set given by $X_{\text{test}} V$ as features (or some subset of the principal component scores as features) for predicting $Y_{\text{test}}$. Note that if your prediction method is linear regression, and only the first $k$ principal component scores are used as features, this approach would be principal components regression.
 
 For $K$-means, you use the training data $X_{\text{train}}$, to determine the $K$ cluster centroids. Once you have the cluster centroids, you can determine the cluster assignment of each observation in the test set by determining which of the $K$ cluster centroids is closest (in Euclidean distance) to each row of the matrix $X_{\text{test}}$. Once you have the cluster assignments on the test set, you can use the cluster assignments as a categorical feature for prediction $Y_{\text{test}}$ (you may want to use other features in addition to the cluster assignment). 
 
@@ -110,9 +121,9 @@ For $K$-means, you use the training data $X_{\text{train}}$, to determine the $K
 You can evaluate the error in predicting $Y$ for your choice of prediction algorithm and your choice features using cross-validation on the set $(X_{\text{test}}, Y_{\text{test}})$.
 
 
-\item[c)] While my peer isn't wrong that the cluster structure they found is predictive of $Y$, it is just not such an impressive predictor of $Y$. In particular my peer's cluster assignments give a statistically significant improvement over just using the grand mean of $Y$ for predicting $Y$. That being said, looking at the sum of squares in the ANOVA table, using the cluster means to predict $Y$ doesn't give an impressive improvement over using the grand mean to predict $Y$. In a similar vein, from linear regression on the cluster we also see that the residuals from the linear regression tend to be much larger in absolute value than the estimates of $Y$ for each cluster. So, I agree with my peer that the cluster structure found is predictive of $Y$, but it doesn't appear to be terribly important structure for predicting $Y$.
+\item While my peer isn't wrong that the cluster structure they found is predictive of $Y$, it is just not such an impressive predictor of $Y$. In particular my peer's cluster assignments give a statistically significant improvement over just using the grand mean of $Y$ for predicting $Y$. That being said, looking at the sum of squares in the ANOVA table, using the cluster means to predict $Y$ doesn't give an impressive improvement over using the grand mean to predict $Y$. In a similar vein, from linear regression on the cluster we also see that the residuals from the linear regression tend to be much larger in absolute value than the estimates of $Y$ for each cluster. So, I agree with my peer that the cluster structure found is predictive of $Y$, but it doesn't appear to be terribly important structure for predicting $Y$.
 
-\item[d)] The results don't contradict each other so it does not cause me to doubt my peer's results. It is possible that the first first 5 principle components are simply not that associated (in a linear way) with the outcome variable $Y$. Perhaps the jth principal component for $j>5$ is important in predicting $Y$. Perhaps the 1st principal component is important in explaining $Y$, but it has $U$ shaped quadratic relationship with $Y$ with a linear coefficient of $0$. In either case the 3-means approach that my friend did would give a better prediction of $Y$ than the principal components regression approach (with 5 components) that I took.
+\item The results don't contradict each other so it does not cause me to doubt my peer's results. It is possible that the first first 5 principle components are simply not that associated (in a linear way) with the outcome variable $Y$. Perhaps the jth principal component for $j>5$ is important in predicting $Y$. Perhaps the 1st principal component is important in explaining $Y$, but it has $U$ shaped quadratic relationship with $Y$ with a linear coefficient of $0$. In either case the 3-means approach that my friend did would give a better prediction of $Y$ than the principal components regression approach (with 5 components) that I took.
 
 While it doesn't sound like my peer did anything wrong, I'm not terribly impressed by his results because the structure he found is quite a weak predictor of $Y$ (admittedly, I am even less impressed by my own results). I would suggest to our supervisor that we continue seeking an alternative to the 3-means approach, as there likely is a better choice of features out there. Perhaps it would be an 8-means approach or involve more than the first 5 principal components or it would involve interaction terms. Also neither of our approaches leveraged the $Y_{\text{train}}$ data, even though we are told that it exists. I would therefore try to convince our supervisor that it is worth digging deeper before sticking to the 3-means approach of my peer.
 \end{enumerate}
@@ -122,25 +133,26 @@ While it doesn't sound like my peer did anything wrong, I'm not terribly impress
 
 \textbf{Key Ideas/ Main Tools:} Score test, maximum likelihood estimation, Bayesian inference
 
-\begin{enumerate}
-\item[a)] $Z$ is distributed as $N(\mu,1)$ variable constrained to be at least 2. Therefore, letting $\Phi$ denote the standard Gaussian CDF and $\phi$ denote the standard Gaussian pdf the likelihood is given by 
+\begin{enumerate}[label=(\alph*)]
+\item $Z$ is distributed as $N(\mu,1)$ variable constrained to be at least 2. Therefore, letting $\Phi$ denote the standard Gaussian CDF and $\phi$ denote the standard Gaussian pdf the likelihood is given by 
 
 $$L(\mu)  = \frac{\frac{1}{\sqrt{2 \pi} } \exp \big( -\frac{1}{2} (Z- \mu)^2 \big)}{\int_{2}^{\infty} \frac{1}{\sqrt{2 \pi} } \exp \big( -\frac{1}{2} (z- \mu)^2 \big) \text{d}z} = \frac{\phi(Z-\mu)}{1- \Phi(2-\mu)} = \frac{\phi(Z-\mu)}{\Phi(\mu-2)}.$$
 
-The loglikelihood is thus given by $$l(\mu) = \log \big( L(\mu) \big) = \log \big( \frac{1}{\sqrt{2 \pi}} \big) -\frac{1}{2} (Z- \mu)^2  - \log \big( \Phi(\mu-2) \big).$$
+The log-likelihood is thus given by $$l(\mu) = \log \big( L(\mu) \big) = \log \big( \frac{1}{\sqrt{2 \pi}} \big) -\frac{1}{2} (Z- \mu)^2  - \log \big( \Phi(\mu-2) \big).$$
 The score function is therefore given by $$U(\mu) =l'(\mu) = (Z-\mu) - \frac{\phi(\mu-2)}{\Phi(\mu-2)},$$ and the Fisher information is given by 
 
 $$\begin{aligned} I(\mu) & = -\mathbb{E}[l''(\mu) \mid \mu] \\ & = -\mathbb{E} \Big[ -1  - \frac{\Phi(\mu-2) \phi'(\mu-2)-[\phi(\mu-2)]^2}{[\Phi(\mu-2)]^2 } \mid \mu \Big] \\ & =1+\frac{(2-\mu) \Phi(\mu-2) \phi(\mu-2)-[\phi(\mu-2)]^2}{[\Phi(\mu-2)]^2}.
 \end{aligned}$$
 
-To conduct a score test of the hypothesis $H_0: \mu=0$, one would use the test statistic, $$T= \frac{[U(0)]^2}{I(0)} = \frac{\big( Z - \frac{\phi(-2)}{\Phi(-2)} \big)^2}{1+\frac{2 \Phi(-2) \phi(-2)-[\phi(-2)]^2}{[\Phi(-2)]^2}}= \frac{(Z-r)^2}{1+2r-r^2} \quad \text{ where } r=\frac{\phi(-2)}{\Phi(-2)} \approx 2.373.$$
-
-The score test will reject whenever $T$ exceeds $c_{1-\alpha}$, where $c_{1-\alpha}$ is the $1-\alpha$ quantile of a chi-squared distribution with one degree of freedom chosen to satisfy $\mathbb{P}(\chi_1^2 \leq c_{1-\alpha} )=1-\alpha$. (Note $c_{1-\alpha} \approx 3.84$ for $\alpha=0.05$). Thus the score test rejects whenever $$ T> c_{1-\alpha} \Leftrightarrow   \frac{(Z-r)^2}{1+2r-r^2} >  c_{1-\alpha} \Leftrightarrow  Z > r+ \sqrt{(1+2r-r^2) c_{1-\alpha}}  \text { or } Z<  r- \sqrt{(1+2r-r^2) c_{1-\alpha}}.$$
-
+To conduct a score test of the hypothesis $H_0: \mu=0$, one would use the test statistic, $$T= \frac{[U(0)]^2}{I(0)} = \frac{\big( Z - \frac{\phi(-2)}{\Phi(-2)} \big)^2}{1+\frac{2 \Phi(-2) \phi(-2)-[\phi(-2)]^2}{[\Phi(-2)]^2}}= \frac{(Z-r)^2}{1+2r-r^2}$$
+where $r=\frac{\phi(-2)}{\Phi(-2)} \approx 2.373.$ The score test will reject whenever $T$ exceeds $c_{1-\alpha}$, where $c_{1-\alpha}$ is the $1-\alpha$ quantile of a chi-squared distribution with one degree of freedom chosen to satisfy $\mathbb{P}(\chi_1^2 \leq c_{1-\alpha} )=1-\alpha$. (Note $c_{1-\alpha} \approx 3.84$ for $\alpha=0.05$). Thus the score test rejects whenever $T> c_{1-\alpha}$, or equivalently   
+\[
+    \frac{(Z-r)^2}{1+2r-r^2} >  c_{1-\alpha} \Leftrightarrow  Z > r+ \sqrt{(1+2r-r^2) c_{1-\alpha}}  \text { or } Z<  r- \sqrt{(1+2r-r^2) c_{1-\alpha}}.
+\]
 Since $Z< 2$ cannot be observed, at level $\alpha=0.05$, noting that $c_{0.95} \approx 3.84$, the score test of $H_0$ rejects whenever $$Z > r+ \sqrt{(1+2r-r^2) c_{1-\alpha}} \approx 3.036.$$
 
 
-\item[b)] Since we just have to optimize over a 1-dimensional parameter you can use grid search to find the MLE. While the following argument is probably unneccasary for the applied qual, to double check that grid search can be used we will find $a, b \in \mathbb{R}$ such that we know $\argmax_{\mu \in \mathbb{R}} l(\mu) \in [a,b]$. Note that whenever, $\mu > Z$, $l'(\mu) <0$, so the MLE must be at most $Z$, and we can set $b=Z$. To find a lower endpoint $a$ for the grid search observe that as a consequence of Theorem 1.2.3 in Durrett, for $x<-1$, $\frac{\phi(x)}{\Phi(x)} \leq (\frac{1}{-x} -\frac{1}{-x^3} )^{-1}$
+\item Since we just have to optimize over a 1-dimensional parameter you can use grid search to find the MLE. While the following argument is probably unneccasary for the applied qual, to double check that grid search can be used we will find $a, b \in \mathbb{R}$ such that we know $\argmax_{\mu \in \mathbb{R}} l(\mu) \in [a,b]$. Note that whenever, $\mu > Z$, $l'(\mu) <0$, so the MLE must be at most $Z$, and we can set $b=Z$. To find a lower endpoint $a$ for the grid search observe that as a consequence of Theorem 1.2.3 in Durrett, for $x<-1$, $\frac{\phi(x)}{\Phi(x)} \leq (\frac{1}{-x} -\frac{1}{-x^3} )^{-1}$
 
 and hence for $\mu < 1$,
 $$\begin{aligned}
@@ -163,11 +175,15 @@ Since the posterior distribution of $\mu$ is proportional to $\pi(\mu)  \exp \bi
 
 As in part (b) this estimator can be found using 1-dimensional grid search. An alternative estimate for $\mu$ would be to estimate the posterior mean $$\hat{\mu} =\mathbb{E}[ \mu \mid Z]= \frac{\int_{-\infty}^{\infty} \mu \pi(\mu)  \exp \big( -\frac{1}{2} (Z-\mu)^2 \big) \text{d} \mu}{ \int_{-\infty}^{\infty} \pi(\mu)  \exp \big( -\frac{1}{2} (Z-\mu)^2 \big) \text{d} \mu}.$$
 
-The numerator and denominator of the above expression can each be approximated numerically using a Gauss-Hermite quadrature. Alternatively, the above posterior mean can be estimated using the Metropolis-Hastings algorithm.
+The numerator and denominator of the above expression can each be approximated numerically using a Gauss--Hermite quadrature. Alternatively, the above posterior mean can be estimated using the Metropolis--Hastings algorithm.
 
 
 
-\item[d)] I'm not entirely sure what the question means by ``conflict", but the answer in part (c) was a Bayesian approach based on one observation for which $Z>2$, whereas part (a) and part (b) describe frequentist approaches where $Z$ is drawn until $Z>2$. The answer in part (c) used a different likelihood than was used in parts (a) and (b). In particular the likelihood in items (a) and (b) was $p(Z \mid \mu,Z>2)=\phi(Z-\mu)/\Phi(\mu -2)$ whereas the likelihood in part (c) that was used was $p(Z \mid \mu)=\phi(Z-\mu)$. The easiest way to see why it was not a mistake to use a different likelihood in part (c), is to note that we could have used the same likelihood in part (c) when applying Bayes' rule as the likelihood used in (a) and (b), but doing so would have made a more difficult calculation. In particular, conditioning on $Z>2$, we could have used Bayes' rule as follows $$p( \mu \mid Z , Z> 2 ) = \frac{ p(\mu \mid Z>2) p(Z \mid \mu ,Z>2) }{\int_{-\infty}^{\infty} p(\mu \mid Z>2) p(Z \mid \mu , Z>2) \text{d} \mu } \propto p(\mu \mid Z>2) p(Z \mid \mu,Z>2),$$ and used the likelihood from parts (a) and (b), but $\pi(\mu \mid Z>2)$ is more difficult to work with than $\pi(\mu)$ and requires applying Bayes' rule. In fact, if we apply Bayes' rule to $\pi(\mu \mid Z>2)$ in the above expression, we simply recover the approach used in part (c): $$p( \mu \mid Z , Z> 2 ) \propto  \pi(\mu) p(Z >2 \mid \mu) p(Z \mid \mu, Z>2)=\pi(\mu)  \Phi(\mu-2) \frac{\phi(Z-\mu)}{\Phi(\mu -2)}=\pi(\mu) \phi(Z-\mu).$$
+\item I'm not entirely sure what the question means by ``conflict", but the answer in part (c) was a Bayesian approach based on one observation for which $Z>2$, whereas part (a) and part (b) describe frequentist approaches where $Z$ is drawn until $Z>2$. The answer in part (c) used a different likelihood than was used in parts (a) and (b). In particular the likelihood in items (a) and (b) was 
+\[p(Z \mid \mu,Z>2)=\phi(Z-\mu)/\Phi(\mu -2),\] 
+whereas the likelihood in part (c) that was used was 
+\[p(Z \mid \mu)=\phi(Z-\mu).\] 
+The easiest way to see why it was not a mistake to use a different likelihood in part (c), is to note that we could have used the same likelihood in part (c) when applying Bayes' rule as the likelihood used in (a) and (b), but doing so would have made a more difficult calculation. In particular, conditioning on $Z>2$, we could have used Bayes' rule as follows $$p( \mu \mid Z , Z> 2 ) = \frac{ p(\mu \mid Z>2) p(Z \mid \mu ,Z>2) }{\int_{-\infty}^{\infty} p(\mu \mid Z>2) p(Z \mid \mu , Z>2) \text{d} \mu } \propto p(\mu \mid Z>2) p(Z \mid \mu,Z>2),$$ and used the likelihood from parts (a) and (b), but $\pi(\mu \mid Z>2)$ is more difficult to work with than $\pi(\mu)$ and requires applying Bayes' rule. In fact, if we apply Bayes' rule to $\pi(\mu \mid Z>2)$ in the above expression, we simply recover the approach used in part (c): $$p( \mu \mid Z , Z> 2 ) \propto  \pi(\mu) p(Z >2 \mid \mu) p(Z \mid \mu, Z>2)=\pi(\mu)  \Phi(\mu-2) \frac{\phi(Z-\mu)}{\Phi(\mu -2)}=\pi(\mu) \phi(Z-\mu).$$
 
 \end{enumerate}
 
@@ -179,23 +195,28 @@ The numerator and denominator of the above expression can each be approximated n
 
 This problem is based on results from \cite{Bates2022CrossVal}. Note that the 2021 qual was open internet, so I think that those who were aware of the paper or were able to find the paper found it the problem quite straightforward, but those who didn't found part (b) especially tricky.
 
-\begin{enumerate}
-\item[a)] Fix any $x_1,x_2, \dots,x_n, y_1,\dots,y_n, \kappa$ and $u$. Now for any subset $S \subset [n]$, let $\hat{\theta}_{S,0}$ denote the OLS estimator trained on the points $\{ (x_i,y_i) \}_{i \in S}$ and let $\hat{\theta}_{S,\kappa}$ denote the OLS estimator trained on the shifted points   $\{ (x_i,y_i +x_i^T \kappa) \}_{i \in S}$. Also let $\mathcal{X}_S \in \mathbb{R}^{\vert S \vert \times p}$ be the design matrix for these OLS regressions whose rows consist of $\{ x_i \ : \ i \in S \}$ and letting $\mathcal{Y}_S = (y_i )_{i \in S}$ be the vector of outcomes for the OLS regression to obtain $\hat{\theta}_{S,0}$. Observe that by the formula for an OLS estimator $$\hat{\theta}_{S,\kappa} = (\mathcal{X}_S^T \mathcal{X}_S)^{-1} \mathcal{X}_S^T \big[ \mathcal{Y}_S + \mathcal{X}_S \kappa \big] =  (\mathcal{X}_S^T \mathcal{X}_S)^{-1} \mathcal{X}_S^T \mathcal{Y}_S  + \kappa =\hat{\theta}_{S,0} +\kappa.$$
+\begin{enumerate}[label=(\alph*)]
+\item Fix any $x_1,x_2, \dots,x_n, y_1,\dots,y_n, \kappa$ and $u$. Now for any subset $S \subset [n]$, let $\hat{\theta}_{S,0}$ denote the OLS estimator trained on the points $\{ (x_i,y_i) \}_{i \in S}$ and let $\hat{\theta}_{S,\kappa}$ denote the OLS estimator trained on the shifted points   $\{ (x_i,y_i +x_i^\top   \kappa) \}_{i \in S}$. Also let $\mathcal{X}_S \in \mathbb{R}^{\vert S \vert \times p}$ be the design matrix for these OLS regressions whose rows consist of $\{ x_i \ : \ i \in S \}$ and letting $\mathcal{Y}_S = (y_i )_{i \in S}$ be the vector of outcomes for the OLS regression to obtain $\hat{\theta}_{S,0}$. Observe that by the formula for an OLS estimator $$\hat{\theta}_{S,\kappa} = (\mathcal{X}_S^\top   \mathcal{X}_S)^{-1} \mathcal{X}_S^\top   \big[ \mathcal{Y}_S + \mathcal{X}_S \kappa \big] =  (\mathcal{X}_S^\top   \mathcal{X}_S)^{-1} \mathcal{X}_S^\top   \mathcal{Y}_S  + \kappa =\hat{\theta}_{S,0} +\kappa.$$
 
-For any $j \notin S$, if we let $\hat{y}_{S,0,j} = x_j^T \hat{\theta}_{S,0}$ be the OLS prediction at point $j$ when training on the subset $S$ for the raw data $(x_i,y_i)$ and if we let $\hat{y}_{S,\kappa,j} = x_j^T \hat{\theta}_{S,\kappa}$ be the OLS prediction at point $j$ when training on the subset $S$ of the translated data $(x_i,y_i+x_i^T \kappa)$, it follows that $$\ell(\hat{y}_{S,\kappa,j} , y_j +x_j^T \kappa) =  \ell(x_j^T \hat{\theta}_{S,\kappa}, y_j +x_j^T \kappa)= \ell(x_j^T \hat{\theta}_{S,0} +x_j^T\kappa, y_j +x_j^T \kappa)  = \ell ( x_j^T \hat{\theta}_{S,0}, y_j)=\ell(\hat{y}_{S,0,j},y_j),$$
-
-where the 2nd last steps holds because $\ell$ is the squared error loss function. It is clear that above argument holds for any subset $S$ and $j \notin S$. %Thus we have that for any subset $S$ and $j \notin S$, the loss when training on $\{ (x_i,y_i) \}_{i \in S}$ and testing on $(x_j,y_j)$ is the same as the loss when training on  $\{ (x_i,y_i +x_i^T \kappa) \}_{i \in S}$ and testing on $(x_j,y_j+x_j^T \kappa)$. 
+For any $j \notin S$, if we let $\hat{y}_{S,0,j} = x_j^\top   \hat{\theta}_{S,0}$ be the OLS prediction at point $j$ when training on the subset $S$ for the raw data $(x_i,y_i)$ and if we let $\hat{y}_{S,\kappa,j} = x_j^\top   \hat{\theta}_{S,\kappa}$ be the OLS prediction at point $j$ when training on the subset $S$ of the translated data $(x_i,y_i+x_i^\top   \kappa)$, it follows that 
+\begin{align*}
+    \ell(\hat{y}_{S,\kappa,j} , y_j +x_j^\top   \kappa)& =  \ell(x_j^\top   \hat{\theta}_{S,\kappa}, y_j +x_j^\top   \kappa)\\
+    &= \ell(x_j^\top   \hat{\theta}_{S,0} +x_j^\top  \kappa, y_j +x_j^\top   \kappa)\\
+    &  = \ell ( x_j^\top   \hat{\theta}_{S,0}, y_j)\\
+    &=\ell(\hat{y}_{S,0,j},y_j),
+\end{align*}
+where the 2nd last steps holds because $\ell$ is the squared error loss function. It is clear that above argument holds for any subset $S$ and $j \notin S$. %Thus we have that for any subset $S$ and $j \notin S$, the loss when training on $\{ (x_i,y_i) \}_{i \in S}$ and testing on $(x_j,y_j)$ is the same as the loss when training on  $\{ (x_i,y_i +x_i^\top   \kappa) \}_{i \in S}$ and testing on $(x_j,y_j+x_j^\top   \kappa)$. 
 
 Letting $S_1(u),\dots,S_K(u)$ be the $K$ training subsets of $[n]$ that define the cross-validation (which depend on the random draw $U$ which we are fixing to be $u$), note that applying the previous result, $$\begin{aligned}
 \widehat{\text{Err}}^{(\text{CV})} \Big( (x_1,y_1), \dots, (x_n,y_n),u \Big) & \equiv \frac{1}{n} \sum_{k=1}^K \sum_{j \notin S_k(u)  } \ell(\hat{y}_{S_k(u),0,j},y_j)
-\\ & =  \frac{1}{n} \sum_{k=1}^K \sum_{j \notin S_k(u)  } \ell(\hat{y}_{S_k(u),\kappa,j},y_j+x_j^T \kappa)
-\\ & = \widehat{\text{Err}}^{(\text{CV})} \Big( (x_1,y_1+x_1^T \kappa), \dots, (x_n,y_n +x_n^T \kappa),u \Big).
+\\ & =  \frac{1}{n} \sum_{k=1}^K \sum_{j \notin S_k(u)  } \ell(\hat{y}_{S_k(u),\kappa,j},y_j+x_j^\top   \kappa)
+\\ & = \widehat{\text{Err}}^{(\text{CV})} \Big( (x_1,y_1+x_1^\top   \kappa), \dots, (x_n,y_n +x_n^\top   \kappa),u \Big).
  \end{aligned}$$
  
  Since this argument holds for any fixed $x_1,x_2, \dots,x_n, y_1,\dots,y_n, \kappa$ and $u$, it follows that $\widehat{\text{Err}}^{(\text{CV})}$ is linearly invariant by definition (2).
 
-\item[b)] Recalling from the problem statement that $\hat{\theta}$ is the OLS estimator based on the all of the observed data, and let $(R_1,\dots,R_n)$ be the residuals for the OLS estimate on the observed data (i.e. $R_i=Y_i -X_i^T \hat{\theta}$ for all $i \in [n]$). By part (a), if we let $\kappa = - \hat{\theta}$, 
-$$\begin{aligned} \widehat{\text{Err}}^{(\text{CV})} \Big( (X_1,Y_1), \dots, (X_n,Y_n),U \Big) & = \widehat{\text{Err}}^{(\text{CV})} \Big( (X_1,Y_1 -X_1^T \hat{\theta}), \dots, (X_n, Y_n-X_n^T \hat{\theta}),U \Big) 
+\item Recalling from the problem statement that $\hat{\theta}$ is the OLS estimator based on the all of the observed data, and let $(R_1,\dots,R_n)$ be the residuals for the OLS estimate on the observed data (i.e. $R_i=Y_i -X_i^\top   \hat{\theta}$ for all $i \in [n]$). By part (a), if we let $\kappa = - \hat{\theta}$, 
+$$\begin{aligned} \widehat{\text{Err}}^{(\text{CV})} \Big( (X_1,Y_1), \dots, (X_n,Y_n),U \Big) & = \widehat{\text{Err}}^{(\text{CV})} \Big( (X_1,Y_1 -X_1^\top   \hat{\theta}), \dots, (X_n, Y_n-X_n^\top   \hat{\theta}),U \Big) 
 \\ & = \widehat{\text{Err}}^{(\text{CV})} \Big( (X_1,R_1), \dots, (X_n,R_n),U \Big) .\end{aligned}$$
 
 It follows conditional on $X=(X_1,\dots,X_n)$, $\widehat{\text{Err}}^{(\text{CV})} $ is a function of only the residuals $(R_1,R_2, \dots,R_n,U)$. Also observe that conditional on $X$, $\text{Err}_{XY}$ is only a function of $\hat{\theta}$. By a property of linear regression under the homoskedastic linear model, $(R_1,R_2,\dots,R_n) \independent \hat{\theta} | X$ (to see this, one can check using the hat matrix that conditional on $X$, the residuals are uncorrelated with the estimator $\hat{\theta}$ and note that for multivariate Gaussian's zero correlation implies independence). Since $U$ is independent of the data, this further implies that  $$(R_1,R_2,\dots,R_n,U) \independent \hat{\theta} | X.$$ Because conditional on $X$, we have shown that $\widehat{\text{Err}}^{(\text{CV})} $ is only a function of $(R_1,R_2, \dots,R_n,U)$ and because conditional on $X$, $\text{Err}_{XY}$ is only a function of $\hat{\theta}$ the conditional independence result displayed above implies that $$\widehat{\text{Err}}^{(\text{CV})} \independent \text{Err}_{XY} | X.$$
@@ -203,6 +224,6 @@ It follows conditional on $X=(X_1,\dots,X_n)$, $\widehat{\text{Err}}^{(\text{CV}
 \item[c)] The previous result from item (b) does not imply that $\widehat{\text{Err}}^{(\text{CV})}$ is a useless estimate of prediction error. In particular,  $\widehat{\text{Err}}^{(\text{CV})}$ is still a good estimate of $\text{Err} \equiv \mathbb{E}[ \text{Err}_{XY} ]$, which is the expected prediction loss across all training sets (see Chapter 7.12 in \cite{hastie2009elements} and \cite{Bates2022CrossVal}). Even if we are truly interested in estimating $\text{Err}_{XY}$ rather than $\text{Err}$, just because $\widehat{\text{Err}}^{(\text{CV})}$ is uncorrelated with  $\text{Err}_{XY}$, it does not mean that it is a bad approximation of $\text{Err}_{XY}$: for large $n$, the random variable $\text{Err}_{XY}$ will likely be concentrated closely about its mean $\text{Err}=\mathbb{E}[ \text{Err}_{XY} ]$.
 
 
-\item[d)] Sample splitting into a training set and a test set would also give a linearly invariant estimate of the prediction error by a similar argument in part (a) and the same argument in part (b). Another commonly used estimate of prediction error that is linearly invariant, so that (3) holds is Mallow's $C_p$. See \cite{Bates2022CrossVal} for discussion about Mallow's $C_p$ and other commonly used linearly invariant estimates of prediction error.
+\item Sample splitting into a training set and a test set would also give a linearly invariant estimate of the prediction error by a similar argument in part (a) and the same argument in part (b). Another commonly used estimate of prediction error that is linearly invariant, so that (3) holds is Mallow's $C_p$. See \cite{Bates2022CrossVal} for discussion about Mallow's $C_p$ and other commonly used linearly invariant estimates of prediction error.
 
 \end{enumerate}

@@ -1,1 +1,124 @@
 \section{Numerical linear algebra\footnote{Stephen Bates, Dan Kluger and M.H.}}
+
+\subsection{Run-times}
+
+Here is a quick overview of the run-times for common matrix calculations. Suppose that $A \in \reals^{n \times m}$, $B \in \reals^{m \times p}$, $x \in \reals^m$ and $y \in \reals^n$. Then, without additional assumptions,
+\begin{itemize}
+    \item Computing $Ax$ takes $O(nm)$ operations.
+    \item Computing $AB$ takes $O(nmp)$ operations.
+    \item Computing the QR factorization of $A$ takes $O(n^2m)$ operations.
+    \item Computing the SVD of $A$ take $O(nm\min\{n,m\})$ operations.
+    \item For $A$ symmetric, computing the eigendecomposition takes $O(n^3)$ operations.
+    \item For $A$ PSD, computing the Cholesky factorization takes $O(n^3)$ operations.
+    \item For $A$ square, computing $A^{-1}$ takes $O(n^3)$ operations.
+    \item For $A$ square, solving $Ax = b$ takes $O(n^3)$ operations. 
+    \item For $A$ square and upper-triangular, solving $Ax = b$ takes $O(n^2)$ operations.
+\end{itemize}
+
+\subsection{Matrix factorizations}
+
+We'll talk about how matrix factorizations relate to common statistical problems. 
+
+\subsubsection*{QR factorization}
+
+ Suppose we have data matrix $X \in \reals^{n \times p}$ that is full rank with $p \le n$. The QR factorization of $X$ gives $X = QR$ with $Q \in \reals^{n \times p}$ satisfying $Q^\top Q = I_p$ and $R \in \reals^{p \times p}$ upper-triangular and invertible. The OLS solution to $Y=X\beta + \varepsilon$ can be written as,
+\[\hat{\beta} = (X^\top X)^{-1}X^\top Y = R^{-1}Q^\top Y, \]
+which is how $\hat{\beta}$ is calculated in practice. 
+
+The \emph{truncated} QR factorization is the QR factorization of the leading columns of $X$. Suppose that $X=[X_1,\ldots,X_p]$ with $X_j \in \reals^n$. If $X^{(k)}=[X_1,\ldots,X_k]$ for $1 \le k \le p$, then the QR factorization of $X^{(k)}$ is
+\[X^{(k)} = Q^{(k)}R^{(k)}, \]
+where $Q^{(k)} \in \reals^{n \times k}$ is the first $k$ columns of $Q$, and $R^{(k)} \in \reals^{k \times k}$ is the top $k \times k$ sub-matrix of $R$. The upshot is that if you calculate the QR-factorization of $X$, then you automatically get the QR-factorization for each matrix $X^{(k)}$.
+
+
+% Suppose we have a full rank design matrix $X \in \reals^{n \times p}$ with $p \le n$ and a response $Y \in \reals^n$. If we fit a model with OLS, we have 
+% \[\hat{\beta} = (X^\top X)^{-1}X^\top Y. \]
+% In practice $\hat{\beta}$ is found by using the QR decomposition of $X$. The matrices $X^\top X$ and $(X^\top X)^{-1}$ need not be calculated. The QR decomposition of $X$ gives $X = QR$ with $Q \in \reals^{n \times p}$ satisfying $Q^\top Q = I_p$ and $R$ invertible and upper triangular. The estimate $\hat{\beta}$ becomes
+% \[\hat{\beta} = R^{-1}Q^\top Y. \]
+% The OLS solution $\hat{\beta}$ is found by the following steps,
+% \begin{enumerate}
+%     \item Compute $Q,R$.
+%     \item Compute $\tilde{Y} = Q^\top Y$.
+%     \item Solve $R\beta = \tilde{Y}$.
+% \end{enumerate}
+% The first step takes $O(n^2p)$ operations, the second take $O(np)$ operations and the last step take $O(p^2)$ operations. The first step thus takes the longest, but it does not depend on $Y$. If you have multiple responses with the same design matrix, then you can store $Q,R$ and quickly calculate the coefficients for the different responses.
+
+% You can also use the truncated QR factorization to get the coefficients for certain sub-models. In particular, for 
+
+
+\subsubsection*{SVD factorization}
+
+The SVD factorization of $X$ is $X=UDV^\top$ where $U \in \reals^{n \times p}$, $D \in \reals^{p \times p}$ and $V \in \reals^{p \times p}$ have the following properties,
+\begin{align*}
+    U^\top U &= V^\top V = VV^\top = I_p,\\
+    D &= \diag(d_1,\ldots,d_p), \quad d_1 \ge d_2 \ge \cdots \ge d_p \ge 0.
+\end{align*}
+The SVD exists even if $X$ is not full rank or $p > n$. The rank of $X$ is equal to the number of non-zero singular values $d_j$. The SVD of $X$ is closely related to principal  component analysis (Section \ref{sec pca}). 
+
+\subsubsection*{Cholesky factorization}
+
+Suppose we have a covariance matrix $\Sigma \in \reals^{p \times p}$ Covariance matrices are always \emph{positive semi-definite} (PSD), that is
+\begin{itemize}
+    \item The matrix $\Sigma$ is symmetric (i.e. $\Sigma^\top = \Sigma$).
+    \item For all vectors $x \in \reals^p$, $x^\top \Sigma x \ge 0$.
+\end{itemize}
+If $\Sigma$ is invertible, then $\Sigma$ is \emph{positive definite}. This is equivalent to the two following conditions,
+\begin{itemize}
+    \item The matrix $\Sigma$ is symmetric (i.e. $\Sigma^\top = \Sigma$).
+    \item For all vectors $x \in \reals^p \setminus \{0\}$, $x^\top \Sigma x > 0$.
+\end{itemize}
+All PSD matrices have a Cholesky factorization, and this characterizes PSD matrices. Specifically, $\Sigma$ is PSD if and only if $\Sigma = LL^\top$ for some $L$  lower-triangular. Furthermore, $\Sigma$ is positive definite if and only $\Sigma = LL^\top$ for $L$ with non-zero diagonal entries. 
+
+The Cholesky factorization can be thought of a representation of a Gaussian random vector. Specifically, if $X \sim \calN(\mu,\Sigma)$, then we have 
+\[X \stackrel{dist}{=} LZ + \mu, \]
+where $Z \sim \calN(0,I_p)$. The fact that $L$ is lower triangular means that this representation is hierarchical. The component $X_k$ depends only on  $Z_1,\ldots,Z_k$.
+
+\subsubsection*{Eigen-decomposition}
+
+Symmetric matrices admit eigen-decompositions. Specifically if $\Sigma \in \reals^{p \times p}$ has $A^\top = A$, then there exists $D$ and $V$ such that
+\[\Sigma = VDV^\top,\]
+where $D$ is diagonal and $V$ satisfies $V^\top V = VV^\top = I_p$. If $\Sigma$ is symmetric, then $\Sigma$ is PSD if and only if each diagonal entry of $D$ is non-negative. Likewise, if $\Sigma$ is symmetric, then $\Sigma$ is positive definite if and only if each diagonal entry of $D$ is positive. The eigen-decomposition makes it easy to compute powers of $\Sigma$. Specifically,
+\begin{align*}
+    \Sigma^k&= VD^kV^\top \quad \text{ for all } k =0,1,2,\ldots,\\
+    \Sigma^s&= VD^sV^\top \quad \text{ for all } s \ge 0 \text{ if $\Sigma$ is PSD},\\
+    \Sigma^s&= VD^sV^\top \quad \text{ for all } s \in \reals \text{ if $\Sigma$ is positive definite}.
+\end{align*}
+Computing $\Sigma^{-1/2}$ can be especially useful. If $X \sim \calN(\mu,\Sigma)$ with $\Sigma$ positive definite, then
+\[Z = \Sigma^{-1/2}X - \Sigma^{-1/2}\mu \sim \calN(0,I_p). \]
+This is called \emph{whitening}, and is an important tool in generalized least squares (Section \ref{sec:gls}).
+
+\subsection{Matrix inversions}
+
+In general computing the inverse of $n$ by $n$ matrix takes $O(n^3)$ operations. There are times when this can be done more quickly. 
+
+\subsubsection*{Block-wise inversion and Gaussian conditionals}
+
+Suppose that $X \sim \calN(\mu,\Sigma)$ with $\Sigma \in \reals^{p \times p}$ positive definite. Suppose we decompose $\mu$  as $[\mu_1,\mu_2]$ and $X$ as $[X_1,X_2]$ where $\mu_1,X_1 \in \reals^{p_1}$, $\mu_2,X_2 \in \reals^{p_2}$ and $p_1+p_2 = p$. We can likewise decompose $\Sigma$,
+\[\Sigma = \begin{bmatrix}
+    \Sigma_{11}&\Sigma_{12}\\
+    \Sigma_{21}&\Sigma_{22}
+\end{bmatrix}, \]
+where $\Sigma_{11} \in \reals^{p_1 \times p_1}$, $\Sigma_{12} \in \reals^{p_1 \times p_2}$, $\Sigma_{21} =\Sigma_{12}^\top \in \reals^{p_2 \times p_1}$ and $\Sigma_{22} \in \reals^{p_2 \times p_2}$. Then, marginally,
+\begin{align*}
+    X_1 &\sim \calN(\mu_1,\Sigma_{11})\\
+    X_2 &\sim \calN(\mu_2,\Sigma_{22}).
+\end{align*}
+And conditionally,
+\begin{align*}
+    X_1 \mid X_2 = x_2 & \sim \calN(\mu_1 + \Sigma_{12}\Sigma_{22}^{-1}(x_2-\mu_2), \Sigma_{11}^{-1} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21})\\
+    X_2 \mid X_1 = x_1 & \sim \calN(\mu_2 + \Sigma_{21}\Sigma_{11}^{-1}(x_1-\mu_1), \Sigma_{22}^{-1} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12}).
+\end{align*}
+The conditional variance $\Sigma_{11}^{-1} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21}$ is called the \emph{Schur complement} of $\Sigma_{22}$ in $\Sigma$. It satisfies the following identity,
+\[(\Sigma^{-1})_{11} =  \Sigma_{11}^{-1} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21}. \]
+That is, the top block of $\Sigma^{-1}$ can be expressed in terms of the block of $\Sigma$ and their inverses. By symmetry,
+\[ (\Sigma^{-1})_{22} =  \Sigma_{22}^{-1} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12}.\]
+
+\subsubsection*{Sherman--Morrison--Woodbury}
+
+The following result helps calculate the inverse of a matrix after a ``low-rank update''. For $A \in \reals^{n \times n}$ invertible, $B \in \reals^{k \times k}$ invertible and $U,V \in \reals^{n \times k}$ with $B^{-1}+V^\top A^{-1}U \in \reals^{k \times k}$ invertible, we have
+\[(A + UBV^\top)^{-1} =  A^{-1} - A^{-1}U\left(B^{-1}+V^\top A^{-1}U \right)^{-1}V^\top A^{-1}.\]
+This is useful when $A^{-1}$ has already been computed and $k \ll n$. In this case the RHS can be computed in $O(k^3+k^2n+kn^2)$ operations while computing the LHS directly would take $O(n^3)$ operations. 
+
+\subsection{Matrix and vector calculus}
+
+The Matrix Cookbook contains many helpful linear algebra facts. Chapter 2 of derivates is especially helpful for optimization questions. You can (and should!) download a copy from here \url{https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf}. 
+
