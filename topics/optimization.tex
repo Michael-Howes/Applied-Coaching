@@ -1,0 +1,33 @@
+\section{Review: Optimization 101 \footnote{Nikos Ignatiadis, Dan Kluger and M.H.}}\label{sec:Opt_review}
+
+Recognizing problems as convex optimization problems is a useful skill for the applied qualifying exam. A convex optimization problem is something of the form
+\begin{equation}\label{eq convex problem}
+    \begin{array}{ll}
+        \mbox{minimize} & f(x)\\
+        \mbox{subject to} & g_i(x) \le 0, \text{ for } i=1,\ldots,k,\\
+        & Ax = b,
+    \end{array}
+\end{equation}
+such that the following hold:
+\begin{itemize}
+    \item The objective $f:\reals^n \to \reals$ is convex.
+    \item Each constraint $g_i : \reals^n \to \reals$ is convex.
+    \item $A\in \reals^{m\times n}$ and $b \in \reals^m$.
+\end{itemize}
+All of these conditions must hold for \eqref{eq convex problem} to be a convex optimization problem. If you have non-linear equality constraints or non-convex inequality constraints, then you do not have a convex optimization problem. 
+
+If you can turn your exam question into solving \eqref{eq convex problem}, then you are done. Convex optimization can be done quickly and reliably, and you don't need to worry about the details. You should know a handful functions that are convex. The following can be helpful for the applied exam,
+\begin{itemize}
+    \item Exponential family cumulant functions: If $g(y) = \exp(\eta^\top y-\psi(\eta))$ is a $d$ dimensional exponential family, then $\psi : \reals^d \to \reals$ is convex.
+    \item Log-sum-exp: the function $f(x) = \log \left(\sum_{i=1}^n\exp(x_i)\right)$ is convex on $\reals^n$.
+    \item Log-normal CDF: if $\Phi$ is the CDF for the standard normal distribution, then $-\log \Phi(x)$ is convex on $\reals$.
+    \item $-f(x)$ is concave if and only if $f(x)$ is convex.
+    \item If $x \mapsto f(x)$ is convex, then $y \mapsto f(By+c)$ is convex for all matrices $B$ and vectors $c$.
+\end{itemize}
+Sometimes you will be asked about the implementation details of a convex optimization problem. When this happens, it's typically for problems without constraints. The algorithms you might need to mention are
+\begin{itemize}
+    \item \textbf{Gradient descent}: This applies when the loss function is differentiable.
+    \item \textbf{Newton's method}: This applies when the loss function is twice differentiable. This method is used to fit the MLE in GLMs.
+    \item \textbf{Coordinate descent}: This can be used for non-smooth problems like the LASSO.
+\end{itemize}
+You might also have to solve non-convex optimization problems. In this case you may have to use EM (Section \ref{sec:review_EM}), CAVI (section \ref{sec cavi}) or gradient descent. Since these methods find local-minima, you should mention doing multiple initialization. If the problem is low-dimensional, then you can suggest grid search which will find the global minima. 

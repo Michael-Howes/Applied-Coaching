@@ -1,4 +1,4 @@
-\section{Applied 2020: Solution\footnote{Isaac Gibbs and D.K.}}
+\section{Applied 2020: Solution\footnote{Isaac Gibbs, Dan Kluger and M.H.}}
 
 \subsection*{Problem 1: Maximum Likelihood for Truncated Data}
 
@@ -6,7 +6,7 @@
 \item[a)]
 Both \verb|t.test(Y)| and \verb|lm(Y ~ 1)| compute the mean and standard deviation $Y$. This is not possible without observing the full dataset. By default, both of these functions will simply ignore the missing values. This will cause us to overestimate the mean of $Y$ and produce a confidence interval that is biased upwards.
 \item[b)]
-The methods in part a) give estimates that have a positive bias. To derive a likelihood based method let $Z_1,\dots,Z_n$ denote the latent values of the light emmisions. We are told that $Z_i \sim N(\mu,\sigma^2)$ for some unknown values $\mu$ and $\sigma^2$ and  we observe 
+The methods in part a) give estimates that have a positive bias. To derive a likelihood based method let $Z_1,\dots,Z_n$ denote the latent values of the light emissions. We are told that $Z_i \sim N(\mu,\sigma^2)$ for some unknown values $\mu$ and $\sigma^2$, and  we observe 
 \[
 Y_i = \begin{cases}
 Z_i, \ \text{if } Z_i > C\\
@@ -42,7 +42,7 @@ Intuitively we should have that the observed data $Y_1,\dots,Y_n$ come from a tr
 \[
 p(Y;\mu,\sigma) = \prod_{i=1}^n \frac{1}{\sigma} \phi\left(\frac{Y_i - \mu}{\sigma}\right)\left( 1- \Phi\left(\frac{C - \mu}{\sigma}\right) \right)^{-1}.
 \]
-The log of this likelihood is again concave in $\lambda = \frac{1}{\sigma}$ and $\nu = \frac{\mu}{\sigma}$, and so we can find the global optimum easily.
+The log of this likelihood is no longer concave in $\lambda = \frac{1}{\sigma}$ and $\nu = \frac{\mu}{\sigma}$, and so we have to use an inexact method such a gradient descent with multiple initialization. Another option would be to do a grid search over $(\mu,\sigma)$.
 
 Without doing any rigorous calculations (assuming both devices take measurements for the same amount of time) we suspect that the device in b) should give a better estimate of $\mu$ and $\sigma$ than the device in c). This is due to the fact that in b) we observe strictly more data than in c).
 
