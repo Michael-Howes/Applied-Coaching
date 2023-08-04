@@ -117,37 +117,40 @@ Proportion of variance explained comes up on Question 5 on the 2010 exam.
 
 \subsection{Removing assumptions}
 
-If the data matrix $X$ is non-centered, then you should center it by defining $X^{(c)}=X- \ones_n \bar{X}_n^\top$. You can then run PCA on $X^{(c)}$. A linear projection of $X^{(c)}$ correspond to an affine projection of $X$. 
+If the data matrix $X$ is non-centered, then you should center it by defining 
+\[X^{(c)}=X- \ones_n \bar{X}_n^\top\in \reals^{n \times p}.\] 
+You can then run PCA on $X^{(c)}$. A linear projection of $X^{(c)}$ correspond to an affine projection of $X$. 
 
 If $p > n$, then you can still do PCA, but now you will have $n$ components instead of $p$. If $p \gg n$, then you should get the eigenvalue decomposition of $\frac{1}{n}XX^\top \in \reals^{n \times n}$ instead of $\widehat{\Sigma} = \frac{1}{n}X^\top X \in \reals^{p \times p}$. 
 
 \subsection{Principal component regression and ridge regression}
 
-Consider now a regression problem where we have a response $Y \in \reals^n$ that we want to model as a linear function of features $X \in \reals^{n \times p}$. Suppose that $Y$ and all columns of $X$ are mean zero. As above suppose that $X$ has singular value decomposition $X=UDV^\top$ and that $X$ has rank $p$. The OLS estimate $\hat{\beta}_{OLS}$ can be expressed in terms of $U,D$ and $V^\top$,
+Consider now a regression problem where we have a response $Y \in \reals^n$ that we want to model as a linear function of features $X \in \reals^{n \times p}$. Suppose that $Y$ and all columns of $X$ are mean zero. As above suppose that $X$ has singular value decomposition $X=UDV^\top$ and that $X$ has rank $p$. The OLS estimate $\widehat{\beta}_{OLS}$ can be expressed in terms of $U,D$ and $V^\top$,
 \begin{align*}
-    \hat{\beta}_{OLS}&=\argmin_{\beta} \Vert X\beta - Y \Vert_2^2 \\
+    \widehat{\beta}_{OLS}&=\argmin_{\beta} \Vert X\beta - Y \Vert_2^2 \\
     &=(X^\top X)^{-1}X^\top Y\\
     &=(VDU^\top U D V^\top)^{-1}V DU^\top Y\\
     &=(VD^2 V^\top)^{-1} VDU^\top Y\\
-    &=VD^{-2}V^\top VU^\top Y\\
+    &=VD^{-2}V^\top VDU^\top Y\\
     &=VD^{-1}U^\top Y.
 \end{align*}
 In coordinates, we have
-\[\hat{\beta}_{OLS} = \sum_{j=1}^p \frac{u_j^\top Y}{d_j}v_j. \]
-Thus, $\hat{\beta}_{OLS}$ is a linear combination of the principal component direction $v_j$. The coefficient of $v_j$ is $\frac{u_j^\top Y}{d_j}$ the scaled covariance of $Y$ in the direction $u_j$. Likewise, the fitted values are,
-\[\widehat{Y}_{OLS} = X\hat{\beta}_{OLS} = UU^\top Y =  \sum_{j=1}^p u_ju_j^\top Y. \]
-In \textbf{principal components regression}, we replace $X$ with $X^{(k)} \in \reals^p$ given by $X^{(k)}= U_k D_k V^\top$ where $U_k \in \reals^{n \times k}$ and $D_k \in \reals^{k \times p}$ are the first $k$ columns of $U$ and $D$. This amounts to ``chopping off'' the $k+1,\ldots,p$ principal components. The coefficients and fitted values are 
-\[\hat{\beta}_{(k)} = \sum_{j=1}^k \frac{u_j^\top Y}{d_j} v_j \text{ and } \hat{Y}_{(k)} = \sum_{j=1}^k u_ju_j^\top Y. \]
-This has the effect of regularizing $\hat{\beta}_{OLS}$ in the directions which $X$ varies the least. A more common form of regularization is ridge regularization. The coefficients in ridge regularization with penalty $\lambda$ are
+\[\widehat{\beta}_{OLS} = \sum_{j=1}^p \frac{u_j^\top Y}{d_j}v_j. \]
+Thus, $\widehat{\beta}_{OLS}$ is a linear combination of the principal component direction $v_j$. The coefficient of $v_j$ is $\frac{u_j^\top Y}{d_j}$ the scaled covariance of $Y$ in the direction $u_j$. Likewise, the fitted values are,
+\[\widehat{Y}_{OLS} = X\widehat{\beta}_{OLS} = UU^\top Y =  \sum_{j=1}^p u_ju_j^\top Y. \]
+In \textbf{principal components regression}, we replace $X$ with $X^{(k)} \in \reals^p$ given by $X^{(k)}= U_k D_k V^\top$ where $U_k \in \reals^{n \times k}$ contains the first $k$ columns of $U$ and $D_k \in \reals^{k \times p}$ contains the first $k$ rows of $D$. This amounts to ``chopping off'' the $k+1,\ldots,p$ principal components of $X$. The coefficients and fitted values are 
+\[\widehat{\beta}_{(k)} = \sum_{j=1}^k \frac{u_j^\top Y}{d_j} v_j \text{ and } \widehat{Y}_{(k)} = \sum_{j=1}^k u_ju_j^\top Y. \]
+This has the effect of regularizing $\widehat{\beta}_{OLS}$ in the directions which $X$ varies the least. A more common form of regularization is ridge regularization. The coefficients in ridge regularization with penalty $\lambda$ are
 \begin{align*}
-    \hat{\beta}_\lambda&=\argmin_\beta \left(\Vert X \beta - Y \Vert_2^2 + \lambda \Vert \beta\Vert_2^2 \right)\\
-    &=(X^\top X + \lambda)^{-1}X^\top Y\\
-    &=(V^\top D^2 V + \lambda)^{-1}VDU^\top Y\\
-    &=V(D^2+\lambda I_p)^{-1}DU^\top Y\\
+    \widehat{\beta}_\lambda&=\argmin_\beta \left(\Vert X \beta - Y \Vert_2^2 + \lambda \Vert \beta\Vert_2^2 \right)\\
+    &=(X^\top X + \lambda I_p)^{-1}X^\top Y\\
+    &=(V^\top D^2 V + \lambda V^\top V)^{-1}VDU^\top Y\\
+    &=V (D^2+\lambda I_p)^{-1}V^\top VDU^\top Y\\
+    &= V(D^2 + \lambda I_p)^{-1} DU^\top Y\\
     &=\sum_{j=1}^p \frac{d_j^2}{d_j^2+\lambda} \frac{u_j^\top Y}{d_j}v_j.
 \end{align*}
-Thus, $\hat{\beta}_\lambda$ is again a linear combination of $v_j$. Compared to $\hat{\beta}_{OLS}$ the coefficient for $v_j$ has been reduced by a factor of $\frac{d_j^2}{d_j^2+\lambda}$. This factor is increasing in $d_j$, so the lower principal directions get shrunk more. As $\lambda$ goes from zero to infinity, $\frac{d_j^2}{d_j^2+\lambda}$ goes from one down to zero. The fitted values in ridge regression are
-\[X\hat{\beta}_\lambda = UD^2(D^2+\lambda I_p)^{-1}U^\top Y = \sum_{j=1}^p \frac{d_j^2}{d_j^2+\lambda} u_ju_j^\top  Y. \]
+Thus, $\widehat{\beta}_\lambda$ is again a linear combination of $v_j$. Compared to $\widehat{\beta}_{OLS}$ the coefficient for $v_j$ has been reduced by a factor of $\frac{d_j^2}{d_j^2+\lambda}$. This factor is increasing in $d_j$, so the lower principal directions get shrunk more. As $\lambda$ goes from zero to infinity, $\frac{d_j^2}{d_j^2+\lambda}$ goes from one down to zero. The fitted values in ridge regression are
+\[X\widehat{\beta}_\lambda = UD^2(D^2+\lambda I_p)^{-1}U^\top Y = \sum_{j=1}^p \frac{d_j^2}{d_j^2+\lambda} u_ju_j^\top  Y. \]
 The fitted values are thus also shrunk by factor of $\frac{d_j^2}{d_j^2+\lambda}$ in direction $u_j$. This shows that ridge regression can be thought of as a smoothed version of PCA regression.
 
 
@@ -160,9 +163,9 @@ PCA can also be interpreted as the maximum likelihood estimate in a latent varia
 \end{align*}
 where $k \le p$. The variables $Z_i$ are unobserved, and we observe $\widetilde{X}_i$, Our parameters are the matrix $W \in \reals^{p \times k}$, the vector $\mu \in \reals^p$ and the scalar $\sigma^2$. Let $X - \ones_n\bar{X}_n = UDV^\top$ be the singular value decomposition of the centered data matrix. The MLE for this model is
 \begin{align*}
-    \hat{\mu}&=\bar{X}_n,\\
-    \hat{\sigma^2}&=\frac{1}{p-k} \sum_{j=k+1}^p \frac{d_j^2}{n},\\
-    \hat{W}&=V_k(D^2_k-\sigma^2)^{1/2}R,
+    \widehat{\mu}&=\bar{X}_n,\\
+    \widehat{\sigma^2}&=\frac{1}{p-k} \sum_{j=k+1}^p \frac{d_j^2}{n},\\
+    \widehat{W}&=V_k(D^2_k-\sigma^2)^{1/2}R,
 \end{align*}
 where $R\in \reals^{k \times k}$ is arbitrary matrix with $R^\top R=I_k$. The parameters $W$ are thus unidentifiable, but we can still estimate the span of $W$ with the first $k$ principal component directions. For more details including a Bayesian approach to probabilistic PCA, see Scott's lecture notes \url{https://github.com/slinderman/stats305c/blob/spring2023/slides/lecture05-continuous_lvms.pdf}.
 
@@ -178,7 +181,7 @@ PCA is probably due to \cite{Zou2006SparsePCA}, where $v_1$ is the solution to
 $$\text{minimize}_{v_1,\alpha} \vert \vert X_c - X_cv_1 \alpha^T \vert \vert_F^2 +\lambda \vert \vert v_1 \vert \vert_2^2+\mu \vert \vert v_1 \vert \vert_1 \quad \text{subject to } \vert \vert \alpha \vert \vert_2^2 =1.$$
 This can be solved by an alternating method (fix $v_1$ and solve the convex optimization problem w.r.t to $\alpha$, then fix $\alpha$ and solve the convex optimization problem with respect to $v_1$ and repeat). Finally, we must normalize $v_1$ to be a unit vector. To obtain subsequent sparse principal component directions we repeat with the additional constraint that $v_2^T v_1=0$.  More formally, to compute the first $k$ sparse principal components  \cite{Zou2006SparsePCA} propose (after centering the data $x_1,\dots, x_n$) solving $$\text{minimize}_{A,B}  \sum_{i=1}^n \vert \vert \widetilde{X}_i - AB^T \widetilde{X}_i \vert \vert_2^2 + \lambda \sum_{j=1}^k  \vert \vert B_j \vert \vert_F^2+\sum_{j=1}^k \lambda_{1,j} \vert \vert B_j \vert \vert_1 \quad \text{subject to } A^T A =I_{k \times k}.$$
 
-The above optimization problem can be solved with an alternating algorithm. Given $\hat{B}_t$, we can find the optimal $A$ by computing the SVD  of $(X_c^T X_c)\hat{B}_t$ (with $(X_c^T X_c)\hat{B}_t =UDV^T$ and set $\hat{A}_{t+1} =U V^T$ ). Given $\hat{A}_{t+1}$, we can set $\hat{B}_{t+1} = [\hat{\beta}_1 \dots \hat{\beta}_k]$ where each $\hat{\beta}_j$ is the solution to an elastic net optimization problem $$\hat{\beta}_j = \argmin\limits_{\beta_j} \vert \vert Y_j^* - X_c \beta_j \vert \vert_2^2 + \lambda \vert \vert \beta_j \vert \vert_2^2 + \lambda_{1,j} \vert \vert \beta_j \vert \vert_1,$$ where $Y_j^* =X_c (\hat{A}_{t+1} \bm{e}_j)$ and $\bm{e}_j$ is the $j$th standard basis vector. Once we have the solution $(\hat{A},\hat{B})$ to the above optimization problem, the columns of $\hat{B}$ give the first $k$ sparse principal component directions. Note that the $\lambda$'s may have to be tuned to attain the desired level of sparsity. 
+The above optimization problem can be solved with an alternating algorithm. Given $\widehat{B}_t$, we can find the optimal $A$ by computing the SVD  of $(X_c^T X_c)\widehat{B}_t$ (with $(X_c^T X_c)\widehat{B}_t =UDV^T$ and set $\widehat{A}_{t+1} =U V^T$ ). Given $\widehat{A}_{t+1}$, we can set $\widehat{B}_{t+1} = [\widehat{\beta}_1 \dots \widehat{\beta}_k]$ where each $\widehat{\beta}_j$ is the solution to an elastic net optimization problem $$\widehat{\beta}_j = \argmin\limits_{\beta_j} \vert \vert Y_j^* - X_c \beta_j \vert \vert_2^2 + \lambda \vert \vert \beta_j \vert \vert_2^2 + \lambda_{1,j} \vert \vert \beta_j \vert \vert_1,$$ where $Y_j^* =X_c (\widehat{A}_{t+1} \bm{e}_j)$ and $\bm{e}_j$ is the $j$th standard basis vector. Once we have the solution $(\widehat{A},\widehat{B})$ to the above optimization problem, the columns of $\widehat{B}$ give the first $k$ sparse principal component directions. Note that the $\lambda$'s may have to be tuned to attain the desired level of sparsity. 
 
 
 
