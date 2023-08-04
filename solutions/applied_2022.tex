@@ -47,15 +47,14 @@ Key ideas:
     where $v_{sj}$ is the entry of $\bm{V}$ in row $s$ and column $j$. We thus have
     \begin{align*}
         \mathrm{MSS}_j&=\frac{1}{n} \Vert \bm{U}_k^\top \hat{\bm{x}}_j \Vert_2^2\\
-        &=
-        &=\frac{1}{n} \Vert \sum_{s=1}^k d_s v_{sj}\bm{e}_s \Vert_2^2\\
+        &=\frac{1}{n} \left\Vert \sum_{s=1}^k d_s v_{sj}\bm{e}_s \right\Vert_2^2\\
         &=\frac{1}{n}\sum_{s=1}^k d_s^2 v_{sj}^2.
     \end{align*}
     Since $\bm{x}_j$ has mean zero and variance one, we are in the setting of part (b) and hence
     \[R^2_j = \mathrm{MSS}_j = \frac{1}{n} \sum_{s=1}^k d_s^2 v_{sj}^2. \]
     \item Note that
     \begin{align*}
-        \sum_{j=1}^p \mathrm{MSS}_j &=\sum_{j=1}^p \frac{1}{n} \sum_{s=1}^k d_s^2 v_{sj}^2\
+        \sum_{j=1}^p \mathrm{MSS}_j &=\sum_{j=1}^p \frac{1}{n} \sum_{s=1}^k d_s^2 v_{sj}^2\\
         &=\sum_{s=1}^k \sum_{j=1}^p \frac{1}{n} d_s^2 v_{sj}^2\\
         &=\sum_{s=1}^k \frac{1}{n} d_s^2 \sum_{j=1}^p v_{sj}^2\\
         &=\sum_{s=1}^k \frac{1}{n}d_s^2 \Vert \bm{v}_s \Vert_2^2 \\
@@ -79,7 +78,7 @@ Key ideas:
     So $\frac{100}{p}\sum_{j=1}^p \mathrm{MSS}_j$ is exactly the cumulative percent variance explained sequence.
 \end{enumerate}
 
-\subsection*{Problem 2: LOO CV, PCA and 1NN}
+\subsection*{Problem 2: LOO, PCA and 1NN}
 
 Key ideas:
 \begin{itemize}
@@ -109,4 +108,84 @@ Key ideas:
             \includegraphics*[width = 0.8\textwidth]{2022-Q2-fig3.png}
         \end{center}
     \end{figure}
+\end{enumerate}
+
+\subsection*{Question 3: Financial Data Science}
+
+
+
+\subsection*{Question 4: Infectious Disease Survival Times}
+Key ideas:
+\begin{itemize}
+    \item Testing coefficients in the proportional hazard model.
+    \item Testing independence in $2 \times 2 \times K$ tables with the Mantel--Haenszel test.
+\end{itemize}
+\begin{enumerate}[label=(\alph*)]
+    \item Since our data is right censored, we will use tools from survival analysis.  Since we want to control for affects from each region, we can use a proportional hazard model. Suppose we have $N$ subjects and for each subject $i=1,\ldots,N$ we observe 
+    \begin{itemize}
+        \item An observed time $O_i = \min\{C_i,T_i\}$. The time $T_i$ is the event time (in this case the time at which the subject died after infect). The time $C_i$ is the censoring time which we assume is independent of $T_i$.
+        \item A censor-indicator $\delta_i= I_{\{O_i = T_i\}} \in \{0,1\}$ with $\delta_i=0$ meaning subject $i$ is censored.
+        \item The vaccination status $V_i \in \{0,1\}$, we'll assume that $V_i=1$ means the subject is vaccinated.
+        \item The region $R_i \in \{1,\ldots,J\}$ where $J$ is the number of regions (assumed to be small).
+    \end{itemize}
+    A proportional hazard models that include effects from both vaccination status and subject regions is
+    \begin{equation}\label{eq:2022 Q4 model}T_i\mid V_i,R_i \simind h_i(t), \quad h_i(t) = h_0(t)\exp(\alpha V_i + \beta_{R_i}), \end{equation}
+    where we are modelling the distribution of $T_i$ in terms of $T_i$'s hazard function $h_i(t)$. To make this model identifiable, we must add a constraint such as
+    \[\sum_{j=1}^J \beta_J = 0 \quad \text{or} \quad \beta_J = 0. \]
+    If the number of regions $J$ is not too large, then we will be able to fit the above model by maximizing the partial likelihood. If the number of regions is large, but we have measured features $X_i$ for subjects $i$'s region, then we could use the model
+    \[T_i \mid V_i,R_i \simind h_i(t), \quad h_i(t)=h_0(t)\exp(\alpha V_i + \gamma^\top X_i). \]
+    Assuming the dimension of $X_i$ is less than $J-1$, then fitting this second model would be easier than fitting \eqref{eq:2022 Q4 model}. We are told that there are only a ``handful'' of possible value of $R$, thus we will assume we have enough data to fit \eqref{eq:2022 Q4 model}. To test the effectiveness of the vaccine, we can test the null hypothesis $\alpha = 0$. If we get evidence that $\alpha <0$, then we can conclude that vaccination likely has a positive effect after controlling for regions. 
+
+    An alternative model would be to include an interaction affect between region and vaccination status. This model would be appropriate if we expect the effectiveness of the vaccine to vary across regions. The corresponding proportional hazard model is,
+    \[T_i \mid V_i,R_i \simind h_i(t), \quad h_i(t)=h_0(t)\exp(\alpha_{R_i} V_i + \beta_{R_i}). \]
+    Again, testing $\alpha_j=0$ across the regions $j$ will test for the vaccine's effectiveness in region $j$. This probably is not a good choice of model. Firstly, we might not have enough data to fit both $\alpha_j$ and $\beta_j$. Secondly, while it is reasonable to expect health outcomes to vary across regions (represented by $\beta_j$) it is unlikely that the effectiveness of the vaccine will vary across regions (represented by $\alpha_j$). We will thus stick with model \eqref{eq:2022 Q4 model}
+    \item In this question, we will ignore the variation across regions. The corresponding Cox proportional hazards model is
+    \[T_i \mid V_i,R_i \simind h_i(t), \quad h_i(t)=h_0(t)\exp(\alpha V_i) \]
+    This model is fit by maximizing the log partial likelihood,
+    \begin{equation}\label{eq:2022 Q4 partial}\ell(\alpha) = \sum_{i:\delta_i=1} \alpha V_i - \log\left(\sum_{k \in R(O_i)} \exp(\alpha V_k)\right), \end{equation}
+    where $R(O_i) = \{k : O_k \ge O_i\}$ is the risk-set at time $O_i$. For the null $H_0:\alpha = 0$, the score-test statistic is
+    \[T = \frac{\ell'(0)^2}{-\ell''(0)}, \]
+    which has asymptotic distribution $\chi^2_1$. We know that the score-test in a Cox proportional hazards model is equivalent to the log-rank test. The log-rank test is itself a special case of the Mantel--Haenszel test. For each $i$ such that $\delta_i=1$, we can make the following contigency table based on the risk set at time $O_i$. Specifically, we consider all individuals with $O_k \ge O_i$ and put them into one of the four below categories
+    \begin{table}[h]
+        \begin{center}
+        \begin{tabular}{|p{2.5cm}|p{5cm}|p{5cm}|}
+            \hline
+         &$V_k=0$ & $V_k=1$ \\
+         \hline 
+        $O_k=O_i$ and $\delta_k=1$ & Number of unvaccinated subjects that died at time $O_i$ & Number of vaccinated subjects that died at time $O_i$\\ 
+        \hline 
+        $O_k > O_i$ or $\delta_k = 0$& Number of unvaccinated subjects that survived beyond time $O_i$ & Number of vaccinated subjects that survived beyond time $O_i$ \\
+        \hline 
+        \end{tabular}
+    \end{center}
+    \end{table}
+    The null hypothesis that vaccination does not affect survival time implies that the row variable and column variable in the above $2 \times 2$ contingency table are equivalent. If there was just one such table, then we could condition on the row and column sums and use Fisher exact test. However, we actually have $K=|\{i:\delta_i=1\}|$ such tables, and we need a way of combining them. The Mantel--Haenszel test uses the hypergeometric distribution from Fisher's exact test to combine these tables into a test statistic that is asymptotically distributed according to $\chi^2_1$. It turns out that this statistic is exactly the score statistic $T$. This can be proved using the formula for the partial likelihood \eqref{eq:2022 Q4 partial} and the formula for the Mantel--Haenszel test.
+    \item Suppose we are now using model \eqref{eq:2022 Q4 model} which allows variation across regions. If we wish to do inference on the affect of vaccination, we can still use the score test. The two hypothesis we are comparing are now,
+    \[H_0 : \alpha = 0 \quad \text{vs} \quad H_1 : \alpha \text{ unconstrained}. \]
+    Thus, we wish to test if the sub-model which does not include vaccination status is sufficient to explain our data.  To make both the null and alternative models identifiable we will add the constraint $\beta_J=0$ and think of $\beta$ as a vector in $\reals^{J-1}$. The log partial likelihood is equal to 
+    \[\ell(\alpha,\beta) = \sum_{i:\delta_i =0}\alpha V_i +\beta_{R_i} - \log\left(\sum_{k \in R(O_i)}\exp\left(\alpha V_k + \beta_{R_k}\right)\right).  \]
+    Let 
+    \begin{align*}
+        U(\alpha,\beta)&=\nabla_{\alpha,\beta}\ell(\alpha,\beta) \in \reals^{J},\\
+        I(\alpha,\beta)&=-\nabla_{\alpha,\beta}^2\ell(\alpha,\beta) \in \reals^{J \times J},
+    \end{align*}
+    be the gradient and negative Hessian of $\ell$ evaluated at $(\alpha,\beta)$. Let $\hat{\beta}_0 \in \reals^{J-1}$ be the MLE of the Cox proportional hazards model under the constraints $\alpha = 0$ and $\beta_J=0$. The score statistic for testing $H_0$ is
+    \begin{equation}\label{eq:2022 Q4 score}T = U(0,\hat{\beta}_0)^\top I(0,\hat{\beta}_0)^{-1} U(0,\hat{\beta}_0) \stackrel{\cdot}{\sim} \chi^2_1, \end{equation}
+    where the approximation above is asymptotic under the null.  As in part (b), we could again use contingency tables to test $H_0$. Again we have a $2 \times 2$ table for uncensored observation $i$. However, now our table should only include people in the same region of subject $i$. Specifically, if $\delta_i=1$ for some $i$, then we make the following table
+    \begin{table}[h]
+        \begin{center}
+        \begin{tabular}{|p{2.5cm}|p{5cm}|p{5cm}|}
+            \hline
+         &$V_k=0$ and $R_k=R_i$ & $V_k=1$ and $R_k=R_i$ \\
+         \hline 
+        $O_k=O_i$ and $\delta_k=1$ & Number of unvaccinated subjects that died at time $O_i$ & Number of vaccinated subjects that died at time $O_i$\\ 
+        \hline 
+        $O_k > O_i$ or $\delta_k = 0$& Number of unvaccinated subjects that survived beyond time $O_i$ & Number of vaccinated subjects that survived beyond time $O_i$ \\
+        \hline 
+        \end{tabular}
+    \end{center}
+    \end{table}
+    This is the same as the contingency table in part (b) but now we only included individuals in the same region as subject $i$. Under the null hypothesis $\alpha = 0$, the row and column variables are independent. Thus, conditional on the row and column, the value in the top square is hypergeometric as in Fisher's exact test. We can thus combine these table via the Mantel--Haenszel test and get a test statistic which will be asymptotically $\chi^2_1$ under the null. However, I do not believe that this is the same test statistic as \eqref{eq:2022 Q4 score}.
+    
+    When adding the region covariates, we have two ways of testing $\alpha = 0$. One is based on the score test and the other is a variant of the Mantel--Haenszel test. While these tests are likely to be related, I believe that they are different. 
 \end{enumerate}

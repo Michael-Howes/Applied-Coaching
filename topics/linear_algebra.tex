@@ -104,13 +104,13 @@ where $\Sigma_{11} \in \reals^{p_1 \times p_1}$, $\Sigma_{12} \in \reals^{p_1 \t
 \end{align*}
 And conditionally,
 \begin{align*}
-    X_1 \mid X_2 = x_2 & \sim \calN(\mu_1 + \Sigma_{12}\Sigma_{22}^{-1}(x_2-\mu_2), \Sigma_{11}^{-1} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21})\\
-    X_2 \mid X_1 = x_1 & \sim \calN(\mu_2 + \Sigma_{21}\Sigma_{11}^{-1}(x_1-\mu_1), \Sigma_{22}^{-1} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12}).
+    X_1 \mid X_2 = x_2 & \sim \calN(\mu_1 + \Sigma_{12}\Sigma_{22}^{-1}(x_2-\mu_2), \Sigma_{11} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21})\\
+    X_2 \mid X_1 = x_1 & \sim \calN(\mu_2 + \Sigma_{21}\Sigma_{11}^{-1}(x_1-\mu_1), \Sigma_{22} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12}).
 \end{align*}
-The conditional variance $\Sigma_{11}^{-1} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21}$ is called the \emph{Schur complement} of $\Sigma_{22}$ in $\Sigma$. It satisfies the following identity,
-\[(\Sigma^{-1})_{11} =  \Sigma_{11}^{-1} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21}. \]
+The conditional variance $\Sigma_{11} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21}$ is called the \emph{Schur complement} of $\Sigma_{22}$ in $\Sigma$. It satisfies the following identity,
+\[(\Sigma^{-1})_{11} =  (\Sigma_{11} - \Sigma_{12}\Sigma_{22}^{-1}\Sigma_{21})^{-1}. \]
 That is, the top block of $\Sigma^{-1}$ can be expressed in terms of the block of $\Sigma$ and their inverses. By symmetry,
-\[ (\Sigma^{-1})_{22} =  \Sigma_{22}^{-1} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12}.\]
+\[ (\Sigma^{-1})_{22} =  (\Sigma_{22} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12})^{-1}.\]
 
 \subsubsection*{Sherman--Morrison--Woodbury}
 
