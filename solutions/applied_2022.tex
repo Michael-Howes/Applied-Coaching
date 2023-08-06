@@ -189,3 +189,174 @@ Key ideas:
     
     When adding the region covariates, we have two ways of testing $\alpha = 0$. One is based on the score test and the other is a variant of the Mantel--Haenszel test. While these tests are likely to be related, I believe that they are different. 
 \end{enumerate}
+
+\subsection*{Question 5: EM for a mixture of Student-t distributions}
+\begin{enumerate}[label = (\alph*)]
+    \item Consider the following augmented model. Independently for $1 \le n \le N$,
+    \begin{align*}
+        z_n &\sim \bm{\pi}, \\
+        \tau_n\mid z_n &\sim \mathrm{Ga}\left(\nu_{z_n}/2,\nu_{z_n}/2 \right), \\
+        \bm{x}_n \mid \tau_n,z_n &\sim \calN\left(\bm{\mu}_{z_n}, \tau_n^{-1}\bm{\Sigma}_{z_n}\right), 
+    \end{align*}
+    the joint density for $\{z_n,\tau_n,\bm{x}_n\}_{n=1}^N$ corresponding to this model is
+    \begin{align*}
+        &p\left(\{z_n,\tau_n,\bm{x}_n\}_{n=1}^N;\bm{\theta}\right)\\
+        &=\prod_{n=1}^N p(z_n,\tau_n,\bm{x}_n;\bm{\theta})\\
+        &=\prod_{n=1}^N p(z_n;\bm{\theta})p(\tau_n\mid z_n;\bm{\theta})p(\bm{x}_n\mid \tau_n,z_n;\bm{\theta}) \\
+        &=\prod_{n=1}^N \pi_{z_n}\mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\bm{x}_n; \bm{\mu}_{z_n}, \tau_{n}^{-1}\bm{\Sigma}_{z_n}\right).
+    \end{align*}
+    The marginal model for $\{z_n,\bm{z}_n\}_{n=1}^N$ is
+    \begin{align*}
+        &p\left(\{z_n,\bm{x}_n\};\bm{\theta}\right)\\
+        &=\int_{\reals_{> 0}^N} p\left(\{z_n,\tau_n,\bm{x}_n\};\bm{\theta}\right)d\bm{\tau}\\
+        &=\int_{\reals_{> 0}^N} \prod_{n=1}^N \pi_{z_n}\mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\bm{x}_n; \bm{\mu}_{z_n}, \tau_{n}^{-1}\bm{\Sigma}_{z_n}\right)d\bm{\tau}\\
+        &=\prod_{n=1}^N \int  \pi_{z_n}\mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\bm{x}_n; \bm{\mu}_{z_n}, \tau_{n}^{-1}\bm{\Sigma}_{z_n}\right)d\tau_n \\
+        &=\prod_{n=1}^N \pi_{z_n}\int  \mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\bm{x}_n; \bm{\mu}_{z_n}, \tau_{n}^{-1}\bm{\Sigma}_{z_n}\right)d\tau_n\\
+        &=\prod_{n=1}^N \pi_{z_n}\mathrm{St}\left(\bm{x}_n; \nu_{z_n}, \bm{\mu}_{z_n}, \tau_{n}^{-1}\bm{\Sigma}_{z_n}\right),
+    \end{align*}
+    where the last line follows from the equation describing the Student-t distribution as a scale mixture of Gaussian. This joint probability corresponds to the original student mixture model.
+    \item We are asked to compute,
+    \[\omega_{nk} = p(z_n = k \mid \bm{x}_n;\bm{\theta}), \]
+    for $1 \le k \le K$ and $1 \le n \le N$. By Bayes rule,
+    \begin{align*}
+        \omega_{nk} &= \frac{p(\bm{x}_n \mid z_n = k; \bm{\theta})p(z_n = k ;\bm{\theta})}{\sum_{j=1}^K p(\bm{x}_n \mid z_n = j; \bm{\theta})p(z_n = j ;\bm{\theta})}\\
+        &= \frac{\mathrm{St}(\bm{x}_n ; \nu_k,\bm{\mu}_k, \bm{\Sigma}_k)\pi_k}{\sum_{j=1}^K \mathrm{St}(\bm{x}_n ; \nu_j,\bm{\mu}_j, \bm{\Sigma}_j)\pi_j},
+    \end{align*}
+    since $\bm{x}_n \mid z_n \sim \mathrm{St}\left(\nu_{z_n},\bm{\mu}_{z_n},\bm{\Sigma}_{z_n}\right)$.
+    \item Next we are asked to compute the conditional distribution,
+    \[p(\tau_n \mid z_n=k, \bm{x}_n; \bm{\theta}). \]
+    To do this, we will again use Bayes rule conditional on $z_n=k$,
+    \begin{align*}
+        &p(\tau_n \mid z_n=k, \bm{x}_n; \bm{\theta})\\
+        &\propto p(\tau_n \mid z_n=k;\bm{\theta})p(\bm{x}_n \mid \tau_n,z_n=k;\bm{\theta})\\
+        &= \mathrm{Ga}(\tau_n;\nu_k/2, \nu_k/2)\calN(\bm{x}_n; \bm{\mu}_k, \tau_n^{-1}\bm{\Sigma}_k)\\
+        &\propto \tau_n^{\nu_k/2 - 1}\exp\left(-\nu_k\tau/2\right)\det(\tau_n^{-1}\bm{\Sigma}_k)^{-1/2}\exp\left(-\frac{1}{2}(\bm{x}_n-\bm{\mu}_k)^\top\left(\tau_n^{-1}\bm{\Sigma}_k\right)^{-1}(\bm{x}_n - \bm{\mu}_k)\right).
+    \end{align*}
+    Note that,
+    \[\det(\tau_n^{-1}\bm{\Sigma}_k) = \det(\tau_n^{-1}\bm{I}_D\bm{\Sigma}_k^{-1}) = \tau_n^{-D}\det(\bm{\Sigma}_k^{-1}), \]
+    and
+    \[-\frac{1}{2}(\bm{x}_n-\bm{\mu}_k)^\top\left(\tau_n^{-1}\bm{\Sigma}_k\right)^{-1}(\bm{x}_n - \bm{\mu}_k) =  - \frac{1}{2}(\bm{x}_n-\bm{\mu}_k)^\top\bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k)\tau_n.\]
+    Thus,
+    \begin{align*}
+        &p(\tau_n\mid z_n=k \bm{x}_n;\bm{\theta})\\
+        &\propto \tau_n^{\nu_k/2 - 1}\exp\left(-\nu_k\tau/2\right)\tau^{D/2}\det(\bm{\Sigma}_k)^{-1/2}\exp\left(\frac{1}{2}(\bm{x}_n-\bm{\mu}_k)^\top\bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k)\tau_n\right)\\
+        &=\tau_n^{(\nu_k+D)/2 - 1}\exp\left(-\frac{1}{2}\left(\nu_k + (\bm{x}_n-\bm{\mu}_k)^\top\bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k)\right)\tau_n\right)\\
+        &\propto \mathrm{Ga}(\tau_n; \alpha_{nk},\beta_{nk}),
+    \end{align*}
+    where
+    \begin{align*}
+        \alpha_{nk}&=\frac{\nu_k+D}{2}\\
+        \beta_{nk}&=\frac{1}{2}\left(\nu_k + (\bm{x}_n-\bm{\mu}_k)^\top\bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k)\right).
+    \end{align*}
+    \item We will first simplify the expected complete log-likelihood,
+    \[\mathcal{L}(\bm{\theta};\bm{\theta}_{\mathrm{old}}) = \sum_{n=1}^N \bbE_{p(z_n, \tau_n \mid \bm{x}_n;\bm{\theta}_{\mathrm{old}})}\left[\log p(z_n,\tau_n,\bm{x}_n;\bm{\theta})\right]. \]
+    First recall that,
+    \begin{align*}
+        &\log p(z_n,\tau_n,\bm{z}_n;\bm{\theta})\\
+        &=\sum_{k=1}^K I[z_n = k]\log p(z_n = k,\tau_n,\bm{z}_n;\bm{\theta})\\
+        &=\sum_{k=1}^K I[z_n = k]\left(\log \pi_k + \log \mathrm{Ga}(\tau_n;\nu_k/2,\nu_k/2) + \log \calN(\bm{x}_n; \bm{\mu}_k, \tau_n^{-1}\bm{\Sigma}_k)\right)\\
+        &=\sum_{k=1}^K I[z_n = k]\bigg(\log \pi_k + \frac{\nu_k}{2}\log\left(\nu_k/2\right) - \log \Gamma(\nu_k/2) + (\nu_k/2-1)\log(\tau_n)\\
+        & - \frac{\nu_k}{2}\tau_n- \frac{D}{2}\log(2\pi) -\frac{1}{2}\log \det(\tau_n^{-1}\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg).
+    \end{align*}
+    If we drop terms that don't depend on $\bm{\theta}$, we have
+    \begin{align}
+        &\log p(z_n,\tau_n,\bm{z}_n;\bm{\theta})\nonumber \\
+        &=\sum_{k=1}^K I[z_n = k]\bigg(\log \pi_k + \frac{\nu_k}{2}\log\left(\nu_k/2\right) - \log \Gamma(\nu_k/2) + (\nu_k/2-1)\log(\tau_n)\nonumber \\
+        & - \frac{\nu_k}{2}\tau_n -\frac{1}{2}\log \det(\tau_n^{-1}\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg).\label{eq:2022 Q5 log like}
+    \end{align}
+    On the exam, we are only asked to do the M-step for $\{\bm{\mu}_k,\bm{\Sigma}_k\}_{k=1}^K$. We can therefore drop terms that do not depend on $\bm{\mu}_k$ or $\bm{\Sigma}_k$. This gives,
+    \begin{align*}
+        &\log p(z_n,\tau_n,\bm{z}_n;\bm{\theta})\\
+        &=\sum_{k=1}^K I[z_n = k]\bigg(-\frac{1}{2}\log \det(\tau_n^{-1}\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg)\\
+        &=\sum_{k=1}^K I[z_n = k]\bigg(\frac{D}{2}\log\tau_n-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg)\\
+        &=\sum_{k=1}^K I[z_n = k]\bigg(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg),
+    \end{align*}
+    where in the last line we dropped the term $\frac{D}{2}\log\tau_n$. We will now take an expectation with respect to $p(z_n,\tau_n\mid \bm{x}_n ;\bm{\theta}_{\mathrm{old}})$. By parts (b) and (c) we have,
+    \begin{align*}
+        \bbE_{p(z_n, \tau_n \mid \bm{x}_n;\bm{\theta}_{\mathrm{old}})}\left[I[Z_n = k]\right] = \omega_{nk}^{\mathrm{old}},
+    \end{align*}
+    and 
+    \begin{align*}
+    \bbE_{p(z_n,\tau_n \mid \bm{x}_n;\bm{\theta}_{\mathrm{old}})}\left[I[Z_n=k]\tau_n\right]
+        &=\omega_{nk}^{\mathrm{old}}\bbE_{\mathrm{Ga}(z_n;\alpha_{nk}^{\text{old}}, \beta_{nk}^{old})}\left[\tau_n\right]\\
+        &= \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\text{old}}}{\beta_{nk}^{\text{old}}}.
+    \end{align*}
+    Thus, up to a constant independent of $\{\bm{\mu}_k,\bm{\Sigma}_k\}_{k=1}^K$ we have
+    \begin{align*}
+        &\bbE_{p(z_n, \tau_n \mid \bm{x}_n;\bm{\theta}_{\mathrm{old}})}\left[\log p(z_n,\tau_n,\bm{z}_n;\bm{\theta})\right]\\
+        &=\sum_{k=1}^K \bbE_{p(z_n, \tau_n \mid \bm{x}_n;\bm{\theta}_{\mathrm{old}})}\left[I[z_n = k]\bigg(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg)\right]\\
+        &=\sum_{k=1}^K \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \right)
+    \end{align*}
+    And so, up to terms independent of $\{\bm{\mu}_k,\bm{\Sigma}_k\}_{k=1}^K$, we have
+    \begin{align*}
+        &\mathcal{L}(\bm{\theta};\bm{\theta}_{\mathrm{old}})\\
+        &=\sum_{n=1}^N\sum_{k=1}^K  \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \right)\\
+        &=\sum_{k=1}^K\sum_{n=1}^N \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \right).
+    \end{align*}
+    We see that the M-step for $\{\bm{\mu}_k,\bm{\Sigma}_k\}_{k=1}^K$ splits over $k$. And so,
+    \[\bm{\mu}_k^\star,\bm{\Sigma}_k^\star \gets \argmax_{\bm{\mu}_k,\bm{\Sigma}_k} \sum_{n=1}^N \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \right). \]
+    If we differentiate with respect to $\bm{\mu}_k$, we see that $\bm{\mu}_k^\star$ solves,
+    \[\sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}\bm{\Sigma}^{-1} (\bm{x}_n-\bm{\mu}_k^\star)=0\in \reals^D. \]
+    And so,
+    \begin{align*}
+       \bm{\mu}_k^\star \left(\sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}\right) &= \sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}} \bm{x}_n.
+    \end{align*}
+    If we define 
+    \[\gamma_{nk} = \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}/\beta_{nk}^{\mathrm{old}}}{\sum_{m=1}^N \omega_{mk}^{\mathrm{old}}\alpha_{mk}^{\mathrm{old}}/\beta_{mk}^{\mathrm{old}}}, \]
+    then 
+    \[ \bm{\mu}^\star = \sum_{n=1}^N \gamma_{nk} \bm{x}_n.\]
+    Likewise, plugging in $\bm{\mu}^\star$ and differentiating with respect to $\bm{\Sigma}_k^{-1}$ gives the first order condition,
+    \[\frac{1}{2}\sum_{n=1}^N \omega_{nk}^{\text{old}}\bm{\Sigma}_k^\star - \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}(\bm{x}_n-\bm{\mu}_k^\star)(\bm{x}_n - \bm{\mu}_k^\star)^\top = 0 \in \reals^{D \times D}. \]
+    And so
+    \[\bm{\Sigma}_k^\star = \frac{1}{\sum_{n=1}^N \omega_{nk}^\text{old}} \sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}(\bm{x}_n-\bm{\mu}_k^\star)(\bm{x}_n - \bm{\mu}_k^\star)^\top.  \]
+\end{enumerate}
+\textbf{Optional:}  In terms of exam requirements, we are now done. We have calculated the M-step for $\{(\bm{\mu}_k,\bm{\Sigma}_k)\}_{k=1}^K$ which we did by isolating the part of $\mathcal{L}(\bm{\theta};\bm{\theta}^{\text{old}})$ that depended on these parameters. We can do a similar thing for $\bm{\pi}$. Using \eqref{eq:2022 Q5 log like} we can compute $\log p(z_n,\tau_n,\bm{x}_n;\bm{\theta})$ as a function of only $\bm{\pi}$ specifically,
+\[\log p(z_n,\tau_n,\bm{x}_n;\bm{\theta}) = C +\sum_{k=1}^K I[Z_n = k]\log(\pi_k). \]
+Thus, as a function of $\bm{\pi}$,
+\begin{align*}
+    &\mathcal{L}(\bm{\theta};\bm{\theta}^{\text{old}})\\
+    &=\sum_{n=1}^N\bbE_{p(z_n,\tau_n\mid \bm{x}_n;\bm{\theta}^{\text{old}})}\left[\sum_{k=1}^KI[Z_n=k]\log(\pi_k)\right]\\
+    &=\sum_{n=1}^N \sum_{k=1}^K\omega_{nk}^{\text{old}}\log(\pi_k).
+\end{align*}
+Thus,
+\[\pi_k^\star = \frac{\sum_{n=1}^N \omega_{nk}}{\sum_{j=1}^K\sum_{n=1}^N \omega_{nj}}. \]
+We can be daring and attempt the $\nu_k$ updates as well. Up to a constant that does not depend on $\nu_k$ we have
+\begin{align*}
+   & p(z_n,\tau_n,\bm{x}_n;\bm{\theta})\\
+   &=C+\sum_{k=1}^KI[z_n = k]\left(\frac{\nu_k}{2}\log(\nu_k/2)-\log \Gamma(\nu_k/2) + \nu_k/2\log(\tau_n) -\frac{\nu_k}{2}\tau_n\right).
+\end{align*}
+Let $v_k = \nu_k/2$. Thus, as a function of $v_k$ we have
+\begin{align*}
+    & p(z_n,\tau_n,\bm{x}_n;\bm{\theta})\\
+   &=C+\sum_{k=1}^KI[z_n = k]\left(v_k\log(v_k)-\log \Gamma(v_k) + v_k\log(\tau_n) -v_k\tau_n\right).
+\end{align*}
+We also have
+\begin{align*}
+    \bbE_{p(z_n,\tau_n\mid \bm{x}_n;\bm{\theta}^{\text{old}})}\left[I[Z_n=k]\right]&=\omega_{nk}^{\mathrm{old}},\\
+    \bbE_{p(z_n,\tau_n\mid \bm{x}_n;\bm{\theta}^{\text{old}})}\left[I[Z_n=k]\tau_n\right]&=\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\text{old}}/\beta_{nk}^{\text{old}},\\
+    \bbE_{p(z_n,\tau_n\mid \bm{x}_n;\bm{\theta}^{\text{old}})}\left[I[Z_n=k]\log(\tau_n)\right]&=\omega_{nk}^{\mathrm{old}}\bbE_{\mathrm{Ga}(\tau_n;\alpha_{nk}^{\text{old}},\beta_{nk}^{\text{old}})}\left[\log(\tau_n)\right]\\
+    &=\omega_{nk}^{\mathrm{old}}\left(\psi\left(\alpha_{nk}^{\text{old}}\right) - \log\left(\beta_{nk}^{\text{old}}\right)\right),
+\end{align*}
+where
+\[\psi(y)= \frac{d}{dy}\log \Gamma(y), \]
+is the digamma function. Thus, as a function of $\bm{v}=(v_k)_{k=1}^K$, we have
+\begin{align*}
+    &\mathcal{L}(\bm{\theta};\bm{\theta}_{\text{old}})\\
+    &=\sum_{n=1}^N \sum_{k=1}^K \omega_{nk}^{\text{old}}\left(v_k\log(v_k)-\log \Gamma(v_k)+v_k\left(\psi\left(\alpha_{nk}^{\text{old}}\right) - \log\left(\beta_{nk}^{\text{old}}\right)\right) -v_k\alpha_{nk}^{\text{old}}/\beta_{nk}^{\text{old}}\right).
+\end{align*}
+And so $v_k^\star$ maximizes
+\[ \left(v_k\log(v_k)-\log \Gamma(v_k)\right)\sum_{n=1}^N\omega_{nk} +v_k \sum_{n=1}^N \omega_{nk}^{\text{old}}\left(\psi\left(\alpha_{nk}^{\text{old}}\right) - \log\left(\beta_{nk}^{\text{old}}\right)-\alpha_{nk}^{\text{old}}/\beta_{nk}^{\text{old}}\right).  \]
+Define,
+\begin{align*}
+    A_k &= \sum_{n=1}^N\omega_{nk},\\
+    B_k &= \sum_{n=1}^N \omega_{nk}^{\text{old}}\left(\psi\left(\alpha_{nk}^{\text{old}}\right) - \log\left(\beta_{nk}^{\text{old}}\right)-\alpha_{nk}^{\text{old}}/\beta_{nk}^{\text{old}}\right).
+\end{align*}
+We are trying to maximize
+\[(v_k\log(v_k)-\log \Gamma(v_k))A_k + v_kB_k. \]
+Which has the first order condition
+\[\left(\log(v_k^\star)+1 -\psi(v_k^\star)\right)A_k + B_k = 0 \]
+So
+\[\log(v_k^\star) - \psi(v_k^\star) = -\frac{A_k+B_k}{A_k}. \]
+A plot in Mathematic shows that $v \mapsto \log(v) - \psi(v)$ is strictly decreasing and so the above equation has a unique solution $v_k^\star$. This means that, with a bit of work, we can implement a full EM algorithm for all the parameters $\bm{\theta}$. 
+
+\subsection*{Question 6: Principal component regression with $\ell_1$-penalties}
