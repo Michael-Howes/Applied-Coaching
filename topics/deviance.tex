@@ -1,0 +1,235 @@
+\section{Deviance and model comparison}
+
+% \subsection{Deviance in exponential families}
+
+
+% \subsubsection*{Definition}
+% Consider a $p$-dimensional exponential family
+% \[f_\eta(y) = \exp(y^\top \eta - \Psi(\eta))f_0(y)m(dy).\]
+% The \emph{deviance} between to parameter vectors $\eta^{(1)},\eta^{(2)} \in \reals^p$  two times the KL divergence between $f_{\eta^{(1)}}$ and $f_{\eta^{(2)}}$. In formulas,
+% \begin{align*}
+%     D(\eta^{(1)},\eta^{(2)})&=2\KLD{f_{\eta^{(1)}}}{f_{\eta^{(2)}}}\\
+%     &=2\left(\bbE_{\eta^{(1)}}\left[\log f_{\eta^{(1)}}(Y)\right] -\bbE_{\eta^{(2)}}\left[\log f_{\eta^{(2)}}(Y)\right]\right)\\
+%     &=2\left(\bbE_{\eta^{(1)}}\left[y^\top(\eta^{(1)}-\eta^{(2)}) - \Psi(\eta^{(1)})+\Psi(\eta^{(2)})\right]\right)\\
+%     &=2\left[\mu_1^\top(\eta^{(1)}-\eta^{(2)}) - \Psi(\eta^{(1)})+\Psi(\eta^{(2)})\right].
+% \end{align*}
+% The deviance is additive. If $y_1,\ldots,y_n$ are i.i.d from $f_\eta$, then $Y=(y_1,\ldots,y_n)$ also forms an exponential family parametrized by $\eta$. We will use $g^{(n)}_\eta$ to denote this exponential family. Likewise, we'll use $D^{(n)}(\eta^{(1)},\eta^{(2)})$ to denote the deviance in this new family. The deviance $D^{(n)}$ satisfies,
+% \[D^{(n)}(\eta^{(1)},\eta^{(2)}) = nD^{(1)}(\eta^{(1)},\eta^{(2)})= D^{(1)}(\eta^{(1)},\eta^{(2)}). \]
+% \subsubsection*{Mean parametrization and Hoeffding's formula}
+% Remember that the mapping $\eta \mapsto \mu = \bbE_{\eta}[y]$ is one-to-one. Thus, we can switch between the parametrization that uses $\eta$ and the parametrization that uses $\mu$. We can thus overload our notation and define the deviance between two mean vectors $\mu_1$ and $\mu_2$
+% \[D(\mu_1,\mu_2) = D(\eta^{(1)},\eta^{(2)}), \]
+% where $\eta_j$ solves $\mu_j = \bbE_{\eta_j}[y]$. Suppose again that we have the repeated sample $Y = (y_1,\ldots,y_n)$ where $y_i \simiid f_{\eta}$. The MLE $\hat{\mu}$ for $\mu$ in this resampling model is the average $\hat{\mu} = \bar{y}$. Hoeffding's formula says that the deviance describes how the likelihood function $\mu \mapsto f_{\mu}(y)$  decreases as we move away from $\hat{\mu}$. Specifically,
+% \begin{align*}
+%     \frac{f_{\mu}^{(n)}(Y)}{f_{\hat{\mu}}^{(n)}(Y)} &= \exp(-nD(\hat{\mu},\mu)/2).
+% \end{align*} 
+% Rewritten on the log-scale,
+% \[\log f_\mu^{(n)}(Y) = \log f_{\hat{\mu}}^{(n)}(Y) - \frac{n}{2} D(\hat{\mu},\mu). \]
+% That is, if we move from $\hat{\mu}$ to $\mu$, then the decrease in log-likelihood is exactly $\frac{n}{2}D(\hat{\mu},\mu)$. Hoeffding's formula is fairly straight forward to derive
+% \begin{align*}
+%     \frac{f_{\mu}^{(n)}(Y)}{f_{\hat{\mu}}^{(n)}(Y)} &=\exp((\eta- \hat{\eta})^\top \sum_{i=1}^n y_i - n\Psi(\eta)+n\Psi(\hat{\eta}))\\
+%     &=\exp((\eta- \hat{\eta})^\top \sum_{i=1}^n y_i - n\Psi(\eta)+n\Psi(\hat{\eta}))\\
+%     &=\exp(-n\left[(\hat{\eta}-\eta)^\top \hat{\mu} +\Psi(\hat{\eta}- \Psi(\eta))\right])\\
+%     &=\exp(-nD(\hat{\eta},\eta)/2)\\
+%     &=\exp(-nD(\hat{\mu},\mu)/2).
+% \end{align*}
+% The deviance also satisfies the following relation,
+% \[(\eta^{(2)} - \eta^{(1)})^\top(\mu_2 - \mu_1) = \frac{D(\eta^{(1)},\eta^{(2)})+D(\eta^{(2)},\eta^{(1)})}{2} \ge 0. \]
+% This formula implies that the map $\eta\to \mu$ is monotone in the sense that the angle between $\eta^{(2)} - \eta^{(1)}$ and $\mu_2 - \mu_1$ is always at most $90$ degrees.
+
+% \subsection{Deviance in GLMs}
+
+% Recall the familiar GLM set up,
+% \begin{equation}
+%     Y_i \simind f_{\eta_i}, \quad \eta_i = X_i^\top \beta, \quad 1 \le i \le n, \label{eq:GLM set up}
+% \end{equation}
+% where $f_{\eta}$ is an exponential family, $Y_i$ is our response and $X_i \in \reals^p$ are our features. Consider also the \emph{saturated model}
+% \begin{equation} 
+%     Y_i \simind f_{\eta_i}, \quad 1 \le i \le n  \label{eq:GLM saturated}
+% \end{equation}
+% That is $Y_i$ is drawn from the exponential family $f_\eta$, but we do not include the linear constraints on $\eta_i$. 
+
+% The MLE $\hat{\beta} \in \reals^p$ for \eqref{eq:GLM set up} is defined by
+% \begin{align*}
+%     \hat{\beta}&=\argmax_{\beta} \sum_{i=1}^n \ell(\beta;Y_i)\\
+%     &=\argmax_\beta \sum_{i=1}^n \ell(X_i^\top \beta;Y_i),
+% \end{align*}
+% The fitted means in the GLM \eqref{eq:GLM set up} are
+% \[\hat{\mu} = \bbE_{X\hat{\beta}}[Y]  = \dot{\psi}(X\hat{\beta}) \in \reals^n.\]
+% The fitted means in the saturated model \eqref{eq:GLM saturated} are simply the observed values $Y \in \reals^n$. One way to measure the goodness of fit of the model \eqref{eq:GLM set up} is to compare the likelihood from saturated model \eqref{eq:GLM saturated} to the constrained model \eqref{eq:GLM set up}. The likelihood in the saturated model is always bigger and so it makes sense to look at the loss in likelihood in going from \eqref{eq:GLM saturated} to \eqref{eq:GLM set up}. This quantity is the \emph{deviance},
+% \begin{align*}
+%     D_+(Y, \hat{\mu}) &=
+% \end{align*}
+
+
+\subsection{Deviance between two parameter vectors}
+
+Let's return to the set-up of Section~\ref{sec:GLM}. That is, suppose we have a one-dimensional exponential family,
+\begin{equation}\label{eq:exp}
+    f_\eta(y) =  \exp\left(\eta y - \psi(\eta)\right)f_0(y), 
+\end{equation}
+Consider now a case where we repeatedly sample from \eqref{eq:exp}, but we let the parameter $\eta$ vary with each sample. That is we have the model,
+\begin{equation}\label{eq:sat model}y_i \simind f_{\eta_i} \quad 1 \le i \le n, \end{equation}
+which is parametrized by $\eta \in \reals^n$. We will let $f_\eta$ denote the density for $Y=(y_1,\ldots,y_n)$. The log-likelihood in this model is
+\[\ell(\eta;Y) = \log f_\eta(Y) = \sum_{i=1}^n \eta_i y_i - \sum_{i=1}^n \psi(\eta_i) = \eta^\top Y-\sum_{i=1}^n \psi(\eta_i). \]
+The \emph{deviance} between two parameter vectors $\eta^{(1)},\eta^{(2)} \in \reals^n$ is given by two times the KL divergence between $f_{\eta^{(1)}}$ and $f_{\eta^{(2)}}$. That is,
+\begin{align*}
+    D(\eta^{(1)},\eta^{(2)})&=2\bbE_{\eta^{(1)}}\left[\log f_{\eta^{(1)}}(Y) -  \log f_{\eta^{(2)}}(Y)\right] \\
+    &= 2\bbE_{\eta^{(1)}}\left[(\eta^{(1)})^\top Y - \sum_{i=1}^n \psi(\eta_{i}^{(1)}) - (\eta^{(2)})^\top Y +\sum_{i=1}^n \psi(\eta^{(2)})\right]\\
+    &= 2\left((\eta^{(1)}-\eta^{(2)})^\top \mu^{(1)} - \sum_{i=1}^n \psi(\eta_i^{(1)}) -\psi(\eta_i^{(2)})\right).
+\end{align*}
+Note that our independence assumption implies that the deviance is additive. That is,
+\[D(\eta^{(1)},\eta^{(2)}) = \sum_{i=1}^n D(\eta^{(1)}_i,\eta^{(2)}_i). \]
+If we set $\mu_i = \bbE_{\eta_i}[y_i]$, then we could parametrize the above model and likelihood by $\mu \in \reals^n$. That is
+\[f_\mu = f_\eta \quad \text{where } \eta \text{ solves } \bbE_\eta[Y] = \mu. \]
+The deviance between two mean vectors $\mu^{(1)}$ and $\mu^{(2)}$ is then defined to be
+\[D(\mu^{(1)}, \mu^{(2)}) = D(\eta^{(1)},\eta^{(2)}). \]
+The model \eqref{eq:sat model} without any constraints on $\eta$ is called the \emph{saturated model}. The MLE in the model is found by matching the expectation of $y_i$ to the observed value. That is,
+\[\hat{\eta}^{\text{sat}} \text{ solves } \bbE_{\hat{\eta}^{\text{sat}}}[Y] = Y.\]
+Or equivalently $\hat{\mu}^{\text{sat}} = Y$. This observation leads to \emph{Hoeffding's formula} which states that for all $\eta \in \reals^n$
+\begin{equation}
+    \frac{f_{\eta}(Y)}{f_{\hat{\eta}^{\text{sat}}}(Y)} =\exp\left(-\frac{1}{2}D(\hat{\eta}^{\text{sat}}, \eta)\right) = \exp\left(-\frac{1}{2}\sum_{i=1}^n D(\hat{\eta}^{\text{sat}}_i, \eta_i)\right). \label{eq hoeff1}
+\end{equation}
+If we use the mean parametrization, then Hoeffding's formula says that for all $\mu \in \reals^n$, 
+\begin{equation}
+    \frac{f_{\mu}(Y)}{f_{Y}(Y)}=\exp\left(-\frac{1}{2}D(Y,\mu)\right) = \exp\left(-\frac{1}{2}\sum_{i=1}^n D(Y_i, \mu_i)\right). \label{eq hoeff2}
+\end{equation}
+On the log-scale, Hoeffding's formula says that
+\[\log f_\eta (Y) = \log f_{\hat{\eta}^{\text{sat}}}(Y) - \frac{1}{2}D(\hat{\eta}^{\text{sat}}, \eta). \]
+That is, if move from the MLE $\hat{\eta}^{\text{sat}}$ to the parameter vector $\eta$ then the log likelihood decreases by half the deviance. Proving Hoeffding's formula follows from the definition of the deviance,
+\begin{align*}
+    -\frac{1}{2}D(\hat{\eta}^{(\text{sat})},\eta) &=-\left(\hat{\eta}^{(\text{sat})}-\eta\right)^\top \hat{\mu}^{\text{sat}} + \sum_{i=1}^n \psi(\hat{\eta}_i^{\text{sat}}) - \psi(\eta_i)\\
+    &=-\left(\hat{\eta}^{(\text{sat})}-\eta\right)^\top Y + \sum_{i=1}^n \psi(\hat{\eta}_i^{\text{sat}}) - \psi(\eta_i)\\
+    &=\eta^\top Y-\sum_{i=1}^n \psi(\eta_i) -\left((\hat{\eta}^{\text{sat}})^\top Y-\sum_{i=1}^n \psi(\hat{\eta}_i^{\text{sat}})\right)\\
+    &=\log f_\eta(Y) - \log f_{\hat{\eta}^{\text{sat}}}(Y).
+\end{align*}
+
+
+\subsection{Deviance in GLMs}
+
+Now suppose we have features $X_i \in \reals^p$ for each observation $i$. To turn the saturated model \eqref{eq:sat model} into a GLM, we put a linear constraint on the parameter vector $\eta$. Specifically, we assume that $\eta_i = X_i^\top \beta$ for some $\beta \in \reals^p$. This gives the model
+\begin{equation}
+        Y_i \simind f_{\eta_i}, \quad \eta = X\beta,
+\end{equation}
+where $X \in \reals^{n \times p}$ has rows $X_i$. As discussed previously, the parameters $\beta$ are fit by maximizing the likelihood. Specifically,
+\[\hat{\beta} = \argmax_\beta f_{X\beta}(Y). \]
+If we let $\mu_i(\beta) = \bbE_{X_i^\top \beta}[Y_i]$, then the mean parametrization version of Hoeffding's formula gives 
+\begin{align*}
+    \hat{\beta}&=\argmax_\beta f_{\mu(\beta)}(Y)\\
+    &= \argmax_\beta \frac{f_{\mu(\beta)}(Y)}{f_Y(Y)}\\
+    &=\argmax_\beta \exp\left(-\frac{1}{2}D(Y,\mu(\beta))\right)\\
+    &=\argmin_\beta D(Y,\mu(\beta)).
+\end{align*}
+Thus, maximizing the likelihood is equivalent to minimizing the deviance from the observed data $Y$ to the fitted mean $\mu(\beta)$. 
+
+\subsection{Difference of deviance}
+
+Suppose we have a decomposition of our feature matrix $X$ into $X = [X^{(1)},X^{(2)}]$ where $X_1\in \reals^{n\times p_1}$ and $X^{(2)} \in \reals^{n \times p_2}$. This decomposition gives two nested models 
+\begin{align*}
+    \text{Sub model: } & y_i \simind f_{\eta_i},\quad \eta = X_1\beta_1,\\
+    \text{Full model: } & y_i \simind f_{\eta_i},\quad \eta = X_1\beta_1+X^{(2)}\beta_2,
+\end{align*}
+where $\beta_1 \in \reals^{p_1}$ and $\beta_2 \in \reals^{p_2}$. To see if the sub model is a sufficient explanation of data, we can test the hypothesis
+\[\mathcal{H}_0 : \beta_2 = 0.\]
+The canonical test statistic for this null hypothesis is the \emph{difference of deviance},
+\[T = D(Y, \mu(\hat{\beta}_{\text{sub}})) - D(Y,\mu(\hat{\beta}_{\text{full}})), \]
+where $\hat{\beta}_{\text{sub}}$ and $\hat{\beta}_{\text{full}}$ are the MLE in the two submodels. Since these MLEs are found by minimizing the deviance we have 
+\[  D(Y, \mu(\hat{\beta}_{\text{sub}})) \ge D(Y,\mu(\hat{\beta}_{\text{full}})),\]
+and hence $T \ge 0$. Furthermore, maximum likelihood theory gives 
+\[T \stackrel{\cdot}{\sim} \chi^2_{p_2}, \]
+under $\mathcal{H}_0$. Thus, rejecting $\mathcal{H}_0$ when $T \ge \chi^2_{p_2}(1-\alpha)$ is a level $\alpha$ test of $\mathcal{H}_0$. If you have $J$ nested models, then you can perform multiple difference of deviance tests to assess the fit of each model. 
+
+\subsection{Deviance residuals}
+
+The deviance also gives a heuristic that can be used to assess goodness-of-fit in a single GLM. Suppose we have the model
+\[Y_i \simind f_{\eta_i}, \quad \eta = X\beta,\]
+where $X \in \reals^{n \times p}$. The deviance heuristic is
+\[D(Y,\mu(\hat{\beta})) \approx \chi^2_{n-p}. \]
+The above approximation may fail, but it is useful to compare the deviance $D(Y, \mu(\hat{\beta}))$ to $n-p = \bbE[\chi^2_{n-p}]$. If the deviance is much larger than $n-p$, then this suggests your model is missing something important. When this occurs, you can try to diagnose the problem by looking at the \emph{deviance residuals}. These are defined by
+\[R_i = \mathrm{Sign}(Y-\mu_i(\hat{\beta}))\sqrt{D(Y_i, \mu_i(\hat{\beta}))}, \]
+and satisfy
+\[\sum_{i=1}^n R_i^2 = D(Y,\mu(\hat{\beta})). \]
+You can look for trends in $R_i$ or abnormally large values of $R_i$. Here's a simple example,
+\begin{example}[Quasi-independence model]
+    Consider the below contingency table, taken from \citep*{agresti2013categorical},
+    \begin{center}
+        \includegraphics*[width = 0.8\textwidth]{figures/Agresti-table.png}
+    \end{center} 
+    Each observation in this table corresponds to a father-son pair. The row and column variable refer to the father's and son's occupational status. Let $Y_{ij}$ be the count in row $i$ and column $j$. We could try a Poisson GLM for $Y_{ij}$. The model below assume independence between father and son status.
+    \begin{equation}Y_{ij} \simind \mathrm{Pois}(\mu_{ij}), \quad \log(\mu_{ij}) = \alpha + \beta_i + \gamma_j.  \label{eq:indep model}\end{equation}
+    For identifiable, we add the constraints, $\beta_1 =\gamma_1=0$. The below table shows the deviance residuals form model \eqref{eq:indep model} for each $(i,j)$ pair,
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{|r|rrrrr|}
+          \hline
+         & 1 & 2 & 3 & 4 & 5 \\ 
+          \hline
+        1 & 12.76 & 5.33 & -2.42 & -5.54 & -5.85 \\ 
+          2 & 2.99 & 10.55 & 2.26 & -3.53 & -8.48 \\ 
+          3 & -1.25 & 0.65 & 4.68 & 0.78 & -4.76 \\ 
+          4 & -5.51 & -4.43 & -0.94 & 3.83 & 0.39 \\ 
+          5 & -5.70 & -8.11 & -3.98 & -1.43 & 9.56 \\ 
+           \hline
+        \end{tabular}
+        \end{table}  
+        We see that there are big positive residuals along the main diagonal and large negative residuals in the top-right and bottom-left corners. Evidently there is a correlation between father and son status that our model is missing. Here is an alternative model we could try,
+        \begin{equation}Y_{ij} \simind \mathrm{Pois}(\mu_{ij}), \quad \log(\mu_{ij}) = \alpha + \beta_i + \delta_{i-j}.  \label{eq:diff model}\end{equation}
+        That is we now have row parameters $\beta_i$ and difference parameters $\delta_{i-j}$. To make the model identifiable we  will require $\beta_1 =\delta_{-4}= 0$. Here are the resulting deviance residuals,
+        \begin{table}[ht]
+            \centering
+            \begin{tabular}{|r|rrrrr|}
+              \hline
+             & 1 & 2 & 3 & 4 & 5 \\ 
+              \hline
+            1 & 1.41 & 1.76 & -4.80 & 0.50 & 0.00 \\ 
+              2 & -4.92 & 2.30 & -3.66 & 4.19 & -0.27 \\ 
+              3 & -3.94 & 0.96 & -4.35 & 6.80 & -2.28 \\ 
+              4 & -3.33 & 3.57 & -4.89 & 4.39 & -2.70 \\ 
+              5 & -0.00 & 2.96 & -2.26 & 6.40 & -4.44 \\ 
+               \hline
+            \end{tabular}
+            \end{table}
+        Although some of these residuals are still large, we see a substantial reduction and there is less of an obvious trend. Later we will talk about the AIC. The AIC for model \eqref{eq:indep model} is $960$ and the AIC for model \eqref{eq:diff model} is $501$. 
+\end{example}
+
+\subsection{Model selection}
+
+Suppose we have GLM models $M_1,M_2,\ldots,M_J$ for the same data $Y$. You can think of each $M_j$ as corresponding to a different feature matrix $X^{(j)} \in \reals^{n \times p_j}$. Choosing one of the models $M_j$ is \emph{model selection}. 
+
+
+We saw in Section~\ref{sec:CVmodelSelection} that cross validation can be used for model selection. This is a very flexible and powerful approach and should be your default if an exam questions asks how you would do model selection. However, there are other approaches and an exam question might specifically ask about one of them.
+
+
+
+\subsubsection*{AIC and BIC}
+
+Let $D_j = D(Y,\mu(\hat{\beta}^{(j)}))$ be the deviance for model $j$. If the models are nested, then you can use difference of deviance tests to choose the model. That is, continue to take larger models until the reduction in deviance is no longer statistically significant. Making decisions based solely on statistical significance isn't always a good idea. Furthermore, we might be in a situation where are models aren't nested. 
+
+The AIC and BIC are two model selection methods that do not require the models to be nested. Both of them are based on ``penalized deviance''
+\begin{itemize}
+    \item \textbf{AIC}: The Akaike information criterion for model $M_j$ is $\mathrm{AIC}^{(j)} = D_j +2p_j$. The AIC model is the one that minimizes $\mathrm{AIC}^{(j)}$.
+    \item \textbf{BIC}: The Bayes information criterion for model $M_j$ is $\mathrm{BIC}^{(j)} = D_j + \log(n)p_j$. Note that the BIC places a higher penalty on model complexity and tends to pick models with fewer parameters.  
+\end{itemize}
+By Hoeffding's formula, we know that
+\[D_j = D(Y,\mu(\hat{\beta}^{(j)})) = 2\left(\log f_Y(Y) - \log f_{\mu(\hat{\beta}^{(j)})}(Y)\right). \]
+Let's write $\ell_j(\beta)$ for the log-likelihood in model $j$ and $\ell_j(\hat{\beta}^{(j)})$ for the maximized log-likelihood in model $j$. Then, the AIC and BIC are equivalent to minimizing the following:
+\begin{align*}
+    \mathrm{AIC:} &\mbox{minimize } -\ell_j(\hat{\beta}^{(j)}) + 2p_j, \\
+    \mathrm{BIC: }&\mbox{minimize } - \ell_j(\hat{\beta}^{(j)}) + \log(n)p_j.
+\end{align*}
+The above formulas can be used for more general models than GLMs.
+
+\subsubsection*{Mallow's $C_p$ statistic}
+
+Mallow's $C_p$ statistic is a version of the AIC that applies to linear models. If the predictions for model $j$ can be written as $\hat{Y}^{(j)} = H_jY$ for some matrix $H_j \in \reals^{n \times n}$, then the $C_p$ statistic is 
+\[C  = \frac{1}{\sigma^2} \left\Vert Y -\hat{Y}^{(j)} \right\Vert_2^2 + 2\tr(H_j),\]
+where $\sigma^2$ is the residual variance in the largest model. To use the $C_p$ statistic, we need an estimate of $\sigma^2$. Normally the unbiased estimate from the largest model is used. The term $\tr(H_j)$ is called the \emph{effective degrees of freedom} of model $M_j$. In OLS regression, the matrix $H_j$ is the orthonormal projection onto a subspace of rank $p_j$ and so $\tr(H_j)=p_j$.
+
+\subsubsection*{The LASSO}
+
+Suppose we have a log-likelihood $\ell(\beta)$ with parameters $\beta \in \reals^p$. The LASSO problem with parameter $\lambda$ is
+\[\mbox{Minimize} -\frac{1}{n}\ell(\beta) + \lambda \Vert \beta \Vert_1.\]
+If $\lambda = 0$, then we get the maximum likelihood problem. For $\lambda > 0$, we get a regularized maximum likelihood problem. The use of the $1$-norm induces sparsity. That is if $\hat{\beta}_\lambda$ is the solution to the LASSO problem, then we would expect $\hat{\beta}_\lambda$ to have many zero entries. A sparse $\hat{\beta}_\lambda$ corresponds to a sub-model since we can drop the columns of $X$ corresponding to zero values of $\hat{\beta}_\lambda$. The parameter $\lambda$ can be chosen via cross-validation as in Section~\ref{sec:CVmodelSelection}. 
+
+Compared to AIC or BIC, one advantage of the LASSO is that we do not have to do as many model fits. We only have one parameter $\lambda$. If we wanted to use AIC or BIC to select the best model sub-model, we would have to do $2^p$ model fits. 
+
+
