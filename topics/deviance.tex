@@ -125,14 +125,14 @@ Thus, maximizing the likelihood is equivalent to minimizing the deviance from th
 
 Suppose we have a decomposition of our feature matrix $X$ into $X = [X^{(1)},X^{(2)}]$ where $X_1\in \reals^{n\times p_1}$ and $X^{(2)} \in \reals^{n \times p_2}$. This decomposition gives two nested models 
 \begin{align*}
-    \text{Sub model: } & y_i \simind f_{\eta_i},\quad \eta = X_1\beta_1,\\
-    \text{Full model: } & y_i \simind f_{\eta_i},\quad \eta = X_1\beta_1+X^{(2)}\beta_2,
+    \text{Sub model: } & y_i \simind f_{\eta_i},\quad \eta = X^{(1)}\beta_1,\\
+    \text{Full model: } & y_i \simind f_{\eta_i},\quad \eta = X^{(1)}\beta_1+X^{(2)}\beta_2,
 \end{align*}
 where $\beta_1 \in \reals^{p_1}$ and $\beta_2 \in \reals^{p_2}$. To see if the sub model is a sufficient explanation of data, we can test the hypothesis
 \[\mathcal{H}_0 : \beta_2 = 0.\]
 The canonical test statistic for this null hypothesis is the \emph{difference of deviance},
 \[T = D(Y, \mu(\hat{\beta}_{\text{sub}})) - D(Y,\mu(\hat{\beta}_{\text{full}})), \]
-where $\hat{\beta}_{\text{sub}}$ and $\hat{\beta}_{\text{full}}$ are the MLE in the two submodels. Since these MLEs are found by minimizing the deviance we have 
+where $\hat{\beta}_{\text{sub}}$ and $\hat{\beta}_{\text{full}}$ are the MLE in the two sub-models. Since these MLEs are found by minimizing the deviance we have 
 \[  D(Y, \mu(\hat{\beta}_{\text{sub}})) \ge D(Y,\mu(\hat{\beta}_{\text{full}})),\]
 and hence $T \ge 0$. Furthermore, maximum likelihood theory gives 
 \[T \stackrel{\cdot}{\sim} \chi^2_{p_2}, \]
@@ -188,7 +188,7 @@ You can look for trends in $R_i$ or abnormally large values of $R_i$. Here's a s
                \hline
             \end{tabular}
             \end{table}
-        Although some of these residuals are still large, we see a substantial reduction and there is less of an obvious trend. Later we will talk about the AIC. The AIC for model \eqref{eq:indep model} is $960$ and the AIC for model \eqref{eq:diff model} is $233$. 
+        Although some of these residuals are still large, we see a substantial reduction and there is less of an obvious trend. Later we will talk about the AIC. The AIC for model \eqref{eq:indep model} is $960$ and the AIC for model \eqref{eq:diff model} is $233$. The code used to fit these models is available here \url{https://github.com/Michael-Howes/Applied-Coaching/blob/main/Code/deviance%20residuals.R}.
 \end{example}
 
 \subsection{Model selection}

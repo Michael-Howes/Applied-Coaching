@@ -42,6 +42,6 @@ full_residuals <- matrix(father_son$full_resids,
                           5,
                           5,
                           byrow = T)
-
+# Compare AICs
 AIC(indep_model)
 AIC(full_model)
