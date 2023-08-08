@@ -172,23 +172,23 @@ You can look for trends in $R_i$ or abnormally large values of $R_i$. Here's a s
         \end{tabular}
         \end{table}  
         We see that there are big positive residuals along the main diagonal and large negative residuals in the top-right and bottom-left corners. Evidently there is a correlation between father and son status that our model is missing. Here is an alternative model we could try,
-        \begin{equation}Y_{ij} \simind \mathrm{Pois}(\mu_{ij}), \quad \log(\mu_{ij}) = \alpha + \beta_i + \delta_{i-j}.  \label{eq:diff model}\end{equation}
-        That is we now have row parameters $\beta_i$ and difference parameters $\delta_{i-j}$. To make the model identifiable we  will require $\beta_1 =\delta_{-4}= 0$. Here are the resulting deviance residuals,
+        \begin{equation}Y_{ij} \simind \mathrm{Pois}(\mu_{ij}), \quad \log(\mu_{ij}) = \alpha + \beta_i + \gamma_j + \delta_{i-j}.  \label{eq:diff model}\end{equation}
+        That is we now have row parameters $\beta_i$, column parameters $\gamma_j$ and ``diagonal'' parameters $\delta_{i-j}$. To make the model identifiable we  will require $\beta_1 =\gamma_1 = 0$ and $\delta_{-4}=\delta_{4}= 0$. Here are the resulting deviance residuals,
         \begin{table}[ht]
             \centering
             \begin{tabular}{|r|rrrrr|}
               \hline
              & 1 & 2 & 3 & 4 & 5 \\ 
               \hline
-            1 & 1.41 & 1.76 & -4.80 & 0.50 & 0.00 \\ 
-              2 & -4.92 & 2.30 & -3.66 & 4.19 & -0.27 \\ 
-              3 & -3.94 & 0.96 & -4.35 & 6.80 & -2.28 \\ 
-              4 & -3.33 & 3.57 & -4.89 & 4.39 & -2.70 \\ 
-              5 & -0.00 & 2.96 & -2.26 & 6.40 & -4.44 \\ 
+            1 & 4.36 & -0.85 & -3.23 & -1.28 & -0.00 \\ 
+              2 & -1.82 & 0.13 & -1.00 & 1.04 & 0.84 \\ 
+              3 & -2.17 & -1.08 & 0.50 & 0.90 & 0.03 \\ 
+              4 & -1.26 & 0.75 & 1.31 & -0.86 & 0.10 \\ 
+              5 & 0.00 & 0.85 & -0.02 & 0.19 & -0.42 \\ 
                \hline
             \end{tabular}
             \end{table}
-        Although some of these residuals are still large, we see a substantial reduction and there is less of an obvious trend. Later we will talk about the AIC. The AIC for model \eqref{eq:indep model} is $960$ and the AIC for model \eqref{eq:diff model} is $501$. 
+        Although some of these residuals are still large, we see a substantial reduction and there is less of an obvious trend. Later we will talk about the AIC. The AIC for model \eqref{eq:indep model} is $960$ and the AIC for model \eqref{eq:diff model} is $233$. 
 \end{example}
 
 \subsection{Model selection}
@@ -202,21 +202,25 @@ We saw in Section~\ref{sec:CVmodelSelection} that cross validation can be used f
 
 \subsubsection*{AIC and BIC}
 
-Let $D_j = D(Y,\mu(\hat{\beta}^{(j)}))$ be the deviance for model $j$. If the models are nested, then you can use difference of deviance tests to choose the model. That is, continue to take larger models until the reduction in deviance is no longer statistically significant. Making decisions based solely on statistical significance isn't always a good idea. Furthermore, we might be in a situation where are models aren't nested. 
-
-The AIC and BIC are two model selection methods that do not require the models to be nested. Both of them are based on ``penalized deviance''
+The testing based approach required our models to be nested. The AIC and BIC are two model selection methods that are similar but do not require the models to be nested. Both of them are based on ``penalized log-likelihood''. Let's write $\ell_j(\beta)$ for the log-likelihood in model $j$ and $\ell_j(\hat{\beta}^{(j)})$ for the maximized log-likelihood in model $j$. Then, the AIC and BIC are 
 \begin{itemize}
-    \item \textbf{AIC}: The Akaike information criterion for model $M_j$ is $\mathrm{AIC}^{(j)} = D_j +2p_j$. The AIC model is the one that minimizes $\mathrm{AIC}^{(j)}$.
-    \item \textbf{BIC}: The Bayes information criterion for model $M_j$ is $\mathrm{BIC}^{(j)} = D_j + \log(n)p_j$. Note that the BIC places a higher penalty on model complexity and tends to pick models with fewer parameters.  
+    \item \textbf{AIC}: The Akaike information criterion for model $M_j$ is \[\mathrm{AIC}^{(j)} = -2\ell_j(\hat{\beta}^{(j)}) +2p_j.\] 
+    The AIC model is the one that minimizes $\mathrm{AIC}^{(j)}$.
+    \item \textbf{BIC}: The Bayes information criterion for model $M_j$ is 
+    \[\mathrm{BIC}^{(j)} = -2\ell_j(\hat{\beta}^{(j)})  + \log(n)p_j.\] 
+    Again the BIC model is the model that minimizes $\mathrm{BIC}^{(j)}$. Note that the BIC places a higher penalty on model complexity and tends to pick models with fewer parameters.  
 \end{itemize}
-By Hoeffding's formula, we know that
+Both the AIC and BIC trade off model fit (measured by the negative-log likelihood) with model complexity (measure by the parameter counts). Both of these are defined for general models. All that's needed is a log-likelihood. The model does not have to be a GLM.
+
+
+In the special case of GLMs, the AIC and BIC can be written in terms of the deviance. Let $D_j = D(Y,\mu(\hat{\beta}^{(j)}))$ be the deviance for model $j$. By Hoeffding's formula, we know that
 \[D_j = D(Y,\mu(\hat{\beta}^{(j)})) = 2\left(\log f_Y(Y) - \log f_{\mu(\hat{\beta}^{(j)})}(Y)\right). \]
-Let's write $\ell_j(\beta)$ for the log-likelihood in model $j$ and $\ell_j(\hat{\beta}^{(j)})$ for the maximized log-likelihood in model $j$. Then, the AIC and BIC are equivalent to minimizing the following:
+The first term does not depend on $j$ and the second is exactly $-\ell_j(\hat{\beta}^{(j)})$. Thus, in GLMs, we can work with the equivalent criteria
 \begin{align*}
-    \mathrm{AIC:} &\mbox{minimize } -\ell_j(\hat{\beta}^{(j)}) + 2p_j, \\
-    \mathrm{BIC: }&\mbox{minimize } - \ell_j(\hat{\beta}^{(j)}) + \log(n)p_j.
+    \widetilde{\mathrm{AIC}}^{(j)} &= D_j + 2p_j, \\
+    \widetilde{\mathrm{BIC}}^{(j)} &= D_j +\log(n)p_j.
 \end{align*}
-The above formulas can be used for more general models than GLMs.
+These formulas can only be applied to GLMs. For other models, use the likelihood based formulas above.
 
 \subsubsection*{Mallow's $C_p$ statistic}
 
@@ -228,7 +232,7 @@ where $\sigma^2$ is the residual variance in the largest model. To use the $C_p$
 
 Suppose we have a log-likelihood $\ell(\beta)$ with parameters $\beta \in \reals^p$. The LASSO problem with parameter $\lambda$ is
 \[\mbox{Minimize} -\frac{1}{n}\ell(\beta) + \lambda \Vert \beta \Vert_1.\]
-If $\lambda = 0$, then we get the maximum likelihood problem. For $\lambda > 0$, we get a regularized maximum likelihood problem. The use of the $1$-norm induces sparsity. That is if $\hat{\beta}_\lambda$ is the solution to the LASSO problem, then we would expect $\hat{\beta}_\lambda$ to have many zero entries. A sparse $\hat{\beta}_\lambda$ corresponds to a sub-model since we can drop the columns of $X$ corresponding to zero values of $\hat{\beta}_\lambda$. The parameter $\lambda$ can be chosen via cross-validation as in Section~\ref{sec:CVmodelSelection}. 
+If $\lambda = 0$, then we get the maximum likelihood problem. For $\lambda > 0$, we get a regularized maximum likelihood problem. The use of the $1$-norm induces sparsity. That is if $\hat{\beta}_\lambda$ is the solution to the LASSO problem, then we would expect $\hat{\beta}_\lambda$ to have many zero entries. A sparse $\hat{\beta}_\lambda$ corresponds to a sub-model since we can drop the columns of $X$ corresponding to zero values of $\hat{\beta}_\lambda$. The parameter $\lambda$ can be chosen via cross-validation as in Section~\ref{sec:CVmodelSelection}. Alternatively, $\lambda$ can be tuned to give a desired level of sparsity. For example, a question may ask for a model which uses 10 features. You could then start with a large value of $\lambda$ and decrease $\lambda$ until you have exactly ten non-zero components.
 
 Compared to AIC or BIC, one advantage of the LASSO is that we do not have to do as many model fits. We only have one parameter $\lambda$. If we wanted to use AIC or BIC to select the best model sub-model, we would have to do $2^p$ model fits. 
 
