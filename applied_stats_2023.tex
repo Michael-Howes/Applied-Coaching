@@ -22,8 +22,36 @@
 \usepackage{color}
 \usepackage{tikz}
 \usepackage{float}
+\usepackage{graphicx}
+\usepackage{fancyvrb}
 \usepackage{listings}
-\usepackage{minted}
+\usepackage{bm}
+\usepackage{xcolor}
+
+\xdefinecolor{gray}{rgb}{0.4,0.4,0.4}
+\xdefinecolor{blue}{RGB}{58,95,205}% R's royalblue3; #3A5FCD
+
+\lstset{% setup listings
+	language=R,% set programming language
+	basicstyle=\ttfamily\small,% basic font style
+	keywordstyle=\color{blue},% keyword style
+        commentstyle=\color{gray},% comment style
+	numbersep=10pt,% space between line numbers and code
+	tabsize=3,% sizes of tabs
+	showstringspaces=false,% do not replace spaces in strings by a certain character
+	captionpos=b,% positioning of the caption below
+        breaklines=true,% automatic line breaking
+        escapeinside={(*}{*)},% escaping to LaTeX
+        fancyvrb=true,% verbatim code is typset by listings
+        extendedchars=false,% prohibit extended chars (chars of codes 128--255)
+        literate={"}{{\texttt{"}}}1{<-}{{$\bm\leftarrow$}}1{<<-}{{$\bm\twoheadleftarrow$}}1
+        {~}{{$\bm\sim$}}1{<=}{{$\bm\le$}}1{>=}{{$\bm\ge$}}1{!=}{{$\bm\neq$}}1{^}{{$^{\bm\wedge}$}}1,% item to replace, text, length of chars
+        alsoletter={.<-},% becomes a letter
+        alsoother={$},% becomes other
+        otherkeywords={!=, ~, $, \&, \%/\%, \%*\%, \%\%, <-, <<-, /},% other keywords
+        deletekeywords={c}% remove keywords
+}
+
 
 
 
@@ -89,36 +117,36 @@
 \newpage
 
 % % Topics
-\include{topics/schedule.tex}
-\newpage
-\include{topics/overview.tex}
-\newpage 
-\include{topics/linear_models.tex}
-\newpage 
-\include{topics/glms.tex}
-\newpage 
-\include{topics/bootstrap.tex}
-\newpage
-\include{topics/EM.tex}
-\newpage
-\include{topics/cross_validation.tex}
-\newpage 
-\include{topics/linear_model_extra.tex}
-\newpage 
-\include{topics/bayesian_models.tex}
-\newpage
-\include{topics/cavi.tex}
-\newpage 
-\include{topics/PCA.tex}
-\newpage
-\include{topics/survival_analysis.tex}
-\newpage 
-\include{topics/optimization.tex}
-\newpage 
-\include{topics/linear_algebra.tex}
-\newpage
-\include{topics/deviance}
-\newpage
+% \include{topics/schedule.tex}
+% \newpage
+% \include{topics/overview.tex}
+% \newpage 
+% \include{topics/linear_models.tex}
+% \newpage 
+% \include{topics/glms.tex}
+% \newpage 
+% \include{topics/bootstrap.tex}
+% \newpage
+% \include{topics/EM.tex}
+% \newpage
+% \include{topics/cross_validation.tex}
+% \newpage 
+% \include{topics/linear_model_extra.tex}
+% \newpage 
+% \include{topics/bayesian_models.tex}
+% \newpage
+% \include{topics/cavi.tex}
+% \newpage 
+% \include{topics/PCA.tex}
+% \newpage
+% \include{topics/survival_analysis.tex}
+% \newpage 
+% \include{topics/optimization.tex}
+% \newpage 
+% \include{topics/linear_algebra.tex}
+% \newpage
+% \include{topics/deviance}
+% \newpage
 
 % Solutions
 \include{solutions/applied_2011.tex}

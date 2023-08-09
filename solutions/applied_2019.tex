@@ -17,23 +17,23 @@ We now set this problem up in survival analysis notation: Let $\delta_i \in \cb{
 After this minor preprocessing, our data consists of $(O_i, \delta_i, W_i, X_i), \; i=1,\dotsc,40$ and we seek to test whether the new drug increased the survival time. Let us further arrange this data in a \texttt{data.frame} with columns: 
 $$\texttt{Time, Status, Treatment, Age, Sex, BMI}.$$ 
 A very standard analysis here to test the null hypothesis of no treatment effect (i.e., equal survival curves for treated and untreated) is the log-rank test, which can be called in `R` as follows
-\begin{minted}{R}
+\begin{lstlisting}
 library(survival)
 survdiff(Surv(Time, Status) ~ Treatment, data=data)
-\end{minted}
+\end{lstlisting}
 The result above does not directly give an answer about directionality. However, one can check directionality by checking whether \texttt{Observed - Expected} is $<0$ for the treated group (and standard modifications to implement a directional test).
 
 There are a few aspects worth mentioning here: under the randomization, the log-rank test is valid (as long as we have $i.i.d.$ samples) without further assumptions. However, it is most powerful under alternatives that satisfy the proportional hazards assumption. And indeed, the log-rank test is the same as the Score test in the following Cox proportional hazards model:
-\begin{minted}{R}
+\begin{lstlisting}
 coxph_fit <- coxph(Surv(Time, Status) ~ Treatment, data=data)
 summary(coxph_fit)
-\end{minted} 
+\end{lstlisting} 
 Note that so far we have ignored the covariates $X_i$; and indeed this is commonly done in the analysis of randomized trials. With the Cox proportional hazards model, we could however include the covariates:
 
-\begin{minted}{R}
+\begin{lstlisting}
 coxph_cov_fit <- coxph(Surv(Time, Status) ~ Treatment + Age + Sex + BMI, data=data)
 summary(coxph_cov_fit)
-\end{minted} 
+\end{lstlisting} 
 In this case, instead of inspecting the score-test p-value, we would inspect the p-value/confidence interval corresponding to the coefficient of $W_i$ (treatment); a negative coefficient provides evidence that the survival time is longer with the new drug. Note that in the above model, we assume that the hazard rate at time $t$ of an individual with treatment status $w_i$ and covariates $x_i$ is equal to
 $$ h(t; w,x) = h_0(t)\cdot \exp( \alpha \cdot w + \beta^\top x), $$
 where $h_0(\cdot)$ is an unspecified baseline hazard function. The interpretation of coefficients needs to take account of this model.
@@ -172,7 +172,7 @@ Putting everything together,
 \end{figure}
 
 \scriptsize
-\begin{minted}{R}
+\begin{lstlisting}
 
 library(tidyverse)
 
@@ -203,7 +203,7 @@ ggplot(plot_df, aes(x=theta, y=density, col=distribution, linetype=distribution)
        theme_bw() +
        facet_grid(.~pi) +
        theme(legend.title=element_blank())
-\end{minted}
+\end{lstlisting}
 \normalsize
 
 \item This problem asks for an explicit expression of the mode of $\theta \mid \bar{y}$. It is just the $\argmax$ of the density in~\eqref{eq:bary_posterior}, which is easy to compute numerically. I do not think there is an analytic solution to the mode; indeed as per the figure above we see that the posterior could be bimodal as well. Here are a few things we can say (which we can verify e.g., by taking the derivative of the objective): the mode(s) must lie in $(\tilde{\mu}_2, \tilde{\mu}_1) = (-6.5/14, 1.5/14)$. Furthermore, as $\pi \to 0$, the mode converges to $1.5/14$ (I believe the answer the question writer was going for was $1.5/14$ and they meant to ask for an approximation of the posterior mode when $\pi$ is small). If you enjoy these kinds of calculations, also see~\citet{behboodian1970modes}.

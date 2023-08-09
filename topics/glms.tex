@@ -166,30 +166,30 @@ Interpreting interaction affects in GLMs is even harder. See \cite{rohrer_arslan
 \subsection{R code}
 
 In \verb|R| you can fit a GLM with the call,
-\begin{minted}{R}
+\begin{lstlisting}
     glm(Y ~ X, family = *, weights = *)
-\end{minted}
+\end{lstlisting}
 where \verb|Y| is your response vector and \verb|X| is your feature matrix. For example,
 \begin{itemize}
     \item {\bf Linear regression} Although you should use \verb|lm| for linear regression, you can use \verb|glm|,
-\begin{minted}{R} 
+\begin{lstlisting} 
     glm(Y ~ X, family = gaussian(link = "identity")) 
-\end{minted}
+\end{lstlisting}
     \item {\bf Logistic regression} If \verb|Y_i| is a binary vector, then function call is
-\begin{minted}{R} 
+\begin{lstlisting} 
     glm(Y ~ X, family = binomial(link = "logit")) 
-\end{minted}
+\end{lstlisting}
     You can also fit a logistic model to binomial data. Consider the model,
     \[Y_i \sim \mathrm{Bin}(n_i, \mu_i); \quad \eta_i = \logit(\mu_i) = X_i^\top \beta, \]
     where $n_i$ are known constants. This is equivalent to an ``unfolded'' logistic model where you turn each $Y_i$ into $n_i$ $0/1$ valued observations with the same features $X_i$. The function \verb|glm| can handle binomial data directly. If \verb|n| is a vector of the counts $n_i$, then you can use either of the following commands,
-\begin{minted}{R}
+\begin{lstlisting}
     glm(Y/n ~ X, family = binomial(link = "logit"), weights = n)
     glm(cbind(Y,n-Y) ~ X, family = binomial(link = "logit"))
-\end{minted}
+\end{lstlisting}
 \item {\bf Poisson regression} Use the command,
-\begin{minted}{R}
+\begin{lstlisting}
     glm(Y ~ X, family = poisson(link = "log"))
-\end{minted}
+\end{lstlisting}
 \end{itemize}
 
 \subsection{Offsets}
@@ -201,9 +201,9 @@ Sometimes you'd want to fit a model of the form,
 where $\beta \in \reals^p$ are unknown parameters but $\alpha \in \reals^n$ are known. This is a GLM with \emph{offsets} $\alpha$. This occurs in Lindsey's method which uses a Poisson GLM to do density estimation. For another example, $Y_i$ could be the number of tweets posted by a user in a time period of length $t_i$. If we have user features $X_i$, then we could use a Poisson regression model $Y_i \sim \mathrm{Pois}(\mu_i);$ $\log(\mu_i) = X_i^\top \beta$. But this ignores the fact that we observed some users for longer periods than others. A better model would be $Y_i \sim \mathrm{Pois}(t_i\mu_i);$ $\log(\mu_i) = X_i^\top \beta$. Now we can interpret $\mu_i$ as the expected number of tweets per unit time-period which is standardized across users. This is a GLM with offsets $\alpha_i = \log(t_i)$. 
 \[Y_i \simind \mathrm{Pois}(\mu_i); \quad \eta_i = \log(\mu_i) = \log(t_i) + X_i^\top\beta. \]
 The \verb|R| code for such a model takes the form,
-\begin{minted}{R}
+\begin{lstlisting}
     glm(Y ~ X, family = *, offset = a)
-\end{minted}
+\end{lstlisting}
 A similar but more serious example is in the analysis of RNA-sequencing datasets~\citet{love2014moderated}. In such datasets, one can model the expected number of counts of gene $i$ in sample $j$ by $\mu_{ij} = s_j \cdot \exp(X_j^\top \beta)$, where $X_{j}$ are features of that samples and $s_j$ is a normalization constant, which accounts for differences in sequencing depth between samples. The value $s_j$ is assumed to be known (estimated outside the GLM framework) and then $\log(s_j)$ is used as an offset (in a GLM with a $\log$ link function).
 
 
@@ -224,9 +224,9 @@ where $\mathbf{1}[E]$ is an indicator function and $Z_i$ are unobserved latent v
 \[\hat{\phi} = \frac{1}{n-p} \sum_{i=1}^n \frac{(Y-\hat{\mu}_i)^2}{W(X_i^\top \hat{\beta})}. \]
 We then scale the estimated covariance matrix for $\hat{\beta}$ by $\hat{\phi}$. In R, you can fit this type of model with the command `quasi'.
 
-\begin{minted}{R}
+\begin{lstlisting}
     glm(Y ~ X, family = quasibinomial(link = "logit"))
     glm(Y ~ X, family = quasipoisson(link = "log"))
-\end{minted}
+\end{lstlisting}
 
 While these quasi-models are an option, I think that the sandwich estimator or the bootstrap give a better, more systematic approach to handle departures from the model. 

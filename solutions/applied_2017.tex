@@ -98,15 +98,15 @@ We are not told whether we should do a one-sided or two-sided test. By default o
 
 Let us do one-sided tests: Then, the smallest p-value would correspond to the receptor that measured $X_i=20$ photons. The p-value is:
 $$P_i = \PP{\text{Poisson}(10) \geq 20} = 1-0.9965 = 0.0035$$
-Since we are testing $100$ hypotheses, however, we need to apply a multiple testing correction. With a Bonferroni correction at $\alpha=0.05$ we would for example only reject hypotheses with $P_i \leq 5 \cdot 10^{-4}$, and so indeed we would not reject anything and report back to the investigators that no receptor ended up being significant. Unfortunately, other corrections, such as Benjamini-Hochberg, also would lead to no significant results at the 0.05 level, see R code below:
+Since we are testing $100$ hypotheses, however, we need to apply a multiple testing correction. With a Bonferroni correction at $\alpha=0.05$ we would for example only reject hypotheses with $P_i \leq 5 \cdot 10^{-4}$, and so indeed we would not reject anything and report back to the investigators that no receptor ended up being significant. Unfortunately, other corrections, such as Benjamini--Hochberg, also would lead to no significant results at the 0.05 level, see R code below:
 
-\begin{minted}{R}
+\begin{lstlisting}
 Xs <- seq(0,20)
 Ns <- c(0,0,1,0,3,2,9,7,11,11,8,8,13,7,5,5,2,3,1,3,1)
 pvals <- rep(1 - ppois(1:21 - 1, 10, Ns[1:21]))
 adjusted_pvals <- p.adjust(pvals, method="BH")
 min(adjusted_pvals) #0.08635855
-\end{minted}
+\end{lstlisting}
 
 
 

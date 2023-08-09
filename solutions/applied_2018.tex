@@ -19,11 +19,11 @@ Key ideas/tools:
   \end{enumerate}
 
   Our setting fits into this framework, taking the exponential family to be the binomial distribution and the link function $g$ to be the log function. We simply need to specify to \texttt{R} how to fit this model. We can fit it as follows:
-  \begin{minted}{R}
+  \begin{lstlisting}
    glm_fit <- glm( (X$Deaths / X$Clients) ~ 1 + X$Age, 
                     family=binomial(link = "log"), 
                     weights = X$Clients)
-  \end{minted}
+  \end{lstlisting}
 
 \item
   We can form the estimate as 
@@ -32,9 +32,9 @@ Key ideas/tools:
   \end{equation*}
   If any of the estimated probabilities are negative, which is possible with the functional form of our model, we should set them to 0. Note that we can extract the probabilities $e^{\hat{\beta}_0 + \hat{\beta}_1 a}$ manually, or by calling:
 
-\begin{minted}{R}
+\begin{lstlisting}
 preds <- predict(glm_fit, type="response")
-\end{minted}
+\end{lstlisting}
 
 \end{enumerate}
 

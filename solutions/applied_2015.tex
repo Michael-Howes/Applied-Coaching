@@ -168,12 +168,12 @@ Once we get the estimated $\hat{p}_j$, we can use them in the same survival form
 \[s^{\text{quad}}_i = \prod_{j=60}^{i-1}(1-\hat{p}_j).\]
 
 To implement this in R, one could use the glm function. In particular, suppose each of the first three columns in the table is stored as a vector in R.
-\begin{minted}{R}
-ageSquared <-age^2
+\begin{lstlisting}
+ageSquared <- age^2
 quadFit <- glm(cbind(deaths,number-deaths) ~ age+ageSquared, 
 			   family = binomial)
 SurvQuad <- cumprod(1-quadFit$fitted.values)
-\end{minted}
+\end{lstlisting}
 
 Unfortunately, you will not be able to double check on the exam that this is what the second actuary did to compute the column titled SurvQuad, because you will not have access to R. That being said, this is a reasonable guess based on the problem description and the fact that this actuary has training in GLMs and computed a ``quadratically smoothed curve". 
 \end{itemize}

@@ -14,7 +14,7 @@ jobs:
       - name: Set up Git repository
         uses: actions/checkout@v3
 
-      - name: Build Winter/310B
+      - name: Build notes
         uses: cvxgrp/.github/actions/latex@main
         with:
           paper: applied_stats_2023.tex

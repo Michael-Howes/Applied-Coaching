@@ -74,9 +74,9 @@ We can fit a GLM to get the MLE $\hat{\theta}$ of $\theta$. This gives the follo
 \end{align*}
 Standard GLM theory gives the limiting distribution of $\hat{\theta}$. You can then use the delta method to get asymptotic standard deviations for $\hat{h}(t)$ and $\hat{S}(t)$. Here is code to fit such a model in \verb|R|,
 
-\begin{minted}{R} 
+\begin{lstlisting} 
     glm(Y/n ~ Phi, family = binomial(link = "logit"), weights = n) 
-\end{minted}
+\end{lstlisting}
 
 Both the Kaplan--Meier estimate and the parametric GLM estimate come up in Question 6 on the 2015 qualifying exam. A parametric modelling question also comes up in Question 1 on the 2018 qualifying exam. There a log link is used instead of a logistic link.
 
@@ -161,15 +161,15 @@ where
 and
 \[ V_i(\beta) = \sum_{k \in R(t_i)}\pi_k(\beta \mid R(T_i))(X_k - m_i(\beta))(X_k - m_i(\beta))^\top.\]
 The \verb|R| package \verb|survival| is a standard tool for fitting proportional hazards models. Here is code that use this package
-\begin{minted}{R}
+\begin{lstlisting}
     S <- Surv(O, delta)
     coxph(S ~ X)
-\end{minted}
+\end{lstlisting}
 You can also use \verb|glm| style notation,
-\begin{minted}{R}
+\begin{lstlisting}
     S <- Surv(O, delta)
     coxph(S ~ X1 + X2 + X3)
-\end{minted}
+\end{lstlisting}
 Intercepts are not fitted in proportional hazards models. The unknown baseline hazard makes intercepts unidentifiable.
 
 
