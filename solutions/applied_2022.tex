@@ -111,7 +111,30 @@ Key ideas:
 \end{enumerate}
 
 \subsection*{Question 3: Financial Data Science}
+Key ideas
+\begin{itemize}
+    \item General knowledge about supervised learning algorithms.
+    \item The dangers of using cross-validation on non i.i.d. data.
+\end{itemize}
+\begin{enumerate}[label = (\alph*)]
+    \item We are asked to describe the strengths of four different supervised learning algorithms for predicting stock returns. These are ridge regression, lasso and elastic net, random forests and gradient boosting.  The goal here should be to just say something for each method. It doesn't have to be very formal or precise. 
+    \begin{itemize}
+        \item \textbf{Ridge regression} is good at combining many signals across different predictors. Ridge regression can combine weak signals from different predictors to give a strong signal.
+        \item \textbf{Lasso and elastic net} is good for feature selection. If we expect that only a few predictors are important for predicting stock returns, then lasso or elastic net would be a good choice since they induce sparsity.
+        \item \textbf{Random forests} are non-linear models, and so they are more flexible than the previous two. Random forests are more interpretable and easier to tune than other non-linear models like neural networks.
+        \item \textbf{Gradient boosting} is also a non-linear model and hence flexible. Gradient boosting is sequential algorithm, and we can use cross-validation to tune the number of steps used.
+    \end{itemize}
+    \item We are asked to list any other predictors that would be useful for predicting daily stock returns. Temporal data such as day of the week or month of the year may be helpful. Previous daily stock returns could also be used as a feature. The age of company could also be a useful predictor.
+    
+    We could also try transforming some of our predictors. For example, we could use log-profits instead of profits or add interactions between sector and company size. It might also be worth-while to transform the response variable. This would be more important if we use a linear model like ridge regression or lasso/elastic net. 
+    \item It is not surprising that the test error is much higher than the cross-validation error. This is because our data is temporally correlated. When doing cross-validation we have ignored the temporal dependency. Each data point in the held-out fold will contain points in the other folds that are close in time. On the other hand, the test data contains data from different years to the training data. This means it is much easier to make predictions on the held-out fold than on the test data. As a result, our cross-validation estimate of the test error is biased downwards.
 
+    There is also a second, less severe, problem. The cross-validation procedure was used for model selection not to estimate the test error directly. The estimate of test error is again likely to be downward biased for the test error since we have specifically chosen a model with low CV-error.
+    \item We need to use a cross-validation process that respects the temporal dependency. A simple way to do this is by ``blocking'' our data. We could drop data into groups of 1-year or 6-months. Then we should create our CV-folds by choosing groups of data points instead of individual data points. This will ensure that the held-out folds do not contain data points that are close in time to data points in the training folds. This procedure will lead to choosing a different model which hopefully performs better on the training data. 
+
+    The suggestion above does not address the second concern and there may again be some downward bias for selection. In this case, it is not particular important. Since we have a separate test data set, we can just use the test data to estimate the test error from deploying the model. If we want to use all the data from 2010-2019 to train our model and get an estimate of the test error, then we could do nested cross-validation. Again the folds in the nested cross-validation should be based on choosing groups of data points from the same time period not on choosing data points individually.
+    \item The out-of-bag error in a random forest is an estimate of test error that is ``almost identical to that obtained by $N$-fold cross-validation'' (Section~15.3 of \citep*{hastie2009elements}). We would therefor expect the out-of-bag error to be higher than the test error for the same reasons discussed in part (c).
+\end{enumerate}
 
 
 \subsection*{Question 4: Infectious Disease Survival Times}
@@ -191,6 +214,13 @@ Key ideas:
 \end{enumerate}
 
 \subsection*{Question 5: EM for a mixture of Student-t distributions}
+
+Key ideas
+\begin{itemize}
+    \item Latent variable models.
+    \item The EM algorithm.
+\end{itemize}
+
 \begin{enumerate}[label = (\alph*)]
     \item Consider the following augmented model. Independently for $1 \le n \le N$,
     \begin{align*}
@@ -357,6 +387,96 @@ Which has the first order condition
 \[\left(\log(v_k^\star)+1 -\psi(v_k^\star)\right)A_k + B_k = 0 \]
 So
 \[\log(v_k^\star) - \psi(v_k^\star) = -\frac{A_k+B_k}{A_k}. \]
-A plot in Mathematic shows that $v \mapsto \log(v) - \psi(v)$ is strictly decreasing and so the above equation has a unique solution $v_k^\star$. This means that, with a bit of work, we can implement a full EM algorithm for all the parameters $\bm{\theta}$. 
+A plot in Mathematic shows that $v \mapsto \log(v) - \psi(v)$ is strictly decreasing and so the above equation has a unique solution $v_k^\star$. This means that, with a bit of work, we can implement a full EM algorithm for all the parameters $\bm{\theta}$. An imperfect implementation is available here \url{https://github.com/Michael-Howes/Applied-Coaching/blob/main/Code/student_mixture.ipynb}.
 
 \subsection*{Question 6: Principal component regression with $\ell_1$-penalties}
+
+Key ideas:
+\begin{itemize}
+    \item The role of the SVD in least squares regression and ridge regression.
+    \item Reducing a multi-parameter optimization problem into several one0dimensional problems.
+    \item $\ell_1$-penalties inducing sparsity.
+\end{itemize}
+
+\begin{enumerate}[label = (\alph*)]
+    \item The function,
+    \[S_\lambda(t) := \argmin_{s \in \reals} \left\{\frac{1}{2}(s-t)^2 + \lambda |s|\right\}, \]
+    is the \emph{soft-threshold} function. It is given by,
+    \[S_\lambda(t) = \begin{cases}
+        t+\lambda &\text{if } t <-\lambda,\\
+        0 & \text{if } -\lambda \le t \le \lambda, \\
+        t-\lambda & \text{if } t  > \lambda.
+    \end{cases} \] 
+    In convex optimization it is called the \emph{proximal function} for the absolute value function $|\cdot|$. On the qualifying exam, you are not asked to derive the above expression for $S_\lambda(t)$, but we will go through a derivation here.
+
+    Define $f_t(s) = \frac{1}{2}(s-t)^2 + \lambda |s|$. Note that,
+    \[f_t(s) = \begin{cases}
+        \frac{1}{2}(s-t)^2 - \lambda s & \text{if } s \le 0,\\
+        \frac{1}{2}(s-t)^2 + \lambda s & \text{if } s > 0.
+    \end{cases} \]
+    The above function is convex as it is the maximum of two convex functions. We'll now consider different cases. 
+    
+    If $t < -\lambda$, then $s^\star := t+\lambda < 0$. For $s<0$, $f_t(s)$ is differentiable with derivate $s-t - \lambda$. Thus, $s^\star = t+\lambda<0$ solves the first order conditions and is a minimizer of $f_t(s)$.
+
+    Likewise, if $t>\lambda$, the $s^\star := t-\lambda > 0$. For $s>0$, $f_t(s)$ is differentiable with derivate $s-t+\lambda$. Thus, $s^\star = t-\lambda >0$ is a minimizer of $f_t(s)$. 
+
+    Finally, if $-\lambda \le t \le \lambda$, then the first order conditions have no stationary points and so the minimizer must be where $f_t(s)$ is non-differentiable. That is, $s^\star = 0$.
+    \item We are asked to find,
+    \[\widehat{\beta}_\lambda := \argmin_{b \in \reals^d}\left\{\frac{1}{2}\Vert Xb - y \Vert_2^2 + \sum_{j=1}^d \lambda_j |v_j^\top b |\right\}, \]
+    where $V = [v_1, \ldots, v_d] \in \reals^{d \times d}$ are the right singular vectors of $X$. Specifically we are given,
+    \[X = U\Gamma V^\top, \]
+    where
+    \begin{itemize}
+        \item $U =[u_1,\ldots, u_d]\in \reals^{n \times d}$ with $U^\top U = I_{d}$.
+        \item $\Gamma$ is a $d \times d$ diagonal matrix of singular values $\Gamma=\diag(\gamma_1,\ldots,\gamma_d)$ with $\gamma_1 \ge \cdots \ge \gamma_d > 0$.
+        \item $V = [v_1, \ldots, v_d] \in \reals^{d \times d}$ satisfies $V^\top V =VV^\top = I_d$. 
+    \end{itemize}
+    For all $b \in \reals^d$, we have
+    \begin{align*}
+        Xb - Y &= U\Gamma V^\top b - Y\\
+        &=U\Gamma V^\top b - UU^\top Y - (I-UU^\top)Y\\
+        &=U(\Gamma V^\top b - U^\top Y) - (I-UU^\top)Y.
+    \end{align*}
+    Note that
+    \[U^\top(I-UU^\top) =U^\top - U^\top = 0,  \]
+    and
+    \[(I-UU^\top)U = U-U=0.\]
+    The vectors $U(\Gamma V^\top b-U^\top Y) \in \reals^n$ and $(I-UU^\top)Y \in \reals^n$ are therefor orthogonal to each other. Thus,
+    \begin{align*}\Vert Xb - Y \Vert_2^2 = \Vert U(\Gamma V^\top b - U^\top Y) - (I-UU^\top)Y\Vert_2^2 = \Vert U(\Gamma V^\top b - U^\top Y)\Vert_2^2 + \Vert (I-UU^\top)Y\Vert_2^2.
+    \end{align*}
+    Since the second term does not depend on $b$, we can conclude that $\widehat{\beta}_\lambda$ solves
+    \[\widehat{\beta}_\lambda = \argmin_{b \in \reals^n}\left\{\frac{1}{2}\Vert U (\Gamma V^\top b - U^\top Y)\Vert_2^2 + \sum_{j=1}^d \lambda_j |v_j^\top b|\right\}. \]
+    Since $U^\top U = I_d$, we have that $\Vert Ux\Vert_2^2 = \Vert x \Vert_2^2$ for all $x \in \reals^d$. Thus,
+    \begin{align*}
+        \Vert U (\Gamma V^\top b - U^\top Y)\Vert_2^2 &= \Vert \Gamma V^\top b - U^\top Y \Vert_2^2.
+    \end{align*}
+    Let $c = V^\top b \in \reals^d$ so that $c_j = v_j^\top b$. Since $b = Vc$, we have that $\hat{\beta}_\lambda$ satisfies,
+    \begin{align*}
+        \widehat{\beta}_\lambda &= Vc^\star,\\
+        \text{where } c^\star &= \argmin_{c \in \reals^d} \left\{\Vert \Gamma c - U^\top Y \Vert_2^2 + \sum_{j=1}^d \lambda_j |c_j| \right\}. 
+    \end{align*}
+    Since $\Gamma$ is diagonal we have that,
+    \begin{align*}
+        \Vert \Gamma c - U^\top Y \Vert_2^2 + \sum_{j=1}^d \lambda_j |c_j|&=\sum_{j=1}^d \left(\gamma_j c_j - u_j^\top Y\right)^2 + \sum_{j=1}^d \lambda_j |c_j|\\
+        &=\sum_{j=1}^d \left(\gamma_j c_j - u_j^\top Y\right)^2 + \lambda_j |c_j|\\
+        &=\sum_{j=1}^d \gamma_j^2\left[\left(c_j - \frac{u_j^\top Y}{\gamma_j}\right)^2 + \frac{\lambda_j}{\gamma_j^2} |c_j|\right].
+    \end{align*}
+    The objective function for $c$ is therefor separable over the coordinates $c_j$. We can thus calculate $c^\star$ by solving $p$ one-dimensional optimization problems. Specifically,
+    \begin{align*}
+        c_j^\star &=\argmin_{c_j} \left\{\gamma_j^2\left[\left(c_j - \frac{u_j^\top Y}{\gamma_j}\right)^2 + \frac{\lambda_j}{\gamma_j^2} |c_j|\right]\right\} \\
+        &=\argmin_{c_j}\left\{\left(c_j - \frac{u_j^\top Y}{\gamma_j}\right)^2 + \frac{\lambda_j}{\gamma_j^2}  |c_j|\right\}\\
+        &= S_{\frac{\lambda_j}{\gamma_j^2}}\left(\frac{u_j^\top Y}{\gamma_j}\right)
+    \end{align*} 
+    where $S_\lambda(t)$ is the soft-threshold function as in part (a). It follows that,
+    \[\widehat{\beta}_\lambda =Vc^\star = \sum_{j=1}^d  S_{\frac{\lambda_j}{\gamma_j^2}}\left(\frac{u_j^\top Y}{\gamma_j}\right) v_j \]
+    \item We now assume that $\gamma_j=1$ for all $j$. We know that $\widehat{\beta}_{\mathrm{ridge}}$ can also be described in terms of the SVD of $X$. Specifically, in the special case when $\gamma_j=1$ for all $j$
+    \[\widehat{\beta}_{\mathrm{ridge}} = \sum_{j=1}^d \frac{1}{1+\lambda_{\mathrm{ridge}}} u_j^\top Y v_j. \] 
+    And, from part (b),
+    \[\widehat{\beta}_\lambda = \sum_{j=1}^d  S_{\lambda_j}\left(u_j^\top Y\right) v_j\]
+    We see that when written in the basis $v_1,\ldots,v_d$, the ridge coefficients and principal-components $\ell_1$-regularized are both shrunk version of the OLS coefficients $a_j = u_j^\top Y$. Specifically, 
+    \begin{itemize}
+        \item Ridge coefficients: $\frac{1}{1+\lambda_{\mathrm{ridge}}} a_j$.
+        \item $\ell_1$-regularized components: $S_{\lambda_j}(a_j)$.
+    \end{itemize}
+    The performance of these two estimators will depend on the expansion of the true parameter vector $\beta$ in the basis $v_1,\ldots,v_d$. If when we write $\beta = \sum_{j=1}^d b_jv_j$, many of the $b_j$'s are zero. Then we will expect the $\ell_1$-regularized estimator to perform better. This is because the soft threshold function $S_{\lambda_j}(a_j)$ will set some coefficients equal to zero. On the other the ridge shrinkage simply scales each $a_j$ by a constant amount. 
+\end{enumerate}
