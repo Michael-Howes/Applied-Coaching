@@ -17,5 +17,5 @@ jobs:
       - name: Build Winter/310B
         uses: cvxgrp/.github/actions/latex@main
         with:
-          paper: 'applied stats (2023).tex'
+          paper: applied_stats_2023.tex
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
