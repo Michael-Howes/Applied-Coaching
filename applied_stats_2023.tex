@@ -41,11 +41,8 @@
 	showstringspaces=false,% do not replace spaces in strings by a certain character
 	captionpos=b,% positioning of the caption below
         breaklines=true,% automatic line breaking
-        escapeinside={(*}{*)},% escaping to LaTeX
         fancyvrb=true,% verbatim code is typset by listings
         extendedchars=false,% prohibit extended chars (chars of codes 128--255)
-        literate={"}{{\texttt{"}}}1{<-}{{$\bm\leftarrow$}}1{<<-}{{$\bm\twoheadleftarrow$}}1
-        {~}{{$\bm\sim$}}1{<=}{{$\bm\le$}}1{>=}{{$\bm\ge$}}1{!=}{{$\bm\neq$}}1{^}{{$^{\bm\wedge}$}}1,% item to replace, text, length of chars
         alsoletter={.<-},% becomes a letter
         alsoother={$},% becomes other
         otherkeywords={!=, ~, $, \&, \%/\%, \%*\%, \%\%, <-, <<-, /},% other keywords
@@ -116,37 +113,37 @@
 \tableofcontents
 \newpage
 
-% % Topics
-% \include{topics/schedule.tex}
-% \newpage
-% \include{topics/overview.tex}
-% \newpage 
-% \include{topics/linear_models.tex}
-% \newpage 
-% \include{topics/glms.tex}
-% \newpage 
-% \include{topics/bootstrap.tex}
-% \newpage
-% \include{topics/EM.tex}
-% \newpage
-% \include{topics/cross_validation.tex}
-% \newpage 
-% \include{topics/linear_model_extra.tex}
-% \newpage 
-% \include{topics/bayesian_models.tex}
-% \newpage
-% \include{topics/cavi.tex}
-% \newpage 
-% \include{topics/PCA.tex}
-% \newpage
-% \include{topics/survival_analysis.tex}
-% \newpage 
-% \include{topics/optimization.tex}
-% \newpage 
-% \include{topics/linear_algebra.tex}
-% \newpage
-% \include{topics/deviance}
-% \newpage
+% Topics
+\include{topics/schedule.tex}
+\newpage
+\include{topics/overview.tex}
+\newpage 
+\include{topics/linear_models.tex}
+\newpage 
+\include{topics/glms.tex}
+\newpage 
+\include{topics/bootstrap.tex}
+\newpage
+\include{topics/EM.tex}
+\newpage
+\include{topics/cross_validation.tex}
+\newpage 
+\include{topics/linear_model_extra.tex}
+\newpage 
+\include{topics/bayesian_models.tex}
+\newpage
+\include{topics/cavi.tex}
+\newpage 
+\include{topics/PCA.tex}
+\newpage
+\include{topics/survival_analysis.tex}
+\newpage 
+\include{topics/optimization.tex}
+\newpage 
+\include{topics/linear_algebra.tex}
+\newpage
+\include{topics/deviance}
+\newpage
 
 % Solutions
 \include{solutions/applied_2011.tex}

@@ -217,7 +217,7 @@ The description of EM given in the problem statement is quite bad. The expressio
 \[
 \hat{\pi}_j = \frac{ \sum_{i=1}^n \tau_{ij}}{\sum_{k=1}^K \sum_{i=1}^n \tau_{ik}} = \frac{ \sum_{i=1}^n \tau_{ij}}{n},
 \]
-where one easily checks that from the definitions we must have that $\sum_{j=1}^K \tau_{ij} = 1$ for all $i$. Optimizing $a_j$ and $b_j$ splits into $K$ standard weighted least squares problems. Let $T_j = \text{diag}(\tau_{1j},\dots,\tau_{nj})$ and let $X= \begin{bmatrix} \bm{1} & (X_i)_{i=1}^n \end{bmatrix}$. Then, we have that 
+where one easily checks that from the definitions we must have that $\sum_{j=1}^K \tau_{ij} = 1$ for all $i$. Optimizing $a_j$ and $b_j$ splits into $K$ standard weighted least squares problems. Let $T_j = \text{diag}(\tau_{1j},\dots,\tau_{nj})$ and let $X= \begin{bmatrix} \mathbf{1} & (X_i)_{i=1}^n \end{bmatrix}$. Then, we have that 
 \begin{align*}
 & \left( \begin{matrix}
  \hat{a}_j \\ \hat{b}_j

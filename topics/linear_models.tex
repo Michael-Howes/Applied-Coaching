@@ -42,7 +42,7 @@ In this section everything is done assuming $X$ is fixed and that $X$ has full r
 \begin{enumerate}
 \item The predictions are orthogonal to the residuals. In particular \[\hat{Y}^\top ( Y - \hat{Y} ) = (HY)^\top (I_n -H) Y = Y^\top H (I_n -H) Y =0.\]
 \item Each covariate (represented by a column of $X$) is orthogonal to the residuals. In particular, $$X^\top (Y- \hat{Y}) = X^\top (I_n -H) Y =0.$$
-\item If there is an intercept in the model (i.e. one of the columns of $X$ is equal to $\bm{1}$), then as a corollary to the previous point $\bm{1}^\top (Y-\hat{Y})$, meaning that the residuals sum to $0$.
+\item If there is an intercept in the model (i.e. one of the columns of $X$ is equal to $\mathbf{1}$), then as a corollary to the previous point $\mathbf{1}^\top (Y-\hat{Y})$, meaning that the residuals sum to $0$.
 \item Under the normal linear model, the joint distribution of $\hat{\beta}$ and $Y- \hat{Y}$ can be found by noting:
 \begin{align}\label{eq:est_resid_decomp}
 \begin{bmatrix} \hat{\beta} \\ Y - \hat{Y} \end{bmatrix} &= \begin{bmatrix} (X^\top  X)^{-1} X^\top  \\ I_n - H \end{bmatrix} Y\nonumber\\

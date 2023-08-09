@@ -9,66 +9,66 @@ Key ideas:
 \end{itemize}
 
 \begin{enumerate}[label=(\alph*)]
-    \item We are given that $\bm{X} \in \reals^{n \times p}$  is standardized so that the columns have mean zero and variance one. We are also given that $\bm{X} = \bm{UDV}^\top$ is the SVD of $\bm{X}$. Let $d_1 \ge d_2 \ge \cdots \ge d_p \ge 0$ be the diagonal entries of $\bm{D}$. The columns of $\bm{V}$ are thus the principal component directions and $\frac{1}{n} d_j^2 = \frac{1}{n}\Vert Xv_j \Vert_2^2$ is the variance of $X$ in the $j$th principal component direction. The cumulative percent variance explained sequence is thus,
+    \item We are given that $\mathbf{X} \in \reals^{n \times p}$  is standardized so that the columns have mean zero and variance one. We are also given that $\mathbf{X} = \mathbf{UDV}^\top$ is the SVD of $\mathbf{X}$. Let $d_1 \ge d_2 \ge \cdots \ge d_p \ge 0$ be the diagonal entries of $\mathbf{D}$. The columns of $\mathbf{V}$ are thus the principal component directions and $\frac{1}{n} d_j^2 = \frac{1}{n}\Vert Xv_j \Vert_2^2$ is the variance of $X$ in the $j$th principal component direction. The cumulative percent variance explained sequence is thus,
     \[\rho_k = 100 \times \frac{\sum_{s=1}^k \frac{1}{n}d_s^2}{\sum_{s=1}^p \frac{1}{n}d_s^2}  =100 \times \frac{\sum_{s=1}^k d_s^2}{\sum_{s=1}^p d_s^2} ,\]
     for $k=1,\ldots,p$.
-    \item We are given a response $\bm{y} \in \reals^n$ with mean zero and variance one. The fitted values are $\hat{\bm{y}}=\bm{X}\hat{\beta} \in \reals^n$. We know that the fitted values $\hat{\bm{y}}$ are orthogonal to the residuals $\bm{y}-\hat{\bm{y}}$. Thus,
-    \[\Vert \bm{y} \Vert_2^2 = \Vert \bm{y}-\hat{\bm{y}} + \hat{\bm{y}} \Vert_2^2 =\Vert \bm{y}-\hat{\bm{y}}\Vert_2^2 + \Vert \hat{\bm{y}} \Vert_2^2.  \]
+    \item We are given a response $\mathbf{y} \in \reals^n$ with mean zero and variance one. The fitted values are $\hat{\mathbf{y}}=\mathbf{X}\hat{\beta} \in \reals^n$. We know that the fitted values $\hat{\mathbf{y}}$ are orthogonal to the residuals $\mathbf{y}-\hat{\mathbf{y}}$. Thus,
+    \[\Vert \mathbf{y} \Vert_2^2 = \Vert \mathbf{y}-\hat{\mathbf{y}} + \hat{\mathbf{y}} \Vert_2^2 =\Vert \mathbf{y}-\hat{\mathbf{y}}\Vert_2^2 + \Vert \hat{\mathbf{y}} \Vert_2^2.  \]
     And so
     \[\frac{1}{n}\sum_{i=1}^n y_i^2 = \frac{1}{n}\sum_{i=1}^n(y_i-\hat{y}_i)^2 + \frac{1}{n}\sum_{i=1}^n \hat{y}_i^2. \]
-    Since $\bm{y}$ has mean zero and variance one, this implies that
+    Since $\mathbf{y}$ has mean zero and variance one, this implies that
     \[1 = \mathrm{MSE}_0 = \mathrm{MSE} + \mathrm{MSS}. \]
     And so,
     \[R^2 = 1-\frac{\mathrm{MSE}}{\mathrm{MSE}_0} = 1-\mathrm{MSE} = \mathrm{MSS}. \]
-    \item  We now regress the $j$th column of $\bm{X}$ on the first $k$ principal components of $\bm{X}$. Let $\bm{U}_k = [\bm{u}_1,\ldots,\bm{u}_k] \in \reals^{n \times k}$ be the matrix containing the first $k$ columns of $\bm{U}$. Since $\bm{U}_k^\top \bm{U}_k = \bm{I}_k$, the fitted values from regressing $\bm{x}_j$ on $\bm{U}_k$ are
-    \[\hat{\bm{x}}_j = \bm{U}_k(\bm{U}_k^\top \bm{U}_k)^{-1}\bm{U}_k^\top \bm{x}_j =  \bm{U}_k\bm{U}_k^\top \bm{x}_j.\]
+    \item  We now regress the $j$th column of $\mathbf{X}$ on the first $k$ principal components of $\mathbf{X}$. Let $\mathbf{U}_k = [\mathbf{u}_1,\ldots,\mathbf{u}_k] \in \reals^{n \times k}$ be the matrix containing the first $k$ columns of $\mathbf{U}$. Since $\mathbf{U}_k^\top \mathbf{U}_k = \mathbf{I}_k$, the fitted values from regressing $\mathbf{x}_j$ on $\mathbf{U}_k$ are
+    \[\hat{\mathbf{x}}_j = \mathbf{U}_k(\mathbf{U}_k^\top \mathbf{U}_k)^{-1}\mathbf{U}_k^\top \mathbf{x}_j =  \mathbf{U}_k\mathbf{U}_k^\top \mathbf{x}_j.\]
     The average regression sum of squares is thus,
     \begin{align*}
-        \mathrm{MSS}_j &=\frac{1}{n} \hat{\bm{x}}_j^\top \hat{\bm{x}}_j\\
-        &=\frac{1}{n} \bm{x}_j^\top \bm{U}_k\bm{U}_k^\top \bm{U}_k \bm{U}_k^\top \bm{x}_j\\
-        &=\frac{1}{n}\bm{x}_j^\top \bm{U}_k\bm{U}_k^\top \bm{x}_j.
+        \mathrm{MSS}_j &=\frac{1}{n} \hat{\mathbf{x}}_j^\top \hat{\mathbf{x}}_j\\
+        &=\frac{1}{n} \mathbf{x}_j^\top \mathbf{U}_k\mathbf{U}_k^\top \mathbf{U}_k \mathbf{U}_k^\top \mathbf{x}_j\\
+        &=\frac{1}{n}\mathbf{x}_j^\top \mathbf{U}_k\mathbf{U}_k^\top \mathbf{x}_j.
     \end{align*}
-    Since $\bm{x}_j$ is the $j$th column of $\bm{X}$ we $\bm{x}_j = \bm{X}\bm{e}_j$ where $\bm{e}_j \in \reals^p$ is the $j$th standard basis vector.
+    Since $\mathbf{x}_j$ is the $j$th column of $\mathbf{X}$ we $\mathbf{x}_j = \mathbf{X}\mathbf{e}_j$ where $\mathbf{e}_j \in \reals^p$ is the $j$th standard basis vector.
     \begin{align*}
-        \bm{U}_k^\top \bm{x}_j &= \bm{U}_k\bm{X}\bm{e}_j\\
-        &= \bm{U}_k^\top \bm{UDV}^\top \bm{e}_j.
+        \mathbf{U}_k^\top \mathbf{x}_j &= \mathbf{U}_k\mathbf{X}\mathbf{e}_j\\
+        &= \mathbf{U}_k^\top \mathbf{UDV}^\top \mathbf{e}_j.
     \end{align*}
-    We know that $\bm{U}_k^\top \bm{U} = [\bm{I}_k, \bm{0}_{k \times (p-k)}] \in \reals^{k \times p}$ where $\bm{0}_{k \times (p-k)}$ is a matrix of all zeros of size $k \times (p-k)$. It follows that 
+    We know that $\mathbf{U}_k^\top \mathbf{U} = [\mathbf{I}_k, \mathbf{0}_{k \times (p-k)}] \in \reals^{k \times p}$ where $\mathbf{0}_{k \times (p-k)}$ is a matrix of all zeros of size $k \times (p-k)$. It follows that 
     \begin{align*}
-        \bm{U}_k^\top \bm{U}\bm{D}\bm{V}^\top &= [\bm{I}_k, \bm{0}_{k \times (p-k)}]\bm{D}\bm{V}^\top\\
-        &=\bm{D}_k\bm{V}_k^\top,
+        \mathbf{U}_k^\top \mathbf{U}\mathbf{D}\mathbf{V}^\top &= [\mathbf{I}_k, \mathbf{0}_{k \times (p-k)}]\mathbf{D}\mathbf{V}^\top\\
+        &=\mathbf{D}_k\mathbf{V}_k^\top,
     \end{align*}
-    where $\bm{D}_k = \mathrm{diag}(d_1,\ldots, d_k) \in \reals^{k \times k}$ and $\bm{V}_k \in \reals^{p \times k}$ is equal to the first $k$ rows of $\bm{V}$. Thus,
+    where $\mathbf{D}_k = \mathrm{diag}(d_1,\ldots, d_k) \in \reals^{k \times k}$ and $\mathbf{V}_k \in \reals^{p \times k}$ is equal to the first $k$ rows of $\mathbf{V}$. Thus,
     \begin{align*}
-        \bm{U}_k^\top \hat{\bm{x}}_j&=  \bm{D}_k \bm{V}_k^\top \bm{e}_j\\
-        &=\sum_{s=1}^k d_s \left(\bm{v}_s^\top \bm{e}_j\right)\bm{e}_s\\
-        &=\sum_{s=1}^k d_s v_{sj}\bm{e}_s
+        \mathbf{U}_k^\top \hat{\mathbf{x}}_j&=  \mathbf{D}_k \mathbf{V}_k^\top \mathbf{e}_j\\
+        &=\sum_{s=1}^k d_s \left(\mathbf{v}_s^\top \mathbf{e}_j\right)\mathbf{e}_s\\
+        &=\sum_{s=1}^k d_s v_{sj}\mathbf{e}_s
     \end{align*}
-    where $v_{sj}$ is the entry of $\bm{V}$ in row $s$ and column $j$. We thus have
+    where $v_{sj}$ is the entry of $\mathbf{V}$ in row $s$ and column $j$. We thus have
     \begin{align*}
-        \mathrm{MSS}_j&=\frac{1}{n} \Vert \bm{U}_k^\top \hat{\bm{x}}_j \Vert_2^2\\
-        &=\frac{1}{n} \left\Vert \sum_{s=1}^k d_s v_{sj}\bm{e}_s \right\Vert_2^2\\
+        \mathrm{MSS}_j&=\frac{1}{n} \Vert \mathbf{U}_k^\top \hat{\mathbf{x}}_j \Vert_2^2\\
+        &=\frac{1}{n} \left\Vert \sum_{s=1}^k d_s v_{sj}\mathbf{e}_s \right\Vert_2^2\\
         &=\frac{1}{n}\sum_{s=1}^k d_s^2 v_{sj}^2.
     \end{align*}
-    Since $\bm{x}_j$ has mean zero and variance one, we are in the setting of part (b) and hence
+    Since $\mathbf{x}_j$ has mean zero and variance one, we are in the setting of part (b) and hence
     \[R^2_j = \mathrm{MSS}_j = \frac{1}{n} \sum_{s=1}^k d_s^2 v_{sj}^2. \]
     \item Note that
     \begin{align*}
         \sum_{j=1}^p \mathrm{MSS}_j &=\sum_{j=1}^p \frac{1}{n} \sum_{s=1}^k d_s^2 v_{sj}^2\\
         &=\sum_{s=1}^k \sum_{j=1}^p \frac{1}{n} d_s^2 v_{sj}^2\\
         &=\sum_{s=1}^k \frac{1}{n} d_s^2 \sum_{j=1}^p v_{sj}^2\\
-        &=\sum_{s=1}^k \frac{1}{n}d_s^2 \Vert \bm{v}_s \Vert_2^2 \\
+        &=\sum_{s=1}^k \frac{1}{n}d_s^2 \Vert \mathbf{v}_s \Vert_2^2 \\
         &=\frac{1}{n}\sum_{s=1}^k d_s^2,
     \end{align*}
-    since all rows of $\bm{V}$ have norm one. We know that each column of $\bm{X}$ has variance one and mean zero. Thus,
+    since all rows of $\mathbf{V}$ have norm one. We know that each column of $\mathbf{X}$ has variance one and mean zero. Thus,
     \begin{align*}
-        p&=\sum_{j=1}^p \frac{1}{n} \bm{x}_j^\top \bm{x}_j\\
-        &=\frac{1}{n}\sum_{j=1}^p \tr\left(\bm{x}_j^\top \bm{x}_j\right)\\
-        &=\frac{1}{n}\sum_{j=1}^p \tr\left(\bm{x}_j\bm{x}_j^\top \right)\\
-        &=\frac{1}{n}\tr\left(\sum_{j=1}^p \bm{x}_j\bm{x}_j^\top \right)\\
-        &=\frac{1}{n}\tr\left(\bm{X}\bm{X}^\top\right)\\
-        &=\frac{1}{n}\tr\left(\bm{U}\bm{D}\bm{V}^\top \bm{V}\bm{D}\bm{U}^\top\right)\\
-        &=\frac{1}{n}\tr\left(\bm{D}^2\right)\\
+        p&=\sum_{j=1}^p \frac{1}{n} \mathbf{x}_j^\top \mathbf{x}_j\\
+        &=\frac{1}{n}\sum_{j=1}^p \tr\left(\mathbf{x}_j^\top \mathbf{x}_j\right)\\
+        &=\frac{1}{n}\sum_{j=1}^p \tr\left(\mathbf{x}_j\mathbf{x}_j^\top \right)\\
+        &=\frac{1}{n}\tr\left(\sum_{j=1}^p \mathbf{x}_j\mathbf{x}_j^\top \right)\\
+        &=\frac{1}{n}\tr\left(\mathbf{X}\mathbf{X}^\top\right)\\
+        &=\frac{1}{n}\tr\left(\mathbf{U}\mathbf{D}\mathbf{V}^\top \mathbf{V}\mathbf{D}\mathbf{U}^\top\right)\\
+        &=\frac{1}{n}\tr\left(\mathbf{D}^2\right)\\
         &=\frac{1}{n}\sum_{s=1}^p d_s^2.
     \end{align*}
     Thus,
@@ -224,154 +224,154 @@ Key ideas
 \begin{enumerate}[label = (\alph*)]
     \item Consider the following augmented model. Independently for $1 \le n \le N$,
     \begin{align*}
-        z_n &\sim \bm{\pi}, \\
+        z_n &\sim \mathbf{\pi}, \\
         \tau_n\mid z_n &\sim \mathrm{Ga}\left(\nu_{z_n}/2,\nu_{z_n}/2 \right), \\
-        \bm{x}_n \mid \tau_n,z_n &\sim \calN\left(\bm{\mu}_{z_n}, \tau_n^{-1}\bm{\Sigma}_{z_n}\right), 
+        \mathbf{x}_n \mid \tau_n,z_n &\sim \calN\left(\mathbf{\mu}_{z_n}, \tau_n^{-1}\mathbf{\Sigma}_{z_n}\right), 
     \end{align*}
-    the joint density for $\{z_n,\tau_n,\bm{x}_n\}_{n=1}^N$ corresponding to this model is
+    the joint density for $\{z_n,\tau_n,\mathbf{x}_n\}_{n=1}^N$ corresponding to this model is
     \begin{align*}
-        &p\left(\{z_n,\tau_n,\bm{x}_n\}_{n=1}^N;\bm{\theta}\right)\\
-        &=\prod_{n=1}^N p(z_n,\tau_n,\bm{x}_n;\bm{\theta})\\
-        &=\prod_{n=1}^N p(z_n;\bm{\theta})p(\tau_n\mid z_n;\bm{\theta})p(\bm{x}_n\mid \tau_n,z_n;\bm{\theta}) \\
-        &=\prod_{n=1}^N \pi_{z_n}\mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\bm{x}_n; \bm{\mu}_{z_n}, \tau_{n}^{-1}\bm{\Sigma}_{z_n}\right).
+        &p\left(\{z_n,\tau_n,\mathbf{x}_n\}_{n=1}^N;\mathbf{\theta}\right)\\
+        &=\prod_{n=1}^N p(z_n,\tau_n,\mathbf{x}_n;\mathbf{\theta})\\
+        &=\prod_{n=1}^N p(z_n;\mathbf{\theta})p(\tau_n\mid z_n;\mathbf{\theta})p(\mathbf{x}_n\mid \tau_n,z_n;\mathbf{\theta}) \\
+        &=\prod_{n=1}^N \pi_{z_n}\mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\mathbf{x}_n; \mathbf{\mu}_{z_n}, \tau_{n}^{-1}\mathbf{\Sigma}_{z_n}\right).
     \end{align*}
-    The marginal model for $\{z_n,\bm{z}_n\}_{n=1}^N$ is
+    The marginal model for $\{z_n,\mathbf{z}_n\}_{n=1}^N$ is
     \begin{align*}
-        &p\left(\{z_n,\bm{x}_n\};\bm{\theta}\right)\\
-        &=\int_{\reals_{> 0}^N} p\left(\{z_n,\tau_n,\bm{x}_n\};\bm{\theta}\right)d\bm{\tau}\\
-        &=\int_{\reals_{> 0}^N} \prod_{n=1}^N \pi_{z_n}\mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\bm{x}_n; \bm{\mu}_{z_n}, \tau_{n}^{-1}\bm{\Sigma}_{z_n}\right)d\bm{\tau}\\
-        &=\prod_{n=1}^N \int  \pi_{z_n}\mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\bm{x}_n; \bm{\mu}_{z_n}, \tau_{n}^{-1}\bm{\Sigma}_{z_n}\right)d\tau_n \\
-        &=\prod_{n=1}^N \pi_{z_n}\int  \mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\bm{x}_n; \bm{\mu}_{z_n}, \tau_{n}^{-1}\bm{\Sigma}_{z_n}\right)d\tau_n\\
-        &=\prod_{n=1}^N \pi_{z_n}\mathrm{St}\left(\bm{x}_n; \nu_{z_n}, \bm{\mu}_{z_n}, \tau_{n}^{-1}\bm{\Sigma}_{z_n}\right),
+        &p\left(\{z_n,\mathbf{x}_n\};\mathbf{\theta}\right)\\
+        &=\int_{\reals_{> 0}^N} p\left(\{z_n,\tau_n,\mathbf{x}_n\};\mathbf{\theta}\right)d\mathbf{\tau}\\
+        &=\int_{\reals_{> 0}^N} \prod_{n=1}^N \pi_{z_n}\mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\mathbf{x}_n; \mathbf{\mu}_{z_n}, \tau_{n}^{-1}\mathbf{\Sigma}_{z_n}\right)d\mathbf{\tau}\\
+        &=\prod_{n=1}^N \int  \pi_{z_n}\mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\mathbf{x}_n; \mathbf{\mu}_{z_n}, \tau_{n}^{-1}\mathbf{\Sigma}_{z_n}\right)d\tau_n \\
+        &=\prod_{n=1}^N \pi_{z_n}\int  \mathrm{Ga}\left(\tau_n; \nu_{z_n}/2, \nu_{z_n}/2\right)\calN\left(\mathbf{x}_n; \mathbf{\mu}_{z_n}, \tau_{n}^{-1}\mathbf{\Sigma}_{z_n}\right)d\tau_n\\
+        &=\prod_{n=1}^N \pi_{z_n}\mathrm{St}\left(\mathbf{x}_n; \nu_{z_n}, \mathbf{\mu}_{z_n}, \tau_{n}^{-1}\mathbf{\Sigma}_{z_n}\right),
     \end{align*}
     where the last line follows from the equation describing the Student-t distribution as a scale mixture of Gaussian. This joint probability corresponds to the original student mixture model.
     \item We are asked to compute,
-    \[\omega_{nk} = p(z_n = k \mid \bm{x}_n;\bm{\theta}), \]
+    \[\omega_{nk} = p(z_n = k \mid \mathbf{x}_n;\mathbf{\theta}), \]
     for $1 \le k \le K$ and $1 \le n \le N$. By Bayes rule,
     \begin{align*}
-        \omega_{nk} &= \frac{p(\bm{x}_n \mid z_n = k; \bm{\theta})p(z_n = k ;\bm{\theta})}{\sum_{j=1}^K p(\bm{x}_n \mid z_n = j; \bm{\theta})p(z_n = j ;\bm{\theta})}\\
-        &= \frac{\mathrm{St}(\bm{x}_n ; \nu_k,\bm{\mu}_k, \bm{\Sigma}_k)\pi_k}{\sum_{j=1}^K \mathrm{St}(\bm{x}_n ; \nu_j,\bm{\mu}_j, \bm{\Sigma}_j)\pi_j},
+        \omega_{nk} &= \frac{p(\mathbf{x}_n \mid z_n = k; \mathbf{\theta})p(z_n = k ;\mathbf{\theta})}{\sum_{j=1}^K p(\mathbf{x}_n \mid z_n = j; \mathbf{\theta})p(z_n = j ;\mathbf{\theta})}\\
+        &= \frac{\mathrm{St}(\mathbf{x}_n ; \nu_k,\mathbf{\mu}_k, \mathbf{\Sigma}_k)\pi_k}{\sum_{j=1}^K \mathrm{St}(\mathbf{x}_n ; \nu_j,\mathbf{\mu}_j, \mathbf{\Sigma}_j)\pi_j},
     \end{align*}
-    since $\bm{x}_n \mid z_n \sim \mathrm{St}\left(\nu_{z_n},\bm{\mu}_{z_n},\bm{\Sigma}_{z_n}\right)$.
+    since $\mathbf{x}_n \mid z_n \sim \mathrm{St}\left(\nu_{z_n},\mathbf{\mu}_{z_n},\mathbf{\Sigma}_{z_n}\right)$.
     \item Next we are asked to compute the conditional distribution,
-    \[p(\tau_n \mid z_n=k, \bm{x}_n; \bm{\theta}). \]
+    \[p(\tau_n \mid z_n=k, \mathbf{x}_n; \mathbf{\theta}). \]
     To do this, we will again use Bayes rule conditional on $z_n=k$,
     \begin{align*}
-        &p(\tau_n \mid z_n=k, \bm{x}_n; \bm{\theta})\\
-        &\propto p(\tau_n \mid z_n=k;\bm{\theta})p(\bm{x}_n \mid \tau_n,z_n=k;\bm{\theta})\\
-        &= \mathrm{Ga}(\tau_n;\nu_k/2, \nu_k/2)\calN(\bm{x}_n; \bm{\mu}_k, \tau_n^{-1}\bm{\Sigma}_k)\\
-        &\propto \tau_n^{\nu_k/2 - 1}\exp\left(-\nu_k\tau/2\right)\det(\tau_n^{-1}\bm{\Sigma}_k)^{-1/2}\exp\left(-\frac{1}{2}(\bm{x}_n-\bm{\mu}_k)^\top\left(\tau_n^{-1}\bm{\Sigma}_k\right)^{-1}(\bm{x}_n - \bm{\mu}_k)\right).
+        &p(\tau_n \mid z_n=k, \mathbf{x}_n; \mathbf{\theta})\\
+        &\propto p(\tau_n \mid z_n=k;\mathbf{\theta})p(\mathbf{x}_n \mid \tau_n,z_n=k;\mathbf{\theta})\\
+        &= \mathrm{Ga}(\tau_n;\nu_k/2, \nu_k/2)\calN(\mathbf{x}_n; \mathbf{\mu}_k, \tau_n^{-1}\mathbf{\Sigma}_k)\\
+        &\propto \tau_n^{\nu_k/2 - 1}\exp\left(-\nu_k\tau/2\right)\det(\tau_n^{-1}\mathbf{\Sigma}_k)^{-1/2}\exp\left(-\frac{1}{2}(\mathbf{x}_n-\mathbf{\mu}_k)^\top\left(\tau_n^{-1}\mathbf{\Sigma}_k\right)^{-1}(\mathbf{x}_n - \mathbf{\mu}_k)\right).
     \end{align*}
     Note that,
-    \[\det(\tau_n^{-1}\bm{\Sigma}_k) = \det(\tau_n^{-1}\bm{I}_D\bm{\Sigma}_k^{-1}) = \tau_n^{-D}\det(\bm{\Sigma}_k^{-1}), \]
+    \[\det(\tau_n^{-1}\mathbf{\Sigma}_k) = \det(\tau_n^{-1}\mathbf{I}_D\mathbf{\Sigma}_k^{-1}) = \tau_n^{-D}\det(\mathbf{\Sigma}_k^{-1}), \]
     and
-    \[-\frac{1}{2}(\bm{x}_n-\bm{\mu}_k)^\top\left(\tau_n^{-1}\bm{\Sigma}_k\right)^{-1}(\bm{x}_n - \bm{\mu}_k) =  - \frac{1}{2}(\bm{x}_n-\bm{\mu}_k)^\top\bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k)\tau_n.\]
+    \[-\frac{1}{2}(\mathbf{x}_n-\mathbf{\mu}_k)^\top\left(\tau_n^{-1}\mathbf{\Sigma}_k\right)^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) =  - \frac{1}{2}(\mathbf{x}_n-\mathbf{\mu}_k)^\top\mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k)\tau_n.\]
     Thus,
     \begin{align*}
-        &p(\tau_n\mid z_n=k \bm{x}_n;\bm{\theta})\\
-        &\propto \tau_n^{\nu_k/2 - 1}\exp\left(-\nu_k\tau/2\right)\tau^{D/2}\det(\bm{\Sigma}_k)^{-1/2}\exp\left(\frac{1}{2}(\bm{x}_n-\bm{\mu}_k)^\top\bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k)\tau_n\right)\\
-        &=\tau_n^{(\nu_k+D)/2 - 1}\exp\left(-\frac{1}{2}\left(\nu_k + (\bm{x}_n-\bm{\mu}_k)^\top\bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k)\right)\tau_n\right)\\
+        &p(\tau_n\mid z_n=k \mathbf{x}_n;\mathbf{\theta})\\
+        &\propto \tau_n^{\nu_k/2 - 1}\exp\left(-\nu_k\tau/2\right)\tau^{D/2}\det(\mathbf{\Sigma}_k)^{-1/2}\exp\left(\frac{1}{2}(\mathbf{x}_n-\mathbf{\mu}_k)^\top\mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k)\tau_n\right)\\
+        &=\tau_n^{(\nu_k+D)/2 - 1}\exp\left(-\frac{1}{2}\left(\nu_k + (\mathbf{x}_n-\mathbf{\mu}_k)^\top\mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k)\right)\tau_n\right)\\
         &\propto \mathrm{Ga}(\tau_n; \alpha_{nk},\beta_{nk}),
     \end{align*}
     where
     \begin{align*}
         \alpha_{nk}&=\frac{\nu_k+D}{2}\\
-        \beta_{nk}&=\frac{1}{2}\left(\nu_k + (\bm{x}_n-\bm{\mu}_k)^\top\bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k)\right).
+        \beta_{nk}&=\frac{1}{2}\left(\nu_k + (\mathbf{x}_n-\mathbf{\mu}_k)^\top\mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k)\right).
     \end{align*}
     \item We will first simplify the expected complete log-likelihood,
-    \[\mathcal{L}(\bm{\theta};\bm{\theta}_{\mathrm{old}}) = \sum_{n=1}^N \bbE_{p(z_n, \tau_n \mid \bm{x}_n;\bm{\theta}_{\mathrm{old}})}\left[\log p(z_n,\tau_n,\bm{x}_n;\bm{\theta})\right]. \]
+    \[\mathcal{L}(\mathbf{\theta};\mathbf{\theta}_{\mathrm{old}}) = \sum_{n=1}^N \bbE_{p(z_n, \tau_n \mid \mathbf{x}_n;\mathbf{\theta}_{\mathrm{old}})}\left[\log p(z_n,\tau_n,\mathbf{x}_n;\mathbf{\theta})\right]. \]
     First recall that,
     \begin{align*}
-        &\log p(z_n,\tau_n,\bm{z}_n;\bm{\theta})\\
-        &=\sum_{k=1}^K I[z_n = k]\log p(z_n = k,\tau_n,\bm{z}_n;\bm{\theta})\\
-        &=\sum_{k=1}^K I[z_n = k]\left(\log \pi_k + \log \mathrm{Ga}(\tau_n;\nu_k/2,\nu_k/2) + \log \calN(\bm{x}_n; \bm{\mu}_k, \tau_n^{-1}\bm{\Sigma}_k)\right)\\
+        &\log p(z_n,\tau_n,\mathbf{z}_n;\mathbf{\theta})\\
+        &=\sum_{k=1}^K I[z_n = k]\log p(z_n = k,\tau_n,\mathbf{z}_n;\mathbf{\theta})\\
+        &=\sum_{k=1}^K I[z_n = k]\left(\log \pi_k + \log \mathrm{Ga}(\tau_n;\nu_k/2,\nu_k/2) + \log \calN(\mathbf{x}_n; \mathbf{\mu}_k, \tau_n^{-1}\mathbf{\Sigma}_k)\right)\\
         &=\sum_{k=1}^K I[z_n = k]\bigg(\log \pi_k + \frac{\nu_k}{2}\log\left(\nu_k/2\right) - \log \Gamma(\nu_k/2) + (\nu_k/2-1)\log(\tau_n)\\
-        & - \frac{\nu_k}{2}\tau_n- \frac{D}{2}\log(2\pi) -\frac{1}{2}\log \det(\tau_n^{-1}\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg).
+        & - \frac{\nu_k}{2}\tau_n- \frac{D}{2}\log(2\pi) -\frac{1}{2}\log \det(\tau_n^{-1}\mathbf{\Sigma}_k) - \frac{\tau_n}{2}(\mathbf{x}_n - \mathbf{\mu}_k)^\top \mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) \bigg).
     \end{align*}
-    If we drop terms that don't depend on $\bm{\theta}$, we have
+    If we drop terms that don't depend on $\mathbf{\theta}$, we have
     \begin{align}
-        &\log p(z_n,\tau_n,\bm{z}_n;\bm{\theta})\nonumber \\
+        &\log p(z_n,\tau_n,\mathbf{z}_n;\mathbf{\theta})\nonumber \\
         &=\sum_{k=1}^K I[z_n = k]\bigg(\log \pi_k + \frac{\nu_k}{2}\log\left(\nu_k/2\right) - \log \Gamma(\nu_k/2) + (\nu_k/2-1)\log(\tau_n)\nonumber \\
-        & - \frac{\nu_k}{2}\tau_n -\frac{1}{2}\log \det(\tau_n^{-1}\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg).\label{eq:2022 Q5 log like}
+        & - \frac{\nu_k}{2}\tau_n -\frac{1}{2}\log \det(\tau_n^{-1}\mathbf{\Sigma}_k) - \frac{\tau_n}{2}(\mathbf{x}_n - \mathbf{\mu}_k)^\top \mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) \bigg).\label{eq:2022 Q5 log like}
     \end{align}
-    On the exam, we are only asked to do the M-step for $\{\bm{\mu}_k,\bm{\Sigma}_k\}_{k=1}^K$. We can therefore drop terms that do not depend on $\bm{\mu}_k$ or $\bm{\Sigma}_k$. This gives,
+    On the exam, we are only asked to do the M-step for $\{\mathbf{\mu}_k,\mathbf{\Sigma}_k\}_{k=1}^K$. We can therefore drop terms that do not depend on $\mathbf{\mu}_k$ or $\mathbf{\Sigma}_k$. This gives,
     \begin{align*}
-        &\log p(z_n,\tau_n,\bm{z}_n;\bm{\theta})\\
-        &=\sum_{k=1}^K I[z_n = k]\bigg(-\frac{1}{2}\log \det(\tau_n^{-1}\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg)\\
-        &=\sum_{k=1}^K I[z_n = k]\bigg(\frac{D}{2}\log\tau_n-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg)\\
-        &=\sum_{k=1}^K I[z_n = k]\bigg(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg),
+        &\log p(z_n,\tau_n,\mathbf{z}_n;\mathbf{\theta})\\
+        &=\sum_{k=1}^K I[z_n = k]\bigg(-\frac{1}{2}\log \det(\tau_n^{-1}\mathbf{\Sigma}_k) - \frac{\tau_n}{2}(\mathbf{x}_n - \mathbf{\mu}_k)^\top \mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) \bigg)\\
+        &=\sum_{k=1}^K I[z_n = k]\bigg(\frac{D}{2}\log\tau_n-\frac{1}{2}\log \det(\mathbf{\Sigma}_k) - \frac{\tau_n}{2}(\mathbf{x}_n - \mathbf{\mu}_k)^\top \mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) \bigg)\\
+        &=\sum_{k=1}^K I[z_n = k]\bigg(-\frac{1}{2}\log \det(\mathbf{\Sigma}_k) - \frac{\tau_n}{2}(\mathbf{x}_n - \mathbf{\mu}_k)^\top \mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) \bigg),
     \end{align*}
-    where in the last line we dropped the term $\frac{D}{2}\log\tau_n$. We will now take an expectation with respect to $p(z_n,\tau_n\mid \bm{x}_n ;\bm{\theta}_{\mathrm{old}})$. By parts (b) and (c) we have,
+    where in the last line we dropped the term $\frac{D}{2}\log\tau_n$. We will now take an expectation with respect to $p(z_n,\tau_n\mid \mathbf{x}_n ;\mathbf{\theta}_{\mathrm{old}})$. By parts (b) and (c) we have,
     \begin{align*}
-        \bbE_{p(z_n, \tau_n \mid \bm{x}_n;\bm{\theta}_{\mathrm{old}})}\left[I[Z_n = k]\right] = \omega_{nk}^{\mathrm{old}},
+        \bbE_{p(z_n, \tau_n \mid \mathbf{x}_n;\mathbf{\theta}_{\mathrm{old}})}\left[I[Z_n = k]\right] = \omega_{nk}^{\mathrm{old}},
     \end{align*}
     and 
     \begin{align*}
-    \bbE_{p(z_n,\tau_n \mid \bm{x}_n;\bm{\theta}_{\mathrm{old}})}\left[I[Z_n=k]\tau_n\right]
+    \bbE_{p(z_n,\tau_n \mid \mathbf{x}_n;\mathbf{\theta}_{\mathrm{old}})}\left[I[Z_n=k]\tau_n\right]
         &=\omega_{nk}^{\mathrm{old}}\bbE_{\mathrm{Ga}(z_n;\alpha_{nk}^{\text{old}}, \beta_{nk}^{old})}\left[\tau_n\right]\\
         &= \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\text{old}}}{\beta_{nk}^{\text{old}}}.
     \end{align*}
-    Thus, up to a constant independent of $\{\bm{\mu}_k,\bm{\Sigma}_k\}_{k=1}^K$ we have
+    Thus, up to a constant independent of $\{\mathbf{\mu}_k,\mathbf{\Sigma}_k\}_{k=1}^K$ we have
     \begin{align*}
-        &\bbE_{p(z_n, \tau_n \mid \bm{x}_n;\bm{\theta}_{\mathrm{old}})}\left[\log p(z_n,\tau_n,\bm{z}_n;\bm{\theta})\right]\\
-        &=\sum_{k=1}^K \bbE_{p(z_n, \tau_n \mid \bm{x}_n;\bm{\theta}_{\mathrm{old}})}\left[I[z_n = k]\bigg(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\tau_n}{2}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \bigg)\right]\\
-        &=\sum_{k=1}^K \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \right)
+        &\bbE_{p(z_n, \tau_n \mid \mathbf{x}_n;\mathbf{\theta}_{\mathrm{old}})}\left[\log p(z_n,\tau_n,\mathbf{z}_n;\mathbf{\theta})\right]\\
+        &=\sum_{k=1}^K \bbE_{p(z_n, \tau_n \mid \mathbf{x}_n;\mathbf{\theta}_{\mathrm{old}})}\left[I[z_n = k]\bigg(-\frac{1}{2}\log \det(\mathbf{\Sigma}_k) - \frac{\tau_n}{2}(\mathbf{x}_n - \mathbf{\mu}_k)^\top \mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) \bigg)\right]\\
+        &=\sum_{k=1}^K \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\mathbf{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\mathbf{x}_n - \mathbf{\mu}_k)^\top \mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) \right)
     \end{align*}
-    And so, up to terms independent of $\{\bm{\mu}_k,\bm{\Sigma}_k\}_{k=1}^K$, we have
+    And so, up to terms independent of $\{\mathbf{\mu}_k,\mathbf{\Sigma}_k\}_{k=1}^K$, we have
     \begin{align*}
-        &\mathcal{L}(\bm{\theta};\bm{\theta}_{\mathrm{old}})\\
-        &=\sum_{n=1}^N\sum_{k=1}^K  \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \right)\\
-        &=\sum_{k=1}^K\sum_{n=1}^N \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \right).
+        &\mathcal{L}(\mathbf{\theta};\mathbf{\theta}_{\mathrm{old}})\\
+        &=\sum_{n=1}^N\sum_{k=1}^K  \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\mathbf{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\mathbf{x}_n - \mathbf{\mu}_k)^\top \mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) \right)\\
+        &=\sum_{k=1}^K\sum_{n=1}^N \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\mathbf{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\mathbf{x}_n - \mathbf{\mu}_k)^\top \mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) \right).
     \end{align*}
-    We see that the M-step for $\{\bm{\mu}_k,\bm{\Sigma}_k\}_{k=1}^K$ splits over $k$. And so,
-    \[\bm{\mu}_k^\star,\bm{\Sigma}_k^\star \gets \argmax_{\bm{\mu}_k,\bm{\Sigma}_k} \sum_{n=1}^N \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\bm{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\bm{x}_n - \bm{\mu}_k)^\top \bm{\Sigma}_k^{-1}(\bm{x}_n - \bm{\mu}_k) \right). \]
-    If we differentiate with respect to $\bm{\mu}_k$, we see that $\bm{\mu}_k^\star$ solves,
-    \[\sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}\bm{\Sigma}^{-1} (\bm{x}_n-\bm{\mu}_k^\star)=0\in \reals^D. \]
+    We see that the M-step for $\{\mathbf{\mu}_k,\mathbf{\Sigma}_k\}_{k=1}^K$ splits over $k$. And so,
+    \[\mathbf{\mu}_k^\star,\mathbf{\Sigma}_k^\star \gets \argmax_{\mathbf{\mu}_k,\mathbf{\Sigma}_k} \sum_{n=1}^N \omega_{nk}^{\mathrm{old}}\left(-\frac{1}{2}\log \det(\mathbf{\Sigma}_k) - \frac{\alpha_{nk}^{\mathrm{old}}}{2\beta_{nk}^{\mathrm{old}}}(\mathbf{x}_n - \mathbf{\mu}_k)^\top \mathbf{\Sigma}_k^{-1}(\mathbf{x}_n - \mathbf{\mu}_k) \right). \]
+    If we differentiate with respect to $\mathbf{\mu}_k$, we see that $\mathbf{\mu}_k^\star$ solves,
+    \[\sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}\mathbf{\Sigma}^{-1} (\mathbf{x}_n-\mathbf{\mu}_k^\star)=0\in \reals^D. \]
     And so,
     \begin{align*}
-       \bm{\mu}_k^\star \left(\sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}\right) &= \sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}} \bm{x}_n.
+       \mathbf{\mu}_k^\star \left(\sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}\right) &= \sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}} \mathbf{x}_n.
     \end{align*}
     If we define 
     \[\gamma_{nk} = \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}/\beta_{nk}^{\mathrm{old}}}{\sum_{m=1}^N \omega_{mk}^{\mathrm{old}}\alpha_{mk}^{\mathrm{old}}/\beta_{mk}^{\mathrm{old}}}, \]
     then 
-    \[ \bm{\mu}^\star = \sum_{n=1}^N \gamma_{nk} \bm{x}_n.\]
-    Likewise, plugging in $\bm{\mu}^\star$ and differentiating with respect to $\bm{\Sigma}_k^{-1}$ gives the first order condition,
-    \[\frac{1}{2}\sum_{n=1}^N \omega_{nk}^{\text{old}}\bm{\Sigma}_k^\star - \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}(\bm{x}_n-\bm{\mu}_k^\star)(\bm{x}_n - \bm{\mu}_k^\star)^\top = 0 \in \reals^{D \times D}. \]
+    \[ \mathbf{\mu}^\star = \sum_{n=1}^N \gamma_{nk} \mathbf{x}_n.\]
+    Likewise, plugging in $\mathbf{\mu}^\star$ and differentiating with respect to $\mathbf{\Sigma}_k^{-1}$ gives the first order condition,
+    \[\frac{1}{2}\sum_{n=1}^N \omega_{nk}^{\text{old}}\mathbf{\Sigma}_k^\star - \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}(\mathbf{x}_n-\mathbf{\mu}_k^\star)(\mathbf{x}_n - \mathbf{\mu}_k^\star)^\top = 0 \in \reals^{D \times D}. \]
     And so
-    \[\bm{\Sigma}_k^\star = \frac{1}{\sum_{n=1}^N \omega_{nk}^\text{old}} \sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}(\bm{x}_n-\bm{\mu}_k^\star)(\bm{x}_n - \bm{\mu}_k^\star)^\top.  \]
+    \[\mathbf{\Sigma}_k^\star = \frac{1}{\sum_{n=1}^N \omega_{nk}^\text{old}} \sum_{n=1}^N \frac{\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\mathrm{old}}}{\beta_{nk}^{\mathrm{old}}}(\mathbf{x}_n-\mathbf{\mu}_k^\star)(\mathbf{x}_n - \mathbf{\mu}_k^\star)^\top.  \]
 \end{enumerate}
-\textbf{Optional:}  In terms of exam requirements, we are now done. We have calculated the M-step for $\{(\bm{\mu}_k,\bm{\Sigma}_k)\}_{k=1}^K$ which we did by isolating the part of $\mathcal{L}(\bm{\theta};\bm{\theta}^{\text{old}})$ that depended on these parameters. We can do a similar thing for $\bm{\pi}$. Using \eqref{eq:2022 Q5 log like} we can compute $\log p(z_n,\tau_n,\bm{x}_n;\bm{\theta})$ as a function of only $\bm{\pi}$ specifically,
-\[\log p(z_n,\tau_n,\bm{x}_n;\bm{\theta}) = C +\sum_{k=1}^K I[Z_n = k]\log(\pi_k). \]
-Thus, as a function of $\bm{\pi}$,
+\textbf{Optional:}  In terms of exam requirements, we are now done. We have calculated the M-step for $\{(\mathbf{\mu}_k,\mathbf{\Sigma}_k)\}_{k=1}^K$ which we did by isolating the part of $\mathcal{L}(\mathbf{\theta};\mathbf{\theta}^{\text{old}})$ that depended on these parameters. We can do a similar thing for $\mathbf{\pi}$. Using \eqref{eq:2022 Q5 log like} we can compute $\log p(z_n,\tau_n,\mathbf{x}_n;\mathbf{\theta})$ as a function of only $\mathbf{\pi}$ specifically,
+\[\log p(z_n,\tau_n,\mathbf{x}_n;\mathbf{\theta}) = C +\sum_{k=1}^K I[Z_n = k]\log(\pi_k). \]
+Thus, as a function of $\mathbf{\pi}$,
 \begin{align*}
-    &\mathcal{L}(\bm{\theta};\bm{\theta}^{\text{old}})\\
-    &=\sum_{n=1}^N\bbE_{p(z_n,\tau_n\mid \bm{x}_n;\bm{\theta}^{\text{old}})}\left[\sum_{k=1}^KI[Z_n=k]\log(\pi_k)\right]\\
+    &\mathcal{L}(\mathbf{\theta};\mathbf{\theta}^{\text{old}})\\
+    &=\sum_{n=1}^N\bbE_{p(z_n,\tau_n\mid \mathbf{x}_n;\mathbf{\theta}^{\text{old}})}\left[\sum_{k=1}^KI[Z_n=k]\log(\pi_k)\right]\\
     &=\sum_{n=1}^N \sum_{k=1}^K\omega_{nk}^{\text{old}}\log(\pi_k).
 \end{align*}
 Thus,
 \[\pi_k^\star = \frac{\sum_{n=1}^N \omega_{nk}}{\sum_{j=1}^K\sum_{n=1}^N \omega_{nj}}. \]
 We can be daring and attempt the $\nu_k$ updates as well. Up to a constant that does not depend on $\nu_k$ we have
 \begin{align*}
-   & p(z_n,\tau_n,\bm{x}_n;\bm{\theta})\\
+   & p(z_n,\tau_n,\mathbf{x}_n;\mathbf{\theta})\\
    &=C+\sum_{k=1}^KI[z_n = k]\left(\frac{\nu_k}{2}\log(\nu_k/2)-\log \Gamma(\nu_k/2) + \nu_k/2\log(\tau_n) -\frac{\nu_k}{2}\tau_n\right).
 \end{align*}
 Let $v_k = \nu_k/2$. Thus, as a function of $v_k$ we have
 \begin{align*}
-    & p(z_n,\tau_n,\bm{x}_n;\bm{\theta})\\
+    & p(z_n,\tau_n,\mathbf{x}_n;\mathbf{\theta})\\
    &=C+\sum_{k=1}^KI[z_n = k]\left(v_k\log(v_k)-\log \Gamma(v_k) + v_k\log(\tau_n) -v_k\tau_n\right).
 \end{align*}
 We also have
 \begin{align*}
-    \bbE_{p(z_n,\tau_n\mid \bm{x}_n;\bm{\theta}^{\text{old}})}\left[I[Z_n=k]\right]&=\omega_{nk}^{\mathrm{old}},\\
-    \bbE_{p(z_n,\tau_n\mid \bm{x}_n;\bm{\theta}^{\text{old}})}\left[I[Z_n=k]\tau_n\right]&=\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\text{old}}/\beta_{nk}^{\text{old}},\\
-    \bbE_{p(z_n,\tau_n\mid \bm{x}_n;\bm{\theta}^{\text{old}})}\left[I[Z_n=k]\log(\tau_n)\right]&=\omega_{nk}^{\mathrm{old}}\bbE_{\mathrm{Ga}(\tau_n;\alpha_{nk}^{\text{old}},\beta_{nk}^{\text{old}})}\left[\log(\tau_n)\right]\\
+    \bbE_{p(z_n,\tau_n\mid \mathbf{x}_n;\mathbf{\theta}^{\text{old}})}\left[I[Z_n=k]\right]&=\omega_{nk}^{\mathrm{old}},\\
+    \bbE_{p(z_n,\tau_n\mid \mathbf{x}_n;\mathbf{\theta}^{\text{old}})}\left[I[Z_n=k]\tau_n\right]&=\omega_{nk}^{\mathrm{old}}\alpha_{nk}^{\text{old}}/\beta_{nk}^{\text{old}},\\
+    \bbE_{p(z_n,\tau_n\mid \mathbf{x}_n;\mathbf{\theta}^{\text{old}})}\left[I[Z_n=k]\log(\tau_n)\right]&=\omega_{nk}^{\mathrm{old}}\bbE_{\mathrm{Ga}(\tau_n;\alpha_{nk}^{\text{old}},\beta_{nk}^{\text{old}})}\left[\log(\tau_n)\right]\\
     &=\omega_{nk}^{\mathrm{old}}\left(\psi\left(\alpha_{nk}^{\text{old}}\right) - \log\left(\beta_{nk}^{\text{old}}\right)\right),
 \end{align*}
 where
 \[\psi(y)= \frac{d}{dy}\log \Gamma(y), \]
-is the digamma function. Thus, as a function of $\bm{v}=(v_k)_{k=1}^K$, we have
+is the digamma function. Thus, as a function of $\mathbf{v}=(v_k)_{k=1}^K$, we have
 \begin{align*}
-    &\mathcal{L}(\bm{\theta};\bm{\theta}_{\text{old}})\\
+    &\mathcal{L}(\mathbf{\theta};\mathbf{\theta}_{\text{old}})\\
     &=\sum_{n=1}^N \sum_{k=1}^K \omega_{nk}^{\text{old}}\left(v_k\log(v_k)-\log \Gamma(v_k)+v_k\left(\psi\left(\alpha_{nk}^{\text{old}}\right) - \log\left(\beta_{nk}^{\text{old}}\right)\right) -v_k\alpha_{nk}^{\text{old}}/\beta_{nk}^{\text{old}}\right).
 \end{align*}
 And so $v_k^\star$ maximizes
@@ -387,7 +387,7 @@ Which has the first order condition
 \[\left(\log(v_k^\star)+1 -\psi(v_k^\star)\right)A_k + B_k = 0 \]
 So
 \[\log(v_k^\star) - \psi(v_k^\star) = -\frac{A_k+B_k}{A_k}. \]
-A plot in Mathematic shows that $v \mapsto \log(v) - \psi(v)$ is strictly decreasing and so the above equation has a unique solution $v_k^\star$. This means that, with a bit of work, we can implement a full EM algorithm for all the parameters $\bm{\theta}$. An imperfect implementation is available here \url{https://github.com/Michael-Howes/Applied-Coaching/blob/main/Code/student_mixture.ipynb}.
+A plot in Mathematic shows that $v \mapsto \log(v) - \psi(v)$ is strictly decreasing and so the above equation has a unique solution $v_k^\star$. This means that, with a bit of work, we can implement a full EM algorithm for all the parameters $\mathbf{\theta}$. An imperfect implementation is available here \url{https://github.com/Michael-Howes/Applied-Coaching/blob/main/Code/student_mixture.ipynb}.
 
 \subsection*{Question 6: Principal component regression with $\ell_1$-penalties}
 
